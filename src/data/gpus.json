@@ -1,0 +1,144 @@
+{
+  "gpus": [
+    {
+      "id": "mi300x",
+      "vendor": "AMD",
+      "name": "AMD Instinct MI300X",
+      "category": "enterprise",
+      "vram_gb": 192,
+      "memory_bandwidth_gbps": 5300,
+      "compute_tflops_fp16": 1300,
+      "compute_tflops_fp8": 2600
+    },
+    {
+      "id": "mi250x",
+      "vendor": "AMD",
+      "name": "AMD Instinct MI250X",
+      "category": "enterprise",
+      "vram_gb": 128,
+      "memory_bandwidth_gbps": 3200,
+      "compute_tflops_fp16": 383,
+      "compute_tflops_fp8": null
+    },
+    {
+      "id": "mi210",
+      "vendor": "AMD",
+      "name": "AMD Instinct MI210",
+      "category": "enterprise",
+      "vram_gb": 64,
+      "memory_bandwidth_gbps": 1638,
+      "compute_tflops_fp16": 181,
+      "compute_tflops_fp8": null
+    },
+    {
+      "id": "h100-sxm",
+      "vendor": "NVIDIA",
+      "name": "NVIDIA H100 SXM",
+      "category": "enterprise",
+      "vram_gb": 80,
+      "memory_bandwidth_gbps": 3350,
+      "compute_tflops_fp16": 989,
+      "compute_tflops_fp8": 1979
+    },
+    {
+      "id": "h100-pcie",
+      "vendor": "NVIDIA",
+      "name": "NVIDIA H100 PCIe",
+      "category": "enterprise",
+      "vram_gb": 80,
+      "memory_bandwidth_gbps": 2000,
+      "compute_tflops_fp16": 756,
+      "compute_tflops_fp8": 1513
+    },
+    {
+      "id": "h200",
+      "vendor": "NVIDIA",
+      "name": "NVIDIA H200",
+      "category": "enterprise",
+      "vram_gb": 141,
+      "memory_bandwidth_gbps": 4800,
+      "compute_tflops_fp16": 989,
+      "compute_tflops_fp8": 1979
+    },
+    {
+      "id": "a100-80gb",
+      "vendor": "NVIDIA",
+      "name": "NVIDIA A100 80GB",
+      "category": "enterprise",
+      "vram_gb": 80,
+      "memory_bandwidth_gbps": 2039,
+      "compute_tflops_fp16": 312,
+      "compute_tflops_fp8": null
+    },
+    {
+      "id": "a100-40gb",
+      "vendor": "NVIDIA",
+      "name": "NVIDIA A100 40GB",
+      "category": "enterprise",
+      "vram_gb": 40,
+      "memory_bandwidth_gbps": 1555,
+      "compute_tflops_fp16": 312,
+      "compute_tflops_fp8": null
+    },
+    {
+      "id": "l40s",
+      "vendor": "NVIDIA",
+      "name": "NVIDIA L40S",
+      "category": "enterprise",
+      "vram_gb": 48,
+      "memory_bandwidth_gbps": 864,
+      "compute_tflops_fp16": 366,
+      "compute_tflops_fp8": 733
+    },
+    {
+      "id": "rtx-4090",
+      "vendor": "NVIDIA",
+      "name": "NVIDIA RTX 4090",
+      "category": "consumer",
+      "vram_gb": 24,
+      "memory_bandwidth_gbps": 1008,
+      "compute_tflops_fp16": 82.6,
+      "compute_tflops_fp8": 165.2
+    },
+    {
+      "id": "rtx-4080",
+      "vendor": "NVIDIA",
+      "name": "NVIDIA RTX 4080",
+      "category": "consumer",
+      "vram_gb": 16,
+      "memory_bandwidth_gbps": 717,
+      "compute_tflops_fp16": 48.7,
+      "compute_tflops_fp8": 97.5
+    },
+    {
+      "id": "rtx-3090",
+      "vendor": "NVIDIA",
+      "name": "NVIDIA RTX 3090",
+      "category": "consumer",
+      "vram_gb": 24,
+      "memory_bandwidth_gbps": 936,
+      "compute_tflops_fp16": 35.6,
+      "compute_tflops_fp8": null
+    },
+    {
+      "id": "rtx-3080",
+      "vendor": "NVIDIA",
+      "name": "NVIDIA RTX 3080",
+      "category": "consumer",
+      "vram_gb": 10,
+      "memory_bandwidth_gbps": 760,
+      "compute_tflops_fp16": 29.8,
+      "compute_tflops_fp8": null
+    },
+    {
+      "id": "custom",
+      "vendor": "Custom",
+      "name": "Custom GPU",
+      "category": "consumer",
+      "vram_gb": 24,
+      "memory_bandwidth_gbps": 1000,
+      "compute_tflops_fp16": 100,
+      "compute_tflops_fp8": 200
+    }
+  ]
+}

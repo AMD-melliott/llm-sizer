@@ -1,0 +1,144 @@
+{
+  "models": [
+    {
+      "id": "deepseek-r1-70b",
+      "name": "DeepSeek-R1 70B",
+      "parameters_billions": 70,
+      "hidden_size": 8192,
+      "num_layers": 80,
+      "num_heads": 64,
+      "default_context_length": 32768,
+      "architecture": "transformer"
+    },
+    {
+      "id": "deepseek-r1-32b",
+      "name": "DeepSeek-R1 32B",
+      "parameters_billions": 32,
+      "hidden_size": 5120,
+      "num_layers": 60,
+      "num_heads": 40,
+      "default_context_length": 32768,
+      "architecture": "transformer"
+    },
+    {
+      "id": "deepseek-r1-14b",
+      "name": "DeepSeek-R1 14B",
+      "parameters_billions": 14,
+      "hidden_size": 4096,
+      "num_layers": 48,
+      "num_heads": 32,
+      "default_context_length": 32768,
+      "architecture": "transformer"
+    },
+    {
+      "id": "deepseek-r1-7b",
+      "name": "DeepSeek-R1 7B",
+      "parameters_billions": 7,
+      "hidden_size": 4096,
+      "num_layers": 32,
+      "num_heads": 32,
+      "default_context_length": 32768,
+      "architecture": "transformer"
+    },
+    {
+      "id": "llama-3-70b",
+      "name": "Llama 3 70B",
+      "parameters_billions": 70,
+      "hidden_size": 8192,
+      "num_layers": 80,
+      "num_heads": 64,
+      "default_context_length": 8192,
+      "architecture": "transformer"
+    },
+    {
+      "id": "llama-3-8b",
+      "name": "Llama 3 8B",
+      "parameters_billions": 8,
+      "hidden_size": 4096,
+      "num_layers": 32,
+      "num_heads": 32,
+      "default_context_length": 8192,
+      "architecture": "transformer"
+    },
+    {
+      "id": "mistral-7b",
+      "name": "Mistral 7B",
+      "parameters_billions": 7,
+      "hidden_size": 4096,
+      "num_layers": 32,
+      "num_heads": 32,
+      "default_context_length": 32768,
+      "architecture": "transformer"
+    },
+    {
+      "id": "mixtral-8x7b",
+      "name": "Mixtral 8x7B",
+      "parameters_billions": 46.7,
+      "hidden_size": 4096,
+      "num_layers": 32,
+      "num_heads": 32,
+      "default_context_length": 32768,
+      "architecture": "moe"
+    },
+    {
+      "id": "mixtral-8x22b",
+      "name": "Mixtral 8x22B",
+      "parameters_billions": 141,
+      "hidden_size": 6144,
+      "num_layers": 56,
+      "num_heads": 48,
+      "default_context_length": 65536,
+      "architecture": "moe"
+    },
+    {
+      "id": "gpt-3-175b",
+      "name": "GPT-3 175B",
+      "parameters_billions": 175,
+      "hidden_size": 12288,
+      "num_layers": 96,
+      "num_heads": 96,
+      "default_context_length": 2048,
+      "architecture": "transformer"
+    },
+    {
+      "id": "falcon-180b",
+      "name": "Falcon 180B",
+      "parameters_billions": 180,
+      "hidden_size": 14848,
+      "num_layers": 80,
+      "num_heads": 232,
+      "default_context_length": 2048,
+      "architecture": "transformer"
+    },
+    {
+      "id": "qwen-72b",
+      "name": "Qwen 72B",
+      "parameters_billions": 72,
+      "hidden_size": 8192,
+      "num_layers": 80,
+      "num_heads": 64,
+      "default_context_length": 32768,
+      "architecture": "transformer"
+    },
+    {
+      "id": "yi-34b",
+      "name": "Yi 34B",
+      "parameters_billions": 34,
+      "hidden_size": 7168,
+      "num_layers": 60,
+      "num_heads": 56,
+      "default_context_length": 200000,
+      "architecture": "transformer"
+    },
+    {
+      "id": "custom",
+      "name": "Custom Model",
+      "parameters_billions": 7,
+      "hidden_size": 4096,
+      "num_layers": 32,
+      "num_heads": 32,
+      "default_context_length": 4096,
+      "architecture": "transformer"
+    }
+  ]
+}
