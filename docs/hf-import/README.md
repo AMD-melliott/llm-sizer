@@ -2,14 +2,19 @@
 
 This script automates the process of importing model specifications from HuggingFace into the LLM Inference Calculator.
 
+**Now using the official [@huggingface/hub](https://www.npmjs.com/package/@huggingface/hub) SDK for improved reliability and authentication support!**
+
 ## Features
 
+- ✅ **Official HuggingFace SDK integration** for reliable API access
+- ✅ **Authentication support** for gated models (Llama, etc.)
 - ✅ Fetch model configurations from HuggingFace
 - ✅ Auto-detect parameter counts, architecture, and specifications
 - ✅ Validate model data against schema
 - ✅ Automatic backup before modifying models.json
 - ✅ Sorted output by parameter count
 - ✅ Support for both Transformer and MoE architectures
+- ✅ Support for multiple config naming conventions (standard & GPT-2 style)
 - ✅ Dry-run mode for previewing changes
 
 ## Usage
@@ -54,6 +59,17 @@ Use `--force` to skip the confirmation prompt:
 npm run import-model -- --model meta-llama/Llama-3.3-70B --force
 ```
 
+### Gated Models (Authentication)
+
+For gated models like Llama, set your HuggingFace token:
+
+```bash
+export HF_TOKEN=hf_your_token_here
+npm run import-model -- --model meta-llama/Llama-3.2-1B
+```
+
+Get your token at: [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+
 ## Options
 
 | Option | Alias | Description |
@@ -88,19 +104,21 @@ npm run import-model -- --model meta-llama/Llama-3.3-70B --force
 
 ## Field Mapping
 
-The script maps HuggingFace config fields to our schema:
+The script maps HuggingFace config fields to our schema, supporting multiple naming conventions:
 
-| HuggingFace Config | Our Schema |
-|-------------------|------------|
-| `hidden_size` | `hidden_size` |
-| `num_hidden_layers` | `num_layers` |
-| `num_attention_heads` | `num_heads` |
-| `num_key_value_heads` | `num_kv_heads` |
-| `max_position_embeddings` | `default_context_length` |
-| `intermediate_size` | `intermediate_size` |
-| `vocab_size` | `vocab_size` |
-| `num_local_experts` | `num_experts` |
-| `num_experts_per_tok` | `experts_per_token` |
+| HuggingFace Config | Alternative | Our Schema |
+|-------------------|-------------|------------|
+| `hidden_size` | `n_embd` | `hidden_size` |
+| `num_hidden_layers` | `n_layer` | `num_layers` |
+| `num_attention_heads` | `n_head` | `num_heads` |
+| `num_key_value_heads` | - | `num_kv_heads` |
+| `max_position_embeddings` | `n_positions`, `n_ctx` | `default_context_length` |
+| `intermediate_size` | - | `intermediate_size` |
+| `vocab_size` | - | `vocab_size` |
+| `num_local_experts`, `num_experts` | - | `num_experts` |
+| `num_experts_per_tok` | - | `experts_per_token` |
+
+**Note**: Standard naming (left column) is used by Llama, Mistral, etc. Alternative naming is used by GPT-2 and similar models.
 
 ## Examples
 
