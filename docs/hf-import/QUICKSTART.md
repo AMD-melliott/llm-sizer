@@ -2,7 +2,13 @@
 
 ## Installation
 
-Dependencies are already installed. The script is ready to use!
+If you're pulling the project fresh or after updates, make sure dependencies are installed:
+
+```bash
+npm install
+```
+
+The script uses the official [@huggingface/hub](https://www.npmjs.com/package/@huggingface/hub) SDK and is now ready to use!
 
 ## Basic Usage
 
@@ -36,11 +42,19 @@ npm run import-model -- --model microsoft/Phi-3-mini-4k-instruct --dry-run
 
 ### 3. Model with gated access (requires auth)
 
-For models that require authentication, you may need to provide parameters manually:
+For models that require authentication (like Llama), set your HuggingFace token first:
 
 ```bash
-npm run import-model -- --model meta-llama/Llama-3.1-8B --params 8 --context 128000
+export HF_TOKEN=hf_your_token_here
+npm run import-model -- --model meta-llama/Llama-3.2-1B
 ```
+
+**Get your token**: [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+
+> **Note**: If you can't authenticate, you can still provide parameters manually as a fallback:
+> ```bash
+> npm run import-model -- --model meta-llama/Llama-3.1-8B --params 8 --context 128000
+> ```
 
 ### 4. Override auto-detected values
 
@@ -111,8 +125,17 @@ The model doesn't exist or is private. Check the model ID.
 ### "Could not determine parameter count"
 Provide it manually: `--params <number>`
 
-### "HTTP 401: Unauthorized"
-Model requires authentication. Provide values manually or use a public model.
+### "HTTP 401: Unauthorized" or "Authentication required"
+Model requires authentication (gated model). Set your HuggingFace token:
+
+```bash
+export HF_TOKEN=hf_your_token_here
+npm run import-model -- --model meta-llama/Llama-3.2-1B
+```
+
+Get your token at: [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+
+**Alternative**: Provide values manually with `--params` and `--context`, or use a public model instead.
 
 ### "Validation failed"
 Check the error message. Usually missing required fields. Use manual overrides.

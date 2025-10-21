@@ -1,11 +1,35 @@
+import { listModels, downloadFile } from "@huggingface/hub";
 import { HFModelConfig } from './types.js';
 import chalk from 'chalk';
+
+// Define a subset of ApiModelInfo that we actually use
+// This avoids importing the full type which may not be exported properly
+interface ModelInfo {
+  id: string;
+  name: string;
+  safetensors?: {
+    parameters?: Record<string, number>;
+    total?: number;
+  };
+  tags?: string[];
+  [key: string]: unknown;
+}
+
+/**
+ * Get credentials for HuggingFace API (for gated models)
+ */
+function getCredentials() {
+  return process.env.HF_TOKEN
+    ? { accessToken: process.env.HF_TOKEN }
+    : undefined;
+}
 
 /**
  * Parse HuggingFace model ID from URL or direct ID
  * Examples:
  *   - "https://huggingface.co/meta-llama/Llama-3.3-70B" → "meta-llama/Llama-3.3-70B"
  *   - "meta-llama/Llama-3.3-70B" → "meta-llama/Llama-3.3-70B"
+ *   - "gpt2" → "openai-community/gpt2" (simple model names)
  */
 export function parseModelId(input: string): string {
   const urlPattern = /huggingface\.co\/([^\/]+\/[^\/\?#]+)/;
@@ -15,85 +39,155 @@ export function parseModelId(input: string): string {
     return match[1];
   }
   
-  // Assume it's already a model ID
+  // If it has a slash, assume it's already a model ID
   if (input.includes('/')) {
     return input;
   }
   
-  throw new Error(`Invalid model URL or ID: ${input}`);
+  // For simple model names without organization, return as-is
+  // The SDK will handle resolving the full path
+  return input;
 }
 
 /**
- * Fetch model config from HuggingFace
- * This will attempt to fetch config.json from the model repository
+ * Fetch model info from HuggingFace using the official SDK
  */
-export async function fetchModelConfig(modelId: string): Promise<HFModelConfig> {
-  const configUrl = `https://huggingface.co/${modelId}/resolve/main/config.json`;
+export async function fetchModelInfo(modelId: string): Promise<ModelInfo> {
+  const credentials = getCredentials();
   
-  console.log(chalk.gray(`Fetching config from: ${configUrl}`));
+  console.log(chalk.gray(`Fetching model info for: ${modelId}`));
   
   try {
-    const response = await fetch(configUrl);
+    // Prepare search parameters
+    let owner: string | undefined;
+    let query: string;
     
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    if (modelId.includes('/')) {
+      // Extract owner and model name from ID
+      const [ownerPart, ...nameParts] = modelId.split('/');
+      owner = ownerPart;
+      query = nameParts.join('/');
+    } else {
+      // Simple model name, search without owner filter
+      query = modelId;
     }
     
-    const config = await response.json() as HFModelConfig;
+    // Use listModels with specific search to get the model info
+    const models = listModels({
+      search: {
+        ...(owner && { owner }),
+        query
+      },
+      credentials,
+      additionalFields: ["safetensors", "cardData", "config", "transformersInfo", "tags", "library_name"],
+      limit: 10 // Get a few to find exact match
+    });
+    
+    // Find exact match
+    for await (const model of models) {
+      // Match by name (which is the full ID like "openai-community/gpt2")
+      // or by the query if it matches the end of the name
+      if (model.name === modelId || 
+          model.id === modelId || 
+          model.name.endsWith(`/${modelId}`) ||
+          model.name === query) {
+        return model as unknown as ModelInfo;
+      }
+    }
+    
+    throw new Error(`Model not found: ${modelId}`);
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes('401')) {
+        throw new Error(
+          'Authentication required. Set HF_TOKEN environment variable.\n' +
+          'Get your token at: https://huggingface.co/settings/tokens'
+        );
+      } else if (error.message.includes('404') || error.message.includes('not found')) {
+        throw new Error(`Model not found: ${modelId}`);
+      }
+    }
+    throw new Error(`Failed to fetch model info: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Fetch model config from HuggingFace using the official SDK
+ * This will download config.json from the model repository
+ */
+export async function fetchModelConfig(modelId: string): Promise<HFModelConfig> {
+  const credentials = getCredentials();
+  
+  console.log(chalk.gray(`Fetching config.json for: ${modelId}`));
+  
+  try {
+    const configResponse = await downloadFile({
+      repo: modelId,
+      path: "config.json",
+      credentials
+    });
+    
+    if (!configResponse) {
+      throw new Error('Config file not found');
+    }
+    
+    const config = await configResponse.json() as HFModelConfig;
     return config;
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes('401')) {
+        throw new Error(
+          'Authentication required. Set HF_TOKEN environment variable.\n' +
+          'Get your token at: https://huggingface.co/settings/tokens'
+        );
+      } else if (error.message.includes('404')) {
+        throw new Error(`Config file not found for model: ${modelId}`);
+      }
+    }
     throw new Error(`Failed to fetch model config: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
 /**
- * Fetch parameter count from model card or API
- * This is a fallback when config.json doesn't have the info
+ * Fetch parameter count from model info
+ * This uses the safetensors metadata or model ID/tags as fallback
  */
 export async function fetchParameterCount(modelId: string): Promise<number | null> {
   try {
-    // Try to get from HuggingFace API
-    const apiUrl = `https://huggingface.co/api/models/${modelId}`;
-    const response = await fetch(apiUrl);
+    const info = await fetchModelInfo(modelId);
     
-    if (!response.ok) {
-      return null;
+    // Try to get from safetensors metadata
+    if (info.safetensors?.total) {
+      const paramsBillions = info.safetensors.total / 1_000_000_000;
+      console.log(chalk.gray(`Found parameter count from safetensors: ${paramsBillions}B`));
+      return paramsBillions;
     }
     
-    const data = await response.json();
-    
-    // Look for parameter count in safetensors metadata or model card
-    if (data.safetensors?.parameters) {
-      const params = data.safetensors.parameters;
-      // Handle if it's a number or an object
-      if (typeof params === 'number') {
-        // Convert from absolute count to billions
-        return params / 1_000_000_000;
-      } else if (typeof params === 'object' && params.total) {
-        return params.total / 1_000_000_000;
-      }
-    }
-    
-    // Try to extract from model ID or tags
+    // Try to extract from model ID
     const idMatch = modelId.match(/(\d+\.?\d*)([bm])/i);
     if (idMatch) {
       const value = parseFloat(idMatch[1]);
       const unit = idMatch[2].toLowerCase();
-      return unit === 'b' ? value : value / 1000;
+      const paramsBillions = unit === 'b' ? value : value / 1000;
+      console.log(chalk.gray(`Extracted parameter count from model ID: ${paramsBillions}B`));
+      return paramsBillions;
     }
     
     // Try to extract from tags
-    if (data.tags) {
-      for (const tag of data.tags) {
+    if (info.tags) {
+      for (const tag of info.tags) {
         const match = tag.match(/(\d+\.?\d*)([bm])/i);
         if (match) {
           const value = parseFloat(match[1]);
           const unit = match[2].toLowerCase();
-          return unit === 'b' ? value : value / 1000;
+          const paramsBillions = unit === 'b' ? value : value / 1000;
+          console.log(chalk.gray(`Extracted parameter count from tags: ${paramsBillions}B`));
+          return paramsBillions;
         }
       }
     }
     
+    console.warn(chalk.yellow('Could not determine parameter count from model info'));
     return null;
   } catch (error) {
     console.warn(chalk.yellow(`Could not fetch parameter count: ${error instanceof Error ? error.message : String(error)}`));
@@ -106,9 +200,8 @@ export async function fetchParameterCount(modelId: string): Promise<number | nul
  */
 export async function validateModelExists(modelId: string): Promise<boolean> {
   try {
-    const apiUrl = `https://huggingface.co/api/models/${modelId}`;
-    const response = await fetch(apiUrl);
-    return response.ok;
+    await fetchModelInfo(modelId);
+    return true;
   } catch (error) {
     return false;
   }

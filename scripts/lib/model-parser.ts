@@ -62,8 +62,12 @@ export function generateModelName(modelName: string): string {
  * Determine architecture type based on config
  */
 export function detectArchitecture(config: HFModelConfig): 'transformer' | 'moe' {
+  // Handle vision-language models with nested text_config
+  // @ts-ignore - text_config may exist on some models
+  const textConfig = config.text_config || config;
+  
   // Check for MoE indicators
-  if (config.num_local_experts || config.num_experts_per_tok) {
+  if (textConfig.num_local_experts || textConfig.num_experts_per_tok || textConfig.num_experts) {
     return 'moe';
   }
   
@@ -86,38 +90,51 @@ export function transformHFConfig(
   config: HFModelConfig,
   overrides?: Partial<ModelEntry>
 ): Partial<ModelEntry> {
+  // Handle vision-language models with nested text_config
+  // @ts-ignore - text_config may exist on some models
+  const textConfig = config.text_config || config;
+  
   const architecture = detectArchitecture(config);
+  
+  // Handle different naming conventions (standard vs GPT-2 style)
+  const hidden_size = textConfig.hidden_size || textConfig.n_embd;
+  const num_layers = textConfig.num_hidden_layers || textConfig.n_layer;
+  const num_heads = textConfig.num_attention_heads || textConfig.n_head;
+  const context_length = textConfig.max_position_embeddings || 
+                        textConfig.n_positions || 
+                        textConfig.n_ctx ||
+                        textConfig.max_sequence_length;
   
   const model: Partial<ModelEntry> = {
     id: generateModelId(modelId),
     name: generateModelName(modelName),
-    hidden_size: config.hidden_size,
-    num_layers: config.num_hidden_layers,
-    num_heads: config.num_attention_heads,
-    default_context_length: config.max_position_embeddings || config.max_sequence_length,
+    hidden_size,
+    num_layers,
+    num_heads,
+    default_context_length: context_length,
     architecture,
   };
 
   // Optional fields
-  if (config.num_key_value_heads) {
-    model.num_kv_heads = config.num_key_value_heads;
+  if (textConfig.num_key_value_heads) {
+    model.num_kv_heads = textConfig.num_key_value_heads;
   }
   
-  if (config.intermediate_size) {
-    model.intermediate_size = config.intermediate_size;
+  if (textConfig.intermediate_size) {
+    model.intermediate_size = textConfig.intermediate_size;
   }
   
-  if (config.vocab_size) {
-    model.vocab_size = config.vocab_size;
+  if (textConfig.vocab_size) {
+    model.vocab_size = textConfig.vocab_size;
   }
 
   // MoE specific
   if (architecture === 'moe') {
-    if (config.num_local_experts) {
-      model.num_experts = config.num_local_experts;
+    if (textConfig.num_local_experts || textConfig.num_experts) {
+      model.num_experts = textConfig.num_local_experts || textConfig.num_experts;
     }
-    if (config.num_experts_per_tok) {
-      model.experts_per_token = config.num_experts_per_tok;
+    if (textConfig.num_experts_per_tok) {
+      model.experts_per_token = textConfig.num_experts_per_tok;
     }
   }
 

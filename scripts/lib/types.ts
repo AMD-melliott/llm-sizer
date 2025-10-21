@@ -1,9 +1,25 @@
 /**
+ * HuggingFace model info from SDK
+ */
+export interface ModelInfo {
+  id: string;
+  name: string;
+  safetensors?: {
+    parameters?: Record<string, number>;
+    total?: number;
+  };
+  tags?: string[];
+  [key: string]: unknown;
+}
+
+/**
  * HuggingFace model configuration from config.json
  */
 export interface HFModelConfig {
   // From config.json
   architectures?: string[];
+  
+  // Standard naming (Llama, Mistral, etc.)
   hidden_size?: number;
   num_hidden_layers?: number;
   num_attention_heads?: number;
@@ -13,13 +29,33 @@ export interface HFModelConfig {
   vocab_size?: number;
   model_type?: string;
 
+  // GPT-2 style naming
+  n_embd?: number;
+  n_layer?: number;
+  n_head?: number;
+  n_positions?: number;
+  n_ctx?: number;
+
   // MoE specific
   num_local_experts?: number;
+  num_experts?: number;
   num_experts_per_tok?: number;
 
   // Other potential fields
   max_sequence_length?: number;
   sliding_window?: number;
+
+  // Vision-language models may have nested text config
+  text_config?: HFModelConfig;
+}
+
+/**
+ * Combined HuggingFace model data from SDK
+ */
+export interface HFModelData {
+  info: ModelInfo;
+  config: HFModelConfig;
+  parametersBillions?: number;
 }
 
 /**
