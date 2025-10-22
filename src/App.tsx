@@ -1,10 +1,13 @@
 import { Calculator, Github, Brain } from 'lucide-react';
 import useAppStore from './store/useAppStore';
 import { useMemoryCalculation } from './hooks/useMemoryCalculation';
+import ModelTypeSelector from './components/ModelTypeSelector';
 import ModelSelector from './components/ModelSelector';
 import GPUSelector from './components/GPUSelector';
 import QuantizationOptions from './components/QuantizationOptions';
 import InferenceParameters from './components/InferenceParameters';
+import EmbeddingParameters from './components/EmbeddingParameters';
+import RerankingParameters from './components/RerankingParameters';
 import ResultsDisplay from './components/ResultsDisplay';
 import MemoryVisualization from './components/MemoryVisualization';
 
@@ -15,8 +18,11 @@ function App() {
     results,
     isCalculating,
     models,
+    embeddingModels,
+    rerankingModels,
     gpus,
   } = useMemoryCalculation({
+    modelType: state.modelType,
     selectedModelId: state.selectedModel,
     selectedGPUId: state.selectedGPU,
     inferenceQuantization: state.inferenceQuantization,
@@ -33,6 +39,16 @@ function App() {
     customVRAM: state.customVRAM,
     numImages: state.numImages,
     imageResolution: state.imageResolution,
+    embeddingBatchSize: state.embeddingBatchSize,
+    documentsPerBatch: state.documentsPerBatch,
+    avgDocumentSize: state.avgDocumentSize,
+    chunkSize: state.chunkSize,
+    chunkOverlap: state.chunkOverlap,
+    rerankingBatchSize: state.rerankingBatchSize,
+    numQueries: state.numQueries,
+    docsPerQuery: state.docsPerQuery,
+    maxQueryLength: state.maxQueryLength,
+    maxDocLength: state.maxDocLength,
   });
 
   return (
@@ -65,13 +81,22 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Configuration */}
           <div className="lg:col-span-1 space-y-6">
+            {/* Model Type Selection Card */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <ModelTypeSelector />
+            </div>
+
             {/* Model Selection Card */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Calculator className="w-5 h-5 text-blue-600" />
                 <h2 className="text-lg font-semibold">Model Configuration</h2>
               </div>
-              <ModelSelector models={models} />
+              <ModelSelector 
+                models={models} 
+                embeddingModels={embeddingModels}
+                rerankingModels={rerankingModels}
+              />
             </div>
 
             {/* GPU Selection Card */}
@@ -92,13 +117,19 @@ function App() {
               <QuantizationOptions />
             </div>
 
-            {/* Inference Parameters Card */}
+            {/* Parameters Card - Conditional based on model type */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Calculator className="w-5 h-5 text-orange-600" />
-                <h2 className="text-lg font-semibold">Inference Parameters</h2>
+                <h2 className="text-lg font-semibold">
+                  {state.modelType === 'generation' && 'Inference Parameters'}
+                  {state.modelType === 'embedding' && 'Embedding Parameters'}
+                  {state.modelType === 'reranking' && 'Reranking Parameters'}
+                </h2>
               </div>
-              <InferenceParameters />
+              {state.modelType === 'generation' && <InferenceParameters />}
+              {state.modelType === 'embedding' && <EmbeddingParameters />}
+              {state.modelType === 'reranking' && <RerankingParameters />}
             </div>
           </div>
 

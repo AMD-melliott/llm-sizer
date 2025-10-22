@@ -1,0 +1,151 @@
+{
+  "models": [
+    {
+      "id": "openai-text-embedding-3-large",
+      "name": "OpenAI text-embedding-3-large",
+      "vendor": "OpenAI",
+      "parameters_millions": 250,
+      "architecture": "transformer",
+      "dimensions": 3072,
+      "max_tokens": 8191,
+      "hidden_size": 1024,
+      "num_layers": 24,
+      "num_heads": 16,
+      "batch_token_limit": 100000
+    },
+    {
+      "id": "openai-text-embedding-3-small",
+      "name": "OpenAI text-embedding-3-small",
+      "vendor": "OpenAI",
+      "parameters_millions": 62,
+      "architecture": "transformer",
+      "dimensions": 1536,
+      "max_tokens": 8191,
+      "hidden_size": 768,
+      "num_layers": 12,
+      "num_heads": 12,
+      "batch_token_limit": 100000
+    },
+    {
+      "id": "cohere-embed-v3",
+      "name": "Cohere Embed v3",
+      "vendor": "Cohere",
+      "parameters_millions": 350,
+      "architecture": "transformer",
+      "dimensions": 1024,
+      "max_tokens": 512,
+      "hidden_size": 1024,
+      "num_layers": 24,
+      "num_heads": 16,
+      "batch_token_limit": 50000
+    },
+    {
+      "id": "bge-large-en-v1.5",
+      "name": "BAAI/bge-large-en-v1.5",
+      "vendor": "BAAI",
+      "parameters_millions": 335,
+      "architecture": "bert",
+      "dimensions": 1024,
+      "max_tokens": 512,
+      "hidden_size": 1024,
+      "num_layers": 24,
+      "num_heads": 16
+    },
+    {
+      "id": "bge-base-en-v1.5",
+      "name": "BAAI/bge-base-en-v1.5",
+      "vendor": "BAAI",
+      "parameters_millions": 109,
+      "architecture": "bert",
+      "dimensions": 768,
+      "max_tokens": 512,
+      "hidden_size": 768,
+      "num_layers": 12,
+      "num_heads": 12
+    },
+    {
+      "id": "bge-small-en-v1.5",
+      "name": "BAAI/bge-small-en-v1.5",
+      "vendor": "BAAI",
+      "parameters_millions": 33,
+      "architecture": "bert",
+      "dimensions": 384,
+      "max_tokens": 512,
+      "hidden_size": 384,
+      "num_layers": 12,
+      "num_heads": 12
+    },
+    {
+      "id": "e5-mistral-7b",
+      "name": "intfloat/e5-mistral-7b-instruct",
+      "vendor": "Microsoft",
+      "parameters_millions": 7000,
+      "architecture": "transformer",
+      "dimensions": 4096,
+      "max_tokens": 32768,
+      "hidden_size": 4096,
+      "num_layers": 32,
+      "num_heads": 32
+    },
+    {
+      "id": "e5-large-v2",
+      "name": "intfloat/e5-large-v2",
+      "vendor": "Microsoft",
+      "parameters_millions": 335,
+      "architecture": "bert",
+      "dimensions": 1024,
+      "max_tokens": 512,
+      "hidden_size": 1024,
+      "num_layers": 24,
+      "num_heads": 16
+    },
+    {
+      "id": "gte-large",
+      "name": "thenlper/gte-large",
+      "vendor": "Alibaba",
+      "parameters_millions": 335,
+      "architecture": "bert",
+      "dimensions": 1024,
+      "max_tokens": 512,
+      "hidden_size": 1024,
+      "num_layers": 24,
+      "num_heads": 16
+    },
+    {
+      "id": "multilingual-e5-large",
+      "name": "intfloat/multilingual-e5-large",
+      "vendor": "Microsoft",
+      "parameters_millions": 560,
+      "architecture": "bert",
+      "dimensions": 1024,
+      "max_tokens": 514,
+      "hidden_size": 1024,
+      "num_layers": 24,
+      "num_heads": 16
+    },
+    {
+      "id": "instructor-xl",
+      "name": "hkunlp/instructor-xl",
+      "vendor": "HKU NLP",
+      "parameters_millions": 335,
+      "architecture": "bert",
+      "dimensions": 768,
+      "max_tokens": 512,
+      "hidden_size": 768,
+      "num_layers": 24,
+      "num_heads": 16
+    },
+    {
+      "id": "all-mpnet-base-v2",
+      "name": "sentence-transformers/all-mpnet-base-v2",
+      "vendor": "Sentence Transformers",
+      "parameters_millions": 109,
+      "architecture": "transformer",
+      "dimensions": 768,
+      "max_tokens": 384,
+      "hidden_size": 768,
+      "num_layers": 12,
+      "num_heads": 12
+    }
+  ]
+}

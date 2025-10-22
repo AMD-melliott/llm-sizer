@@ -10,6 +10,9 @@ export interface GPU {
   compute_tflops_fp8?: number;
 }
 
+// Model Type
+export type ModelType = 'generation' | 'embedding' | 'reranking';
+
 // Model Configuration Types
 export interface Model {
   id: string;
@@ -45,6 +48,36 @@ export interface Model {
   };
 }
 
+// Embedding Model Configuration
+export interface EmbeddingModel {
+  id: string;
+  name: string;
+  vendor?: string;
+  parameters_millions: number;
+  architecture: 'transformer' | 'bert' | 'bi-encoder';
+  dimensions: number;
+  max_tokens: number;
+  hidden_size: number;
+  num_layers: number;
+  num_heads: number;
+  batch_token_limit?: number;
+}
+
+// Reranking Model Configuration
+export interface RerankingModel {
+  id: string;
+  name: string;
+  vendor?: string;
+  parameters_millions: number;
+  architecture: 'cross-encoder' | 'late-interaction';
+  max_query_length: number;
+  max_doc_length: number;
+  max_docs_per_query: number;
+  hidden_size: number;
+  num_layers: number;
+  num_heads: number;
+}
+
 // Quantization Types
 export type InferenceQuantization = 'fp16' | 'fp8' | 'int8' | 'int4';
 export type KVCacheQuantization = 'fp16_bf16' | 'fp8_bf16' | 'int8';
@@ -70,6 +103,16 @@ export interface PerformanceMetrics {
   generationSpeed: number;
   totalThroughput: number;
   perUserSpeed: number;
+  
+  // Embedding-specific metrics
+  documentsPerSecond?: number;
+  tokensPerSecond?: number;
+  embeddingsPerSecond?: number;
+  
+  // Reranking-specific metrics
+  queryDocPairsPerSecond?: number;
+  queriesPerSecond?: number;
+  avgLatencyMs?: number;
 }
 
 // Calculation Results
@@ -85,6 +128,9 @@ export interface CalculationResults {
 
 // Application State
 export interface AppState {
+  // Model Type Selection
+  modelType: ModelType;
+  
   // Model Configuration
   selectedModel: string;
   customModelParams?: number;
@@ -101,7 +147,7 @@ export interface AppState {
   customVRAM?: number;
   numGPUs: number;
 
-  // Inference Parameters
+  // Inference Parameters (Generation)
   batchSize: number;
   sequenceLength: number;
   concurrentUsers: number;
@@ -110,6 +156,20 @@ export interface AppState {
   // Multimodal Parameters
   numImages: number;
   imageResolution: number;
+  
+  // Embedding Parameters
+  embeddingBatchSize: number;
+  documentsPerBatch: number;
+  avgDocumentSize: number;
+  chunkSize: number;
+  chunkOverlap: number;
+
+  // Reranking Parameters
+  rerankingBatchSize: number;
+  numQueries: number;
+  docsPerQuery: number;
+  maxQueryLength: number;
+  maxDocLength: number;
 
   // Computed Results
   results: CalculationResults | null;
@@ -117,6 +177,7 @@ export interface AppState {
 
 // Store Actions
 export interface AppActions {
+  setModelType: (type: ModelType) => void;
   setSelectedModel: (modelId: string) => void;
   setCustomModelParams: (params: number | undefined) => void;
   setInferenceQuantization: (quant: InferenceQuantization) => void;
@@ -130,6 +191,16 @@ export interface AppActions {
   setEnableOffloading: (enable: boolean) => void;
   setNumImages: (num: number) => void;
   setImageResolution: (resolution: number) => void;
+  setEmbeddingBatchSize: (size: number) => void;
+  setDocumentsPerBatch: (count: number) => void;
+  setAvgDocumentSize: (size: number) => void;
+  setChunkSize: (size: number) => void;
+  setChunkOverlap: (overlap: number) => void;
+  setRerankingBatchSize: (size: number) => void;
+  setNumQueries: (count: number) => void;
+  setDocsPerQuery: (count: number) => void;
+  setMaxQueryLength: (length: number) => void;
+  setMaxDocLength: (length: number) => void;
   calculateResults: () => void;
 }
 

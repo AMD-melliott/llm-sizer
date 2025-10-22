@@ -1,0 +1,95 @@
+{
+  "models": [
+    {
+      "id": "cohere-rerank-v3",
+      "name": "Cohere Rerank v3",
+      "vendor": "Cohere",
+      "parameters_millions": 420,
+      "architecture": "cross-encoder",
+      "max_query_length": 1024,
+      "max_doc_length": 4096,
+      "max_docs_per_query": 1000,
+      "hidden_size": 1024,
+      "num_layers": 24,
+      "num_heads": 16
+    },
+    {
+      "id": "bge-reranker-v2-m3",
+      "name": "BAAI/bge-reranker-v2-m3",
+      "vendor": "BAAI",
+      "parameters_millions": 568,
+      "architecture": "cross-encoder",
+      "max_query_length": 8192,
+      "max_doc_length": 8192,
+      "max_docs_per_query": 1000,
+      "hidden_size": 1024,
+      "num_layers": 24,
+      "num_heads": 16
+    },
+    {
+      "id": "bge-reranker-large",
+      "name": "BAAI/bge-reranker-large",
+      "vendor": "BAAI",
+      "parameters_millions": 560,
+      "architecture": "cross-encoder",
+      "max_query_length": 512,
+      "max_doc_length": 512,
+      "max_docs_per_query": 1000,
+      "hidden_size": 1024,
+      "num_layers": 24,
+      "num_heads": 16
+    },
+    {
+      "id": "ms-marco-minilm-l-12",
+      "name": "cross-encoder/ms-marco-MiniLM-L-12-v2",
+      "vendor": "Microsoft",
+      "parameters_millions": 110,
+      "architecture": "cross-encoder",
+      "max_query_length": 512,
+      "max_doc_length": 512,
+      "max_docs_per_query": 500,
+      "hidden_size": 384,
+      "num_layers": 12,
+      "num_heads": 12
+    },
+    {
+      "id": "ms-marco-minilm-l-6",
+      "name": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+      "vendor": "Microsoft",
+      "parameters_millions": 55,
+      "architecture": "cross-encoder",
+      "max_query_length": 512,
+      "max_doc_length": 512,
+      "max_docs_per_query": 500,
+      "hidden_size": 384,
+      "num_layers": 6,
+      "num_heads": 12
+    },
+    {
+      "id": "jina-reranker-v2",
+      "name": "jinaai/jina-reranker-v2-base-multilingual",
+      "vendor": "Jina AI",
+      "parameters_millions": 278,
+      "architecture": "cross-encoder",
+      "max_query_length": 8192,
+      "max_doc_length": 8192,
+      "max_docs_per_query": 1000,
+      "hidden_size": 768,
+      "num_layers": 24,
+      "num_heads": 12
+    },
+    {
+      "id": "colbert-v2",
+      "name": "colbert-ir/colbertv2.0",
+      "vendor": "Stanford",
+      "parameters_millions": 110,
+      "architecture": "late-interaction",
+      "max_query_length": 512,
+      "max_doc_length": 512,
+      "max_docs_per_query": 1000,
+      "hidden_size": 768,
+      "num_layers": 12,
+      "num_heads": 12
+    }
+  ]
+}

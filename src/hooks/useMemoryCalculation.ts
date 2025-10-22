@@ -1,17 +1,25 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   Model,
+  EmbeddingModel,
+  RerankingModel,
   GPU,
   InferenceQuantization,
   KVCacheQuantization,
-  CalculationResults
+  CalculationResults,
+  ModelType
 } from '../types';
 import { calculateMemoryRequirements } from '../utils/memoryCalculator';
 import { estimatePerformance } from '../utils/performanceEstimator';
+import { calculateEmbeddingMemory } from '../utils/embeddingCalculator';
+import { calculateRerankingMemory } from '../utils/rerankingCalculator';
 import modelsData from '../data/models.json';
+import embeddingModelsData from '../data/embedding-models.json';
+import rerankingModelsData from '../data/reranking-models.json';
 import gpusData from '../data/gpus.json';
 
 interface UseMemoryCalculationProps {
+  modelType: ModelType;
   selectedModelId: string;
   selectedGPUId: string;
   inferenceQuantization: InferenceQuantization;
@@ -23,6 +31,16 @@ interface UseMemoryCalculationProps {
   enableOffloading: boolean;
   numImages: number;
   imageResolution: number;
+  embeddingBatchSize: number;
+  documentsPerBatch: number;
+  avgDocumentSize: number;
+  chunkSize: number;
+  chunkOverlap: number;
+  rerankingBatchSize: number;
+  numQueries: number;
+  docsPerQuery: number;
+  maxQueryLength: number;
+  maxDocLength: number;
   customModelParams?: number;
   customHiddenSize?: number;
   customNumLayers?: number;
@@ -31,6 +49,7 @@ interface UseMemoryCalculationProps {
 }
 
 export function useMemoryCalculation({
+  modelType,
   selectedModelId,
   selectedGPUId,
   inferenceQuantization,
@@ -42,6 +61,16 @@ export function useMemoryCalculation({
   enableOffloading,
   numImages,
   imageResolution,
+  embeddingBatchSize,
+  documentsPerBatch,
+  avgDocumentSize,
+  chunkSize,
+  chunkOverlap,
+  rerankingBatchSize,
+  numQueries,
+  docsPerQuery,
+  maxQueryLength,
+  maxDocLength,
   customModelParams,
   customHiddenSize,
   customNumLayers,
@@ -53,6 +82,8 @@ export function useMemoryCalculation({
 
   // Get model and GPU data
   const models = useMemo(() => modelsData.models as Model[], []);
+  const embeddingModels = useMemo(() => (embeddingModelsData as any).models as EmbeddingModel[], []);
+  const rerankingModels = useMemo(() => (rerankingModelsData as any).models as RerankingModel[], []);
   const gpus = useMemo(() => gpusData.gpus as GPU[], []);
 
   const selectedModel = useMemo(() => {
@@ -97,7 +128,7 @@ export function useMemoryCalculation({
 
   // Calculate memory requirements whenever inputs change
   useEffect(() => {
-    if (!selectedModel || !selectedGPU) {
+    if (!selectedGPU) {
       setResults(null);
       return;
     }
@@ -107,38 +138,82 @@ export function useMemoryCalculation({
     // Use setTimeout to prevent blocking UI during calculation
     const timer = setTimeout(() => {
       try {
-        // Calculate memory requirements
-        const memoryResults = calculateMemoryRequirements(
-          selectedModel,
-          selectedGPU,
-          inferenceQuantization,
-          kvCacheQuantization,
-          batchSize,
-          sequenceLength,
-          concurrentUsers,
-          numGPUs,
-          enableOffloading,
-          numImages,
-          imageResolution
-        );
+        let finalResults: CalculationResults;
 
-        // Estimate performance
-        const performanceMetrics = estimatePerformance(
-          selectedModel,
-          selectedGPU,
-          inferenceQuantization,
-          batchSize,
-          sequenceLength,
-          concurrentUsers,
-          numGPUs,
-          memoryResults.vramPercentage
-        );
+        if (modelType === 'embedding') {
+          const embModel = embeddingModels.find(m => m.id === selectedModelId);
+          if (!embModel) {
+            setResults(null);
+            setIsCalculating(false);
+            return;
+          }
 
-        // Combine results
-        const finalResults: CalculationResults = {
-          ...memoryResults,
-          performance: performanceMetrics,
-        };
+          finalResults = calculateEmbeddingMemory(
+            embModel,
+            selectedGPU,
+            inferenceQuantization,
+            embeddingBatchSize,
+            documentsPerBatch,
+            avgDocumentSize,
+            numGPUs
+          );
+        } else if (modelType === 'reranking') {
+          const rerankModel = rerankingModels.find(m => m.id === selectedModelId);
+          if (!rerankModel) {
+            setResults(null);
+            setIsCalculating(false);
+            return;
+          }
+
+          finalResults = calculateRerankingMemory(
+            rerankModel,
+            selectedGPU,
+            inferenceQuantization,
+            numQueries,
+            docsPerQuery,
+            maxQueryLength,
+            maxDocLength,
+            numGPUs,
+            rerankingBatchSize
+          );
+        } else {
+          // Generation model
+          if (!selectedModel) {
+            setResults(null);
+            setIsCalculating(false);
+            return;
+          }
+
+          const memoryResults = calculateMemoryRequirements(
+            selectedModel,
+            selectedGPU,
+            inferenceQuantization,
+            kvCacheQuantization,
+            batchSize,
+            sequenceLength,
+            concurrentUsers,
+            numGPUs,
+            enableOffloading,
+            numImages,
+            imageResolution
+          );
+
+          const performanceMetrics = estimatePerformance(
+            selectedModel,
+            selectedGPU,
+            inferenceQuantization,
+            batchSize,
+            sequenceLength,
+            concurrentUsers,
+            numGPUs,
+            memoryResults.vramPercentage
+          );
+
+          finalResults = {
+            ...memoryResults,
+            performance: performanceMetrics,
+          };
+        }
 
         setResults(finalResults);
       } catch (error) {
@@ -151,7 +226,9 @@ export function useMemoryCalculation({
 
     return () => clearTimeout(timer);
   }, [
+    modelType,
     selectedModel,
+    selectedModelId,
     selectedGPU,
     inferenceQuantization,
     kvCacheQuantization,
@@ -162,12 +239,26 @@ export function useMemoryCalculation({
     enableOffloading,
     numImages,
     imageResolution,
+    embeddingBatchSize,
+    documentsPerBatch,
+    avgDocumentSize,
+    chunkSize,
+    chunkOverlap,
+    embeddingModels,
+    rerankingBatchSize,
+    numQueries,
+    docsPerQuery,
+    maxQueryLength,
+    maxDocLength,
+    rerankingModels,
   ]);
 
   return {
     results,
     isCalculating,
     models,
+    embeddingModels,
+    rerankingModels,
     gpus,
     selectedModel,
     selectedGPU,

@@ -3,6 +3,7 @@ import { AppStore, InferenceQuantization, KVCacheQuantization } from '../types';
 
 const useAppStore = create<AppStore>((set) => ({
   // Initial state
+  modelType: 'generation',
   selectedModel: 'llama-3-70b',
   customModelParams: undefined,
   customHiddenSize: undefined,
@@ -10,7 +11,7 @@ const useAppStore = create<AppStore>((set) => ({
   customNumHeads: undefined,
   inferenceQuantization: 'fp16',
   kvCacheQuantization: 'fp16_bf16',
-  selectedGPU: 'h100-sxm',
+  selectedGPU: 'mi300x',
   customVRAM: undefined,
   numGPUs: 1,
   batchSize: 1,
@@ -19,9 +20,31 @@ const useAppStore = create<AppStore>((set) => ({
   enableOffloading: false,
   numImages: 1,
   imageResolution: 336,
+  embeddingBatchSize: 256,
+  documentsPerBatch: 64,
+  avgDocumentSize: 512,
+  chunkSize: 512,
+  chunkOverlap: 20,
+  rerankingBatchSize: 32,
+  numQueries: 1,
+  docsPerQuery: 50,
+  maxQueryLength: 256,
+  maxDocLength: 512,
   results: null,
 
   // Actions
+  setModelType: (type) => set((state) => {
+    // Set appropriate default model when switching types
+    let newModel = state.selectedModel;
+    if (type === 'embedding') {
+      newModel = 'bge-large-en-v1.5';
+    } else if (type === 'reranking') {
+      newModel = 'bge-reranker-large';
+    } else if (type === 'generation') {
+      newModel = 'llama-3-70b';
+    }
+    return { modelType: type, selectedModel: newModel, results: null };
+  }),
   setSelectedModel: (modelId: string) => set({ selectedModel: modelId }),
   setCustomModelParams: (params: number | undefined) => set({ customModelParams: params }),
   setInferenceQuantization: (quant: InferenceQuantization) => set({ inferenceQuantization: quant }),
@@ -35,6 +58,16 @@ const useAppStore = create<AppStore>((set) => ({
   setEnableOffloading: (enable: boolean) => set({ enableOffloading: enable }),
   setNumImages: (num: number) => set({ numImages: num }),
   setImageResolution: (resolution: number) => set({ imageResolution: resolution }),
+  setEmbeddingBatchSize: (size: number) => set({ embeddingBatchSize: size }),
+  setDocumentsPerBatch: (count: number) => set({ documentsPerBatch: count }),
+  setAvgDocumentSize: (size: number) => set({ avgDocumentSize: size }),
+  setChunkSize: (size: number) => set({ chunkSize: size }),
+  setChunkOverlap: (overlap: number) => set({ chunkOverlap: overlap }),
+  setRerankingBatchSize: (size: number) => set({ rerankingBatchSize: size }),
+  setNumQueries: (count: number) => set({ numQueries: count }),
+  setDocsPerQuery: (count: number) => set({ docsPerQuery: count }),
+  setMaxQueryLength: (length: number) => set({ maxQueryLength: length }),
+  setMaxDocLength: (length: number) => set({ maxDocLength: length }),
   calculateResults: () => {
     // This is handled by the useMemoryCalculation hook
     console.log('Calculating results...');

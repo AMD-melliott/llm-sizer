@@ -144,37 +144,100 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, isCalculating 
         <h3 className="text-lg font-semibold mb-4">Performance Metrics</h3>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="flex items-center space-x-2 mb-1">
-              <Zap className="w-4 h-4 text-blue-500" />
-              <span className="text-xs text-gray-600">Generation Speed</span>
-            </div>
-            <p className="text-lg font-semibold">{results.performance.generationSpeed} tok/s</p>
-          </div>
+          {/* Embedding-specific metrics */}
+          {results.performance.documentsPerSecond !== undefined && (
+            <>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Activity className="w-4 h-4 text-blue-500" />
+                  <span className="text-xs text-gray-600">Documents/sec</span>
+                </div>
+                <p className="text-lg font-semibold">{results.performance.documentsPerSecond.toFixed(1)}</p>
+              </div>
 
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="flex items-center space-x-2 mb-1">
-              <Activity className="w-4 h-4 text-green-500" />
-              <span className="text-xs text-gray-600">Total Throughput</span>
-            </div>
-            <p className="text-lg font-semibold">{results.performance.totalThroughput} tok/s</p>
-          </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Zap className="w-4 h-4 text-green-500" />
+                  <span className="text-xs text-gray-600">Tokens/sec</span>
+                </div>
+                <p className="text-lg font-semibold">{results.performance.tokensPerSecond?.toFixed(1)}</p>
+              </div>
 
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="flex items-center space-x-2 mb-1">
-              <Clock className="w-4 h-4 text-purple-500" />
-              <span className="text-xs text-gray-600">First Token Latency</span>
-            </div>
-            <p className="text-lg font-semibold">{latency.firstToken} ms</p>
-          </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Zap className="w-4 h-4 text-purple-500" />
+                  <span className="text-xs text-gray-600">Embeddings/sec</span>
+                </div>
+                <p className="text-lg font-semibold">{results.performance.embeddingsPerSecond?.toFixed(1)}</p>
+              </div>
+            </>
+          )}
 
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="flex items-center space-x-2 mb-1">
-              <Clock className="w-4 h-4 text-orange-500" />
-              <span className="text-xs text-gray-600">100 Token Response</span>
-            </div>
-            <p className="text-lg font-semibold">{(latency.fullResponse / 1000).toFixed(1)} s</p>
-          </div>
+          {/* Reranking-specific metrics */}
+          {results.performance.queryDocPairsPerSecond !== undefined && (
+            <>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Activity className="w-4 h-4 text-blue-500" />
+                  <span className="text-xs text-gray-600">Query-Doc Pairs/sec</span>
+                </div>
+                <p className="text-lg font-semibold">{results.performance.queryDocPairsPerSecond.toFixed(1)}</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Zap className="w-4 h-4 text-green-500" />
+                  <span className="text-xs text-gray-600">Queries/sec</span>
+                </div>
+                <p className="text-lg font-semibold">{results.performance.queriesPerSecond?.toFixed(2)}</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Clock className="w-4 h-4 text-purple-500" />
+                  <span className="text-xs text-gray-600">Avg Latency</span>
+                </div>
+                <p className="text-lg font-semibold">{results.performance.avgLatencyMs?.toFixed(1)} ms</p>
+              </div>
+            </>
+          )}
+
+          {/* Generation-specific metrics */}
+          {results.performance.generationSpeed && results.performance.documentsPerSecond === undefined && results.performance.queryDocPairsPerSecond === undefined && (
+            <>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Zap className="w-4 h-4 text-blue-500" />
+                  <span className="text-xs text-gray-600">Generation Speed</span>
+                </div>
+                <p className="text-lg font-semibold">{results.performance.generationSpeed} tok/s</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Activity className="w-4 h-4 text-green-500" />
+                  <span className="text-xs text-gray-600">Total Throughput</span>
+                </div>
+                <p className="text-lg font-semibold">{results.performance.totalThroughput} tok/s</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Clock className="w-4 h-4 text-purple-500" />
+                  <span className="text-xs text-gray-600">First Token Latency</span>
+                </div>
+                <p className="text-lg font-semibold">{latency.firstToken} ms</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Clock className="w-4 h-4 text-orange-500" />
+                  <span className="text-xs text-gray-600">100 Token Response</span>
+                </div>
+                <p className="text-lg font-semibold">{(latency.fullResponse / 1000).toFixed(1)} s</p>
+              </div>
+            </>
+          )}
         </div>
 
         <div className={`p-3 rounded-lg bg-gray-50 border-l-4 ${
