@@ -21,6 +21,8 @@ interface UseMemoryCalculationProps {
   concurrentUsers: number;
   numGPUs: number;
   enableOffloading: boolean;
+  numImages: number;
+  imageResolution: number;
   customModelParams?: number;
   customHiddenSize?: number;
   customNumLayers?: number;
@@ -38,6 +40,8 @@ export function useMemoryCalculation({
   concurrentUsers,
   numGPUs,
   enableOffloading,
+  numImages,
+  imageResolution,
   customModelParams,
   customHiddenSize,
   customNumLayers,
@@ -113,7 +117,9 @@ export function useMemoryCalculation({
           sequenceLength,
           concurrentUsers,
           numGPUs,
-          enableOffloading
+          enableOffloading,
+          numImages,
+          imageResolution
         );
 
         // Estimate performance
@@ -154,6 +160,8 @@ export function useMemoryCalculation({
     concurrentUsers,
     numGPUs,
     enableOffloading,
+    numImages,
+    imageResolution,
   ]);
 
   return {

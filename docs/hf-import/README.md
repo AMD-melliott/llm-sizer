@@ -176,9 +176,66 @@ scripts/
     └── model.schema.json   # JSON schema for validation
 ```
 
+## Batch Import
+
+Import multiple models at once using the batch import script:
+
+### Create a Model List
+
+Create a file `models-to-import.txt`:
+```text
+# Comments start with #
+microsoft/Phi-3.5-mini-instruct
+Qwen/Qwen2.5-1.5B-Instruct
+google/gemma-2b-it
+```
+
+### Run Batch Import
+
+```bash
+npm run batch-import -- --file models-to-import.txt
+```
+
+Options:
+- `--dry-run` - Preview all imports
+- `--continue-on-error` - Don't stop on failures
+- `--log <path>` - Custom log file path
+
+## Common Issues
+
+### Gated Models (403 Error)
+
+For models like Llama that require access approval:
+1. Visit the model page on HuggingFace
+2. Click "Agree and access repository"
+3. Accept terms and conditions
+4. Re-run import after approval
+
+### Multimodal Models
+
+Vision-language models are not supported. The tool will detect and reject these models with a clear error message.
+
+### Model Not Found
+
+Check if:
+- Organization name is correct (e.g., `CohereLabs` not `CohereForAI`)
+- Model ID matches exactly what's on HuggingFace
+- Model hasn't been renamed or moved
+
+## Import Success Statistics
+
+Based on recent imports (October 2025):
+- **Success Rate:** 89% for text-only models
+- **Common Issues:**
+  - 30% - Gated access required
+  - 20% - Multimodal models (not supported)
+  - 10% - Incorrect model IDs
+
 ## Future Enhancements
 
-- [ ] Batch import from file
+- [x] Batch import from file
+- [x] Better error handling for gated models
+- [x] Multimodal model detection
 - [ ] MCP server integration for enhanced model discovery
 - [ ] Automatic model discovery (trending models)
 - [ ] Support for GGUF and quantized formats

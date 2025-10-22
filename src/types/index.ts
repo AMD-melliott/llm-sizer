@@ -20,6 +20,29 @@ export interface Model {
   num_heads: number;
   default_context_length: number;
   architecture: 'transformer' | 'moe' | 'other';
+  
+  // Multimodal support
+  modality?: 'text' | 'multimodal';
+  vision_config?: {
+    model_type: string;
+    image_size: number;
+    patch_size: number | number[];
+    num_channels?: number;
+    hidden_size: number;
+    num_layers: number;
+    num_heads: number;
+    intermediate_size?: number;
+    parameters_millions: number;
+  };
+  multimodal_config?: {
+    image_token_count?: number;
+    max_images?: number;
+    projector_type?: string;
+    projector_params_millions?: number;
+    merge_strategy?: string;
+    supports_video?: boolean;
+    frames_per_second?: number;
+  };
 }
 
 // Quantization Types
@@ -33,6 +56,13 @@ export interface MemoryBreakdown {
   kvCache: number;
   frameworkOverhead: number;
   multiGPUOverhead: number;
+  
+  // Multimodal memory components
+  visionWeights?: number;
+  visionActivations?: number;
+  projectorWeights?: number;
+  imagePreprocessing?: number;
+  imageTokensKV?: number;
 }
 
 // Performance Metrics
@@ -77,6 +107,10 @@ export interface AppState {
   concurrentUsers: number;
   enableOffloading: boolean;
 
+  // Multimodal Parameters
+  numImages: number;
+  imageResolution: number;
+
   // Computed Results
   results: CalculationResults | null;
 }
@@ -94,6 +128,8 @@ export interface AppActions {
   setSequenceLength: (length: number) => void;
   setConcurrentUsers: (users: number) => void;
   setEnableOffloading: (enable: boolean) => void;
+  setNumImages: (num: number) => void;
+  setImageResolution: (resolution: number) => void;
   calculateResults: () => void;
 }
 

@@ -31,6 +31,8 @@ function App() {
     customNumLayers: state.customNumLayers,
     customNumHeads: state.customNumHeads,
     customVRAM: state.customVRAM,
+    numImages: state.numImages,
+    imageResolution: state.imageResolution,
   });
 
   return (

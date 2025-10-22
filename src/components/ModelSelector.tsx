@@ -33,22 +33,29 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ models }) => {
           onChange={(e) => setSelectedModel(e.target.value)}
           className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
+          <optgroup label="Multimodal Models">
+            {models.filter(m => m.modality === 'multimodal').map(model => (
+              <option key={model.id} value={model.id}>
+                🖼️ {model.name} ({model.parameters_billions}B params)
+              </option>
+            ))}
+          </optgroup>
           <optgroup label="DeepSeek Models">
-            {models.filter(m => m.id.startsWith('deepseek')).map(model => (
+            {models.filter(m => m.id.startsWith('deepseek') && m.modality !== 'multimodal').map(model => (
               <option key={model.id} value={model.id}>
                 {model.name} ({model.parameters_billions}B params)
               </option>
             ))}
           </optgroup>
           <optgroup label="Llama Models">
-            {models.filter(m => m.id.startsWith('llama')).map(model => (
+            {models.filter(m => m.id.startsWith('llama') && m.modality !== 'multimodal').map(model => (
               <option key={model.id} value={model.id}>
                 {model.name} ({model.parameters_billions}B params)
               </option>
             ))}
           </optgroup>
           <optgroup label="Mistral Models">
-            {models.filter(m => m.id.startsWith('mistral') || m.id.startsWith('mixtral')).map(model => (
+            {models.filter(m => (m.id.startsWith('mistral') || m.id.startsWith('mixtral')) && m.modality !== 'multimodal').map(model => (
               <option key={model.id} value={model.id}>
                 {model.name} ({model.parameters_billions}B params)
               </option>
@@ -60,7 +67,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ models }) => {
               !m.id.startsWith('llama') &&
               !m.id.startsWith('mistral') &&
               !m.id.startsWith('mixtral') &&
-              m.id !== 'custom'
+              m.id !== 'custom' &&
+              m.modality !== 'multimodal'
             ).map(model => (
               <option key={model.id} value={model.id}>
                 {model.name} ({model.parameters_billions}B params)
@@ -112,6 +120,38 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ models }) => {
               <span className="text-gray-500">Architecture:</span>
               <span className="ml-2 font-medium capitalize">{currentModel.architecture}</span>
             </div>
+            {currentModel.modality === 'multimodal' && (
+              <>
+                <div className="col-span-2">
+                  <span className="text-gray-500">Modality:</span>
+                  <span className="ml-2 font-medium text-purple-600">🖼️ Multimodal (Vision + Text)</span>
+                </div>
+                {currentModel.vision_config && (
+                  <>
+                    <div>
+                      <span className="text-gray-500">Vision Encoder:</span>
+                      <span className="ml-2 font-medium">{currentModel.vision_config.parameters_millions}M params</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Image Size:</span>
+                      <span className="ml-2 font-medium">{currentModel.vision_config.image_size}px</span>
+                    </div>
+                  </>
+                )}
+                {currentModel.multimodal_config && (
+                  <>
+                    <div>
+                      <span className="text-gray-500">Image Tokens:</span>
+                      <span className="ml-2 font-medium">{currentModel.multimodal_config.image_token_count}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Projector:</span>
+                      <span className="ml-2 font-medium capitalize">{currentModel.multimodal_config.projector_type}</span>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}

@@ -17,6 +17,8 @@ const useAppStore = create<AppStore>((set) => ({
   sequenceLength: 4096,
   concurrentUsers: 1,
   enableOffloading: false,
+  numImages: 1,
+  imageResolution: 336,
   results: null,
 
   // Actions
@@ -31,6 +33,8 @@ const useAppStore = create<AppStore>((set) => ({
   setSequenceLength: (length: number) => set({ sequenceLength: length }),
   setConcurrentUsers: (users: number) => set({ concurrentUsers: users }),
   setEnableOffloading: (enable: boolean) => set({ enableOffloading: enable }),
+  setNumImages: (num: number) => set({ numImages: num }),
+  setImageResolution: (resolution: number) => set({ imageResolution: resolution }),
   calculateResults: () => {
     // This is handled by the useMemoryCalculation hook
     console.log('Calculating results...');

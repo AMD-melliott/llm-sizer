@@ -53,6 +53,36 @@ export function validateModel(model: ModelEntry): ValidationResult {
     warnings.push('Missing vocab_size (useful for embedding calculations)');
   }
 
+  // Multimodal model validations
+  if (model.modality === 'multimodal') {
+    if (!model.vision_config) {
+      errors.push('Multimodal model must have vision_config');
+    } else {
+      // Validate vision config fields
+      if (!model.vision_config.model_type) {
+        errors.push('Vision config missing model_type');
+      }
+      if (!model.vision_config.image_size) {
+        errors.push('Vision config missing image_size');
+      }
+      if (!model.vision_config.parameters_millions) {
+        warnings.push('Vision config missing parameters_millions');
+      }
+    }
+
+    if (!model.multimodal_config) {
+      warnings.push('Multimodal model missing multimodal_config');
+    } else {
+      // Validate multimodal config fields
+      if (!model.multimodal_config.image_token_count) {
+        warnings.push('Multimodal config missing image_token_count');
+      }
+      if (!model.multimodal_config.projector_type) {
+        warnings.push('Multimodal config missing projector_type');
+      }
+    }
+  }
+
   return {
     valid: errors.length === 0,
     errors,

@@ -7,7 +7,8 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "import-model": "tsx scripts/import-hf-model.ts"
+    "import-model": "tsx scripts/import-hf-model.ts",
+    "batch-import": "tsx scripts/batch-import.ts"
   },
   "keywords": [],
   "author": "",

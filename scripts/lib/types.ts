@@ -13,12 +13,28 @@ export interface ModelInfo {
 }
 
 /**
+ * Vision encoder configuration
+ */
+export interface VisionConfig {
+  model_type?: string;  // 'clip_vision_tower', 'siglip', 'eva', 'davit', etc.
+  image_size?: number;  // Default input resolution
+  patch_size?: number | number[];  // Vision transformer patch size (array for hierarchical models)
+  num_channels?: number;  // Usually 3 for RGB
+  hidden_size?: number;  // Vision encoder hidden dimension
+  num_hidden_layers?: number;  // Vision encoder depth
+  num_attention_heads?: number;  // Vision encoder attention heads
+  intermediate_size?: number;  // Vision FFN size
+  num_positions?: number;  // Max position embeddings
+  projection_dim?: number;  // Output projection dimension
+}
+
+/**
  * HuggingFace model configuration from config.json
  */
 export interface HFModelConfig {
   // From config.json
   architectures?: string[];
-  
+
   // Standard naming (Llama, Mistral, etc.)
   hidden_size?: number;
   num_hidden_layers?: number;
@@ -45,8 +61,19 @@ export interface HFModelConfig {
   max_sequence_length?: number;
   sliding_window?: number;
 
-  // Vision-language models may have nested text config
+  // Vision-language models configurations
   text_config?: HFModelConfig;
+  vision_config?: VisionConfig;
+  is_vision_language_model?: boolean;
+  image_processor?: string;
+  vision_feature_layer?: number;
+  vision_feature_select_strategy?: string;
+  image_token_index?: number;
+
+  // Multimodal projector config
+  mm_hidden_size?: number;
+  mm_projector_type?: string;
+  mm_vision_tower?: string;
 }
 
 /**
@@ -56,6 +83,19 @@ export interface HFModelData {
   info: ModelInfo;
   config: HFModelConfig;
   parametersBillions?: number;
+}
+
+/**
+ * Multimodal configuration for vision-language models
+ */
+export interface MultimodalConfig {
+  image_token_count?: number;  // Tokens per image
+  max_images?: number;  // Max images per prompt
+  projector_type?: string;  // 'linear', 'mlp', 'resampler'
+  projector_params_millions?: number;  // Projector parameters
+  merge_strategy?: string;  // 'concatenate', 'cross_attention', 'prefix'
+  supports_video?: boolean;  // Video frame support
+  frames_per_second?: number;  // For video models
 }
 
 /**
@@ -77,6 +117,21 @@ export interface ModelEntry {
   vocab_size?: number;
   num_experts?: number;
   experts_per_token?: number;
+
+  // Multimodal fields
+  modality?: 'text' | 'multimodal';  // Default to 'text' for backward compatibility
+  vision_config?: {
+    model_type: string;  // Vision encoder type
+    image_size: number;  // Default input resolution
+    patch_size: number | number[];  // Vision transformer patch size (array for hierarchical models)
+    num_channels?: number;  // Usually 3 for RGB
+    hidden_size: number;  // Vision encoder hidden dimension
+    num_layers: number;  // Vision encoder depth
+    num_heads: number;  // Vision encoder attention heads
+    intermediate_size?: number;  // Vision FFN size
+    parameters_millions: number;  // Vision encoder params in millions
+  };
+  multimodal_config?: MultimodalConfig;
 }
 
 /**

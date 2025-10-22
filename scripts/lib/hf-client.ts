@@ -140,6 +140,12 @@ export async function fetchModelConfig(modelId: string): Promise<HFModelConfig> 
           'Authentication required. Set HF_TOKEN environment variable.\n' +
           'Get your token at: https://huggingface.co/settings/tokens'
         );
+      } else if (error.message.includes('403')) {
+        throw new Error(
+          `Gated model access required for: ${modelId}\n` +
+          `Please visit https://huggingface.co/${modelId} and request access.\n` +
+          'After approval, ensure your HF_TOKEN has the necessary permissions.'
+        );
       } else if (error.message.includes('404')) {
         throw new Error(`Config file not found for model: ${modelId}`);
       }

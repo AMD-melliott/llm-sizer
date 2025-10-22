@@ -37,7 +37,44 @@ const MemoryVisualization: React.FC<MemoryVisualizationProps> = ({ memoryBreakdo
     },
   ];
 
-  if (memoryBreakdown.multiGPUOverhead > 0) {
+  // Add multimodal components if present
+  if (memoryBreakdown.visionWeights && memoryBreakdown.visionWeights > 0) {
+    data.push({
+      name: 'Vision Encoder',
+      value: memoryBreakdown.visionWeights,
+      percentage: ((memoryBreakdown.visionWeights / totalVRAM) * 100).toFixed(1),
+      color: '#EC4899', // pink
+    });
+  }
+
+  if (memoryBreakdown.visionActivations && memoryBreakdown.visionActivations > 0) {
+    data.push({
+      name: 'Vision Activations',
+      value: memoryBreakdown.visionActivations,
+      percentage: ((memoryBreakdown.visionActivations / totalVRAM) * 100).toFixed(1),
+      color: '#F472B6', // lighter pink
+    });
+  }
+
+  if (memoryBreakdown.projectorWeights && memoryBreakdown.projectorWeights > 0) {
+    data.push({
+      name: 'Projector',
+      value: memoryBreakdown.projectorWeights,
+      percentage: ((memoryBreakdown.projectorWeights / totalVRAM) * 100).toFixed(1),
+      color: '#A855F7', // violet
+    });
+  }
+
+  if (memoryBreakdown.imageTokensKV && memoryBreakdown.imageTokensKV > 0) {
+    data.push({
+      name: 'Image Tokens KV',
+      value: memoryBreakdown.imageTokensKV,
+      percentage: ((memoryBreakdown.imageTokensKV / totalVRAM) * 100).toFixed(1),
+      color: '#14B8A6', // teal
+    });
+  }
+
+  if (memoryBreakdown.multiGPUOverhead && memoryBreakdown.multiGPUOverhead > 0) {
     data.push({
       name: 'Multi-GPU',
       value: memoryBreakdown.multiGPUOverhead,

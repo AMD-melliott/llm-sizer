@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import * as readline from 'readline';
 import { parseModelId, fetchModelConfig, fetchParameterCount, validateModelExists } from './lib/hf-client.js';
-import { transformHFConfig, parseParameterCount, displayModelInfo } from './lib/model-parser.js';
+import { transformHFConfig, parseParameterCount, displayModelInfo, isMultimodal } from './lib/model-parser.js';
 import { validateModel, isDuplicateModel } from './lib/validator.js';
 import { readModelsFile, writeModelsFile, createBackup, addModelToList, showDiff } from './lib/file-handler.js';
 import { ImportOptions, ModelEntry } from './lib/types.js';
@@ -72,11 +72,25 @@ async function importModel(modelInput: string, opts: ImportOptions): Promise<boo
       }
     }
 
+    // Check if this is a multimodal model and provide appropriate handling
+    const isMultimodalModel = isMultimodal(config);
+
+    if (isMultimodalModel) {
+      console.log(chalk.bold.yellow('🖼️  Multimodal model detected'));
+      console.log(chalk.gray('Processing vision-language model configuration...'));
+
+      // For multimodal models, we need to adjust parameter calculation
+      // to account for vision encoder parameters
+      if (!paramCount && config.vision_config) {
+        console.log(chalk.yellow('Note: Parameter count will include both vision and language components'));
+      }
+    }
+
     // Transform config to our format
     const overrides: Partial<ModelEntry> = {
       parameters_billions: paramCount,
     };
-    
+
     if (opts.context) {
       overrides.default_context_length = opts.context;
     }
@@ -84,11 +98,27 @@ async function importModel(modelInput: string, opts: ImportOptions): Promise<boo
     const modelData = transformHFConfig(modelId, modelId, config, overrides);
     
     // Ensure all required fields are present
-    if (!modelData.id || !modelData.name || !modelData.parameters_billions ||
-        !modelData.hidden_size || !modelData.num_layers || !modelData.num_heads ||
-        !modelData.default_context_length || !modelData.architecture) {
-      console.error(chalk.red('❌ Missing required fields in model data'));
-      console.log(chalk.yellow('Available data:'), modelData);
+    const missingFields = [];
+    if (!modelData.id) missingFields.push('id');
+    if (!modelData.name) missingFields.push('name');
+    if (!modelData.parameters_billions) missingFields.push('parameters_billions');
+    if (!modelData.hidden_size) missingFields.push('hidden_size');
+    if (!modelData.num_layers) missingFields.push('num_layers');
+    if (!modelData.num_heads) missingFields.push('num_heads');
+    if (!modelData.default_context_length) missingFields.push('default_context_length');
+    if (!modelData.architecture) missingFields.push('architecture');
+
+    if (missingFields.length > 0) {
+      console.error(chalk.red('❌ Missing required fields:'), missingFields.join(', '));
+      console.log(chalk.yellow('\nAvailable data:'));
+      console.log(chalk.gray(JSON.stringify(modelData, null, 2)));
+      console.log(chalk.yellow('\nYou can provide missing values with:'));
+      if (missingFields.includes('parameters_billions')) {
+        console.log(chalk.yellow('  --params <number>  : Parameter count in billions'));
+      }
+      if (missingFields.includes('default_context_length')) {
+        console.log(chalk.yellow('  --context <number> : Context length in tokens'));
+      }
       return false;
     }
 

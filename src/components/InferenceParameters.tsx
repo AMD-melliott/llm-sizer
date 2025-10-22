@@ -1,9 +1,12 @@
-import React from 'react';
-import { Users, FileText, Layers, HardDrive } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Users, FileText, Layers, HardDrive, Image } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
+import modelsData from '../data/models.json';
+import { Model } from '../types';
 
 const InferenceParameters: React.FC = () => {
   const {
+    selectedModel,
     batchSize,
     setBatchSize,
     sequenceLength,
@@ -12,7 +15,19 @@ const InferenceParameters: React.FC = () => {
     setConcurrentUsers,
     enableOffloading,
     setEnableOffloading,
+    numImages,
+    setNumImages,
+    imageResolution,
+    setImageResolution,
   } = useAppStore();
+
+  // Get current model to check if it's multimodal
+  const currentModel = useMemo(() => {
+    const models = modelsData.models as Model[];
+    return models.find(m => m.id === selectedModel);
+  }, [selectedModel]);
+
+  const isMultimodal = currentModel?.modality === 'multimodal';
 
   // Log scale values for sliders
   const batchSizeSteps = [1, 2, 4, 8, 16, 32, 64, 128];
@@ -114,6 +129,59 @@ const InferenceParameters: React.FC = () => {
         </div>
       </div>
 
+      {/* Multimodal Parameters */}
+      {isMultimodal && (
+        <>
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <Image className="w-4 h-4 text-gray-600" />
+                <label className="text-sm font-medium text-gray-700">
+                  Images per Prompt
+                </label>
+              </div>
+              <span className="text-lg font-semibold text-purple-600">{numImages}</span>
+            </div>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={numImages}
+              onChange={(e) => setNumImages(parseInt(e.target.value))}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>1</span>
+              <span>5</span>
+              <span>10</span>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center space-x-2 mb-3">
+              <Image className="w-4 h-4 text-gray-600" />
+              <label className="text-sm font-medium text-gray-700">
+                Image Resolution
+              </label>
+            </div>
+            <select
+              value={imageResolution}
+              onChange={(e) => setImageResolution(parseInt(e.target.value))}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+            >
+              <option value={224}>224 × 224</option>
+              <option value={336}>336 × 336</option>
+              <option value={448}>448 × 448</option>
+              <option value={512}>512 × 512</option>
+              <option value={1024}>1024 × 1024</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Higher resolutions increase memory usage but improve visual understanding
+            </p>
+          </div>
+        </>
+      )}
+
       <div className="border-t pt-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -151,6 +219,12 @@ const InferenceParameters: React.FC = () => {
           <li>• <strong>Batch Size:</strong> Processes multiple requests simultaneously</li>
           <li>• <strong>Sequence Length:</strong> Maximum context window for generation</li>
           <li>• <strong>Concurrent Users:</strong> Number of parallel user sessions</li>
+          {isMultimodal && (
+            <>
+              <li>• <strong>Images per Prompt:</strong> Number of images processed in each request</li>
+              <li>• <strong>Image Resolution:</strong> Higher resolutions = more image tokens & memory</li>
+            </>
+          )}
         </ul>
       </div>
     </div>

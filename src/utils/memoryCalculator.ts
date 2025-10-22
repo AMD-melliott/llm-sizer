@@ -30,7 +30,9 @@ export function calculateMemoryRequirements(
   sequenceLength: number,
   concurrentUsers: number,
   numGPUs: number,
-  enableOffloading: boolean
+  enableOffloading: boolean,
+  numImages: number = 1,
+  imageResolution: number = 336
 ): CalculationResults {
   // Calculate base model weights in GB
   const bitsPerParam = QUANTIZATION_BITS[inferenceQuantization];
@@ -53,16 +55,62 @@ export function calculateMemoryRequirements(
 
   const activations = activationsPerBatch * concurrentUsers;
 
+  // Multimodal memory components (only for multimodal models)
+  // NOTE: These calculations provide reasonable estimates for vision-language models
+  // but actual memory usage may vary based on:
+  // - Specific vision encoder architecture (ViT, CLIP, DaViT, etc.)
+  // - Image preprocessing pipeline and tensor formats
+  // - Framework-specific optimizations (gradient checkpointing, fused kernels)
+  // - Projector/adapter architecture (linear, MLP, resampler, etc.)
+  let visionWeights = 0;
+  let visionActivations = 0;
+  let projectorWeights = 0;
+  let imagePreprocessing = 0;
+  let imageTokensKV = 0;
+
+  if (model.modality === 'multimodal' && model.vision_config && model.multimodal_config) {
+    // Vision encoder weights (quantized at same level as base model)
+    // Assumes vision encoder uses same quantization as language model
+    visionWeights = (model.vision_config.parameters_millions * 1e6 * bitsPerParam) / 8 / 1e9;
+
+    // Vision encoder activations (per image, per batch)
+    // Factor of 4 accounts for intermediate activations in attention and FFN layers
+    const patchSize = Array.isArray(model.vision_config.patch_size)
+      ? model.vision_config.patch_size[0]  // Use first patch size for hierarchical models
+      : model.vision_config.patch_size;
+    const numPatches = (imageResolution / patchSize) ** 2;
+    visionActivations = (
+      numImages * batchSize * numPatches *
+      model.vision_config.hidden_size *
+      model.vision_config.num_layers * 4 / 1e9  // 4 bytes per fp32 activation
+    ) * concurrentUsers;
+
+    // Projector/adapter weights (maps vision features to language model space)
+    projectorWeights = ((model.multimodal_config.projector_params_millions || 0) * 1e6 * bitsPerParam) / 8 / 1e9;
+
+    // Image preprocessing buffer (RGB images stored as fp32 tensors)
+    // 3 channels (RGB) * 4 bytes per float32
+    imagePreprocessing = (batchSize * numImages * imageResolution * imageResolution * 3 * 4) / 1e9;
+
+    // Additional KV cache for image tokens in language model
+    // Image tokens are processed through language model's attention layers
+    const imageTokenCount = model.multimodal_config.image_token_count || 576;
+    const imageKVCachePerToken = 2 * model.num_layers * model.hidden_size * kvBitsPerParam / 8;
+    imageTokensKV = (imageKVCachePerToken * imageTokenCount * numImages * batchSize * concurrentUsers) / 1e9;
+  }
+
+  const totalMultimodalMemory = visionWeights + visionActivations + projectorWeights + imagePreprocessing + imageTokensKV;
+
   // Framework overhead (5-10% of base memory usage)
-  const frameworkOverhead = (baseWeights + totalKVCache + activations) * 0.08;
+  const frameworkOverhead = (baseWeights + totalKVCache + activations + totalMultimodalMemory) * 0.08;
 
   // Multi-GPU overhead (increases with GPU count due to communication)
   const multiGPUOverhead = numGPUs > 1
-    ? (baseWeights + totalKVCache + activations + frameworkOverhead) * 0.02 * (numGPUs - 1)
+    ? (baseWeights + totalKVCache + activations + totalMultimodalMemory + frameworkOverhead) * 0.02 * (numGPUs - 1)
     : 0;
 
   // Calculate total memory usage
-  const usedVRAM = baseWeights + totalKVCache + activations + frameworkOverhead + multiGPUOverhead;
+  const usedVRAM = baseWeights + totalKVCache + activations + totalMultimodalMemory + frameworkOverhead + multiGPUOverhead;
   const totalVRAM = gpu.vram_gb * numGPUs;
   const vramPercentage = (usedVRAM / totalVRAM) * 100;
 
@@ -93,6 +141,14 @@ export function calculateMemoryRequirements(
     kvCache: totalKVCache,
     frameworkOverhead,
     multiGPUOverhead,
+    // Include multimodal components if applicable
+    ...(model.modality === 'multimodal' && {
+      visionWeights,
+      visionActivations,
+      projectorWeights,
+      imagePreprocessing,
+      imageTokensKV,
+    }),
   };
 
   // Calculate performance metrics (will be done in performanceEstimator.ts)
