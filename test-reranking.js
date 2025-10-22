@@ -231,9 +231,3 @@ console.log(`Total Used: ${result.usedVRAM.toFixed(2)} GB`);
 console.log(`Total VRAM: ${result.totalVRAM.toFixed(2)} GB`);
 console.log(`VRAM %: ${result.vramPercentage.toFixed(1)}%`);
 console.log();
-
-console.log("=" .repeat(80));
-console.log("SUMMARY:");
-console.log("The fix ensures memory is calculated based on batch size, not total pairs.");
-console.log("This matches real-world behavior where models process in batches.");
-console.log("=" .repeat(80));

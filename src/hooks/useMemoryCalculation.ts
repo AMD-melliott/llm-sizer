@@ -28,7 +28,6 @@ interface UseMemoryCalculationProps {
   sequenceLength: number;
   concurrentUsers: number;
   numGPUs: number;
-  enableOffloading: boolean;
   numImages: number;
   imageResolution: number;
   embeddingBatchSize: number;
@@ -58,7 +57,6 @@ export function useMemoryCalculation({
   sequenceLength,
   concurrentUsers,
   numGPUs,
-  enableOffloading,
   numImages,
   imageResolution,
   embeddingBatchSize,
@@ -193,7 +191,6 @@ export function useMemoryCalculation({
             sequenceLength,
             concurrentUsers,
             numGPUs,
-            enableOffloading,
             numImages,
             imageResolution
           );
@@ -236,7 +233,6 @@ export function useMemoryCalculation({
     sequenceLength,
     concurrentUsers,
     numGPUs,
-    enableOffloading,
     numImages,
     imageResolution,
     embeddingBatchSize,

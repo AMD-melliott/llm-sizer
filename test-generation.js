@@ -77,9 +77,12 @@ function calculateMemoryRequirements(
   // Framework overhead
   const frameworkOverhead = (baseWeights + totalKVCache + activations + totalMultimodalMemory) * 0.08;
 
-  // Multi-GPU overhead
+  // Multi-GPU overhead with tensor parallelism
+  // With tensor parallelism, model weights and KV cache are SPLIT across GPUs (not duplicated)
+  // There's minimal memory overhead (~2-5% total) for communication buffers and gradients
+  // This is a small constant overhead, not per-GPU multiplicative
   const multiGPUOverhead = numGPUs > 1
-    ? (baseWeights + totalKVCache + activations + totalMultimodalMemory + frameworkOverhead) * 0.02 * (numGPUs - 1)
+    ? (baseWeights + totalKVCache + activations + totalMultimodalMemory + frameworkOverhead) * 0.03
     : 0;
 
   const usedVRAM = baseWeights + totalKVCache + activations + totalMultimodalMemory + frameworkOverhead + multiGPUOverhead;
@@ -253,12 +256,3 @@ console.log(`Total Used: ${result.usedVRAM.toFixed(2)} GB`);
 console.log(`Total VRAM: ${result.totalVRAM.toFixed(2)} GB`);
 console.log(`VRAM %: ${result.vramPercentage.toFixed(1)}%`);
 console.log();
-
-console.log("=".repeat(80));
-console.log("SUMMARY:");
-console.log("Generation models (LLMs) have significant memory requirements:");
-console.log("- Model weights scale linearly with parameters");
-console.log("- KV cache grows with batch size, sequence length, and users");
-console.log("- Quantization (INT4/INT8) can reduce weights by 2-4x");
-console.log("- Multi-GPU distribution adds ~2% overhead per additional GPU");
-console.log("=".repeat(80));

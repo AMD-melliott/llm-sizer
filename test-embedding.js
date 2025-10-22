@@ -215,10 +215,3 @@ console.log(`Total Used: ${result.usedVRAM.toFixed(2)} GB`);
 console.log(`Total VRAM: ${result.totalVRAM.toFixed(2)} GB`);
 console.log(`VRAM %: ${result.vramPercentage.toFixed(1)}%`);
 console.log();
-
-console.log("=".repeat(80));
-console.log("SUMMARY:");
-console.log("Embedding models scale primarily with batch size and document length.");
-console.log("Attention memory grows quadratically with sequence length.");
-console.log("For large batches, consider multi-GPU distribution.");
-console.log("=".repeat(80));

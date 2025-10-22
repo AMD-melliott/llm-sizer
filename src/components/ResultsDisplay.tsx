@@ -1,8 +1,7 @@
 import React from 'react';
-import { AlertCircle, CheckCircle, XCircle, Activity, Zap, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { CalculationResults } from '../types';
 import { formatMemorySize } from '../utils/memoryCalculator';
-import { getPerformanceRating, estimateLatency } from '../utils/performanceEstimator';
 
 interface ResultsDisplayProps {
   results: CalculationResults | null;
@@ -25,9 +24,6 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, isCalculating 
       </div>
     );
   }
-
-  const performanceRating = getPerformanceRating(results.performance.perUserSpeed);
-  const latency = estimateLatency(results.performance.perUserSpeed);
 
   const getStatusIcon = () => {
     switch (results.status) {
@@ -139,127 +135,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, isCalculating 
         </div>
       </div>
 
-      {/* Performance Metrics */}
-      <div className="bg-white rounded-lg p-6 shadow-sm border">
-        <h3 className="text-lg font-semibold mb-4">Performance Metrics</h3>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          {/* Embedding-specific metrics */}
-          {results.performance.documentsPerSecond !== undefined && (
-            <>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Activity className="w-4 h-4 text-blue-500" />
-                  <span className="text-xs text-gray-600">Documents/sec</span>
-                </div>
-                <p className="text-lg font-semibold">{results.performance.documentsPerSecond.toFixed(1)}</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Zap className="w-4 h-4 text-green-500" />
-                  <span className="text-xs text-gray-600">Tokens/sec</span>
-                </div>
-                <p className="text-lg font-semibold">{results.performance.tokensPerSecond?.toFixed(1)}</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Zap className="w-4 h-4 text-purple-500" />
-                  <span className="text-xs text-gray-600">Embeddings/sec</span>
-                </div>
-                <p className="text-lg font-semibold">{results.performance.embeddingsPerSecond?.toFixed(1)}</p>
-              </div>
-            </>
-          )}
-
-          {/* Reranking-specific metrics */}
-          {results.performance.queryDocPairsPerSecond !== undefined && (
-            <>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Activity className="w-4 h-4 text-blue-500" />
-                  <span className="text-xs text-gray-600">Query-Doc Pairs/sec</span>
-                </div>
-                <p className="text-lg font-semibold">{results.performance.queryDocPairsPerSecond.toFixed(1)}</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Zap className="w-4 h-4 text-green-500" />
-                  <span className="text-xs text-gray-600">Queries/sec</span>
-                </div>
-                <p className="text-lg font-semibold">{results.performance.queriesPerSecond?.toFixed(2)}</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Clock className="w-4 h-4 text-purple-500" />
-                  <span className="text-xs text-gray-600">Avg Latency</span>
-                </div>
-                <p className="text-lg font-semibold">{results.performance.avgLatencyMs?.toFixed(1)} ms</p>
-              </div>
-            </>
-          )}
-
-          {/* Generation-specific metrics */}
-          {results.performance.generationSpeed && results.performance.documentsPerSecond === undefined && results.performance.queryDocPairsPerSecond === undefined && (
-            <>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Zap className="w-4 h-4 text-blue-500" />
-                  <span className="text-xs text-gray-600">Generation Speed</span>
-                </div>
-                <p className="text-lg font-semibold">{results.performance.generationSpeed} tok/s</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Activity className="w-4 h-4 text-green-500" />
-                  <span className="text-xs text-gray-600">Total Throughput</span>
-                </div>
-                <p className="text-lg font-semibold">{results.performance.totalThroughput} tok/s</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Clock className="w-4 h-4 text-purple-500" />
-                  <span className="text-xs text-gray-600">First Token Latency</span>
-                </div>
-                <p className="text-lg font-semibold">{latency.firstToken} ms</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Clock className="w-4 h-4 text-orange-500" />
-                  <span className="text-xs text-gray-600">100 Token Response</span>
-                </div>
-                <p className="text-lg font-semibold">{(latency.fullResponse / 1000).toFixed(1)} s</p>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className={`p-3 rounded-lg bg-gray-50 border-l-4 ${
-          performanceRating.color === 'text-green-600' ? 'border-green-500' :
-          performanceRating.color === 'text-blue-600' ? 'border-blue-500' :
-          performanceRating.color === 'text-yellow-600' ? 'border-yellow-500' :
-          performanceRating.color === 'text-orange-600' ? 'border-orange-500' :
-          'border-red-500'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <span className={`text-sm font-semibold ${performanceRating.color}`}>
-                {performanceRating.rating} Performance
-              </span>
-              <p className="text-xs text-gray-600 mt-1">{performanceRating.description}</p>
-            </div>
-            <span className="text-2xl font-bold text-gray-700">
-              {results.performance.perUserSpeed} tok/s
-            </span>
-          </div>
-        </div>
-      </div>
+      {/* Performance Metrics - Hidden per PRD section 2.5 */}
+      {/* Performance metrics temporarily hidden to avoid displaying misleading information
+          until we have proper data to support these calculations. This section will be
+          re-enabled in a future update once accurate performance estimation is available. */}
     </div>
   );
 };

@@ -30,7 +30,6 @@ export function calculateMemoryRequirements(
   sequenceLength: number,
   concurrentUsers: number,
   numGPUs: number,
-  enableOffloading: boolean,
   numImages: number = 1,
   imageResolution: number = 336
 ): CalculationResults {
@@ -104,9 +103,12 @@ export function calculateMemoryRequirements(
   // Framework overhead (5-10% of base memory usage)
   const frameworkOverhead = (baseWeights + totalKVCache + activations + totalMultimodalMemory) * 0.08;
 
-  // Multi-GPU overhead (increases with GPU count due to communication)
+  // Multi-GPU overhead with tensor parallelism
+  // With tensor parallelism, model weights and KV cache are SPLIT across GPUs (not duplicated)
+  // There's minimal memory overhead (~2-5% total) for communication buffers and gradients
+  // This is a small constant overhead, not per-GPU multiplicative
   const multiGPUOverhead = numGPUs > 1
-    ? (baseWeights + totalKVCache + activations + totalMultimodalMemory + frameworkOverhead) * 0.02 * (numGPUs - 1)
+    ? (baseWeights + totalKVCache + activations + totalMultimodalMemory + frameworkOverhead) * 0.03
     : 0;
 
   // Calculate total memory usage
@@ -120,19 +122,14 @@ export function calculateMemoryRequirements(
 
   if (vramPercentage > 100) {
     status = 'error';
-    message = `Memory requirement exceeds available VRAM by ${(usedVRAM - totalVRAM).toFixed(1)} GB. Consider: reducing batch size, using more aggressive quantization, adding more GPUs, or enabling offloading.`;
+    const gpusNeeded = Math.ceil(usedVRAM / gpu.vram_gb);
+    message = `Memory requirement exceeds available VRAM by ${(usedVRAM - totalVRAM).toFixed(1)} GB. Recommended options: ${gpusNeeded}x ${gpu.name}, reduce batch size, or use more aggressive quantization.`;
   } else if (vramPercentage > 90) {
     status = 'warning';
     message = 'Very high VRAM usage (>90%). Performance may degrade due to limited memory for caching and buffers.';
   } else if (vramPercentage > 80) {
     status = 'warning';
     message = 'High VRAM usage (>80%). Consider leaving more headroom for optimal performance.';
-  }
-
-  // If offloading is enabled and we're over capacity, adjust the message
-  if (enableOffloading && vramPercentage > 100) {
-    status = 'warning';
-    message = `Offloading enabled: ${(usedVRAM - totalVRAM).toFixed(1)} GB will be offloaded to system RAM/NVMe. Performance will be reduced.`;
   }
 
   const memoryBreakdown: MemoryBreakdown = {

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Users, FileText, Layers, HardDrive, Image } from 'lucide-react';
+import { Users, FileText, Layers, Image } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import modelsData from '../data/models.json';
 import { Model } from '../types';
@@ -13,8 +13,6 @@ const InferenceParameters: React.FC = () => {
     setSequenceLength,
     concurrentUsers,
     setConcurrentUsers,
-    enableOffloading,
-    setEnableOffloading,
     numImages,
     setNumImages,
     imageResolution,
@@ -181,37 +179,6 @@ const InferenceParameters: React.FC = () => {
           </div>
         </>
       )}
-
-      <div className="border-t pt-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <HardDrive className="w-4 h-4 text-gray-600" />
-            <div>
-              <label htmlFor="offloading" className="text-sm font-medium text-gray-700">
-                Enable Offloading
-              </label>
-              <p className="text-xs text-gray-500">
-                Offload to CPU/RAM/NVMe when VRAM is exceeded
-              </p>
-            </div>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              id="offloading"
-              type="checkbox"
-              checked={enableOffloading}
-              onChange={(e) => setEnableOffloading(e.target.checked)}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-          </label>
-        </div>
-        {enableOffloading && (
-          <div className="mt-2 p-2 bg-amber-50 rounded text-xs text-amber-700">
-            <strong>Note:</strong> Offloading will significantly reduce inference speed but allows running models larger than VRAM capacity.
-          </div>
-        )}
-      </div>
 
       <div className="bg-gray-50 rounded-lg p-3">
         <h4 className="text-xs font-medium text-gray-700 mb-2">Parameter Impact:</h4>

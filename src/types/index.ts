@@ -3,11 +3,18 @@ export interface GPU {
   id: string;
   vendor: 'AMD' | 'NVIDIA' | 'Custom';
   name: string;
-  category: 'enterprise' | 'consumer';
+  category: 'enterprise' | 'consumer'; // Legacy field, kept for backward compatibility
+  tier: 'datacenter' | 'professional' | 'consumer' | 'custom';
   vram_gb: number;
+  memory_type: 'HBM3e' | 'HBM3' | 'HBM2e' | 'GDDR6X' | 'GDDR6' | 'GDDR5';
   memory_bandwidth_gbps: number;
   compute_tflops_fp16: number;
   compute_tflops_fp8?: number;
+  nvlink_bandwidth_gbps?: number;
+  pcie_gen: 3 | 4 | 5;
+  tdp_watts: number;
+  multi_gpu_capable: boolean;
+  release_year: number;
 }
 
 // Model Type
@@ -151,7 +158,6 @@ export interface AppState {
   batchSize: number;
   sequenceLength: number;
   concurrentUsers: number;
-  enableOffloading: boolean;
 
   // Multimodal Parameters
   numImages: number;
@@ -188,7 +194,6 @@ export interface AppActions {
   setBatchSize: (size: number) => void;
   setSequenceLength: (length: number) => void;
   setConcurrentUsers: (users: number) => void;
-  setEnableOffloading: (enable: boolean) => void;
   setNumImages: (num: number) => void;
   setImageResolution: (resolution: number) => void;
   setEmbeddingBatchSize: (size: number) => void;

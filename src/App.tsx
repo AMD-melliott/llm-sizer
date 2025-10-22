@@ -1,4 +1,4 @@
-import { Calculator, Github, Brain } from 'lucide-react';
+import { Github, Brain, Cpu, Box, Zap, Layers } from 'lucide-react';
 import useAppStore from './store/useAppStore';
 import { useMemoryCalculation } from './hooks/useMemoryCalculation';
 import ModelTypeSelector from './components/ModelTypeSelector';
@@ -10,6 +10,7 @@ import EmbeddingParameters from './components/EmbeddingParameters';
 import RerankingParameters from './components/RerankingParameters';
 import ResultsDisplay from './components/ResultsDisplay';
 import MemoryVisualization from './components/MemoryVisualization';
+import CollapsibleSection from './components/CollapsibleSection';
 
 function App() {
   const state = useAppStore();
@@ -31,7 +32,6 @@ function App() {
     sequenceLength: state.sequenceLength,
     concurrentUsers: state.concurrentUsers,
     numGPUs: state.numGPUs,
-    enableOffloading: state.enableOffloading,
     customModelParams: state.customModelParams,
     customHiddenSize: state.customHiddenSize,
     customNumLayers: state.customNumLayers,
@@ -81,56 +81,65 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Configuration */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Model Type Selection Card */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <ModelTypeSelector />
-            </div>
+            {/* 1. Hardware Configuration (GPU) */}
+            <CollapsibleSection 
+              title="Hardware Configuration" 
+              icon={Cpu} 
+              iconColor="text-green-600"
+              defaultOpen={true}
+            >
+              <GPUSelector gpus={gpus} />
+            </CollapsibleSection>
 
-            {/* Model Selection Card */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Calculator className="w-5 h-5 text-blue-600" />
-                <h2 className="text-lg font-semibold">Model Configuration</h2>
-              </div>
+            {/* 2. Model Type Selection */}
+            <CollapsibleSection 
+              title="Model Type" 
+              icon={Box} 
+              iconColor="text-indigo-600"
+              defaultOpen={true}
+            >
+              <ModelTypeSelector />
+            </CollapsibleSection>
+
+            {/* 3. Model Configuration */}
+            <CollapsibleSection 
+              title="Model Configuration" 
+              icon={Brain} 
+              iconColor="text-blue-600"
+              defaultOpen={true}
+            >
               <ModelSelector 
                 models={models} 
                 embeddingModels={embeddingModels}
                 rerankingModels={rerankingModels}
               />
-            </div>
+            </CollapsibleSection>
 
-            {/* GPU Selection Card */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Calculator className="w-5 h-5 text-green-600" />
-                <h2 className="text-lg font-semibold">Hardware Configuration</h2>
-              </div>
-              <GPUSelector gpus={gpus} />
-            </div>
-
-            {/* Quantization Card */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Calculator className="w-5 h-5 text-purple-600" />
-                <h2 className="text-lg font-semibold">Quantization Settings</h2>
-              </div>
-              <QuantizationOptions />
-            </div>
-
-            {/* Parameters Card - Conditional based on model type */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Calculator className="w-5 h-5 text-orange-600" />
-                <h2 className="text-lg font-semibold">
-                  {state.modelType === 'generation' && 'Inference Parameters'}
-                  {state.modelType === 'embedding' && 'Embedding Parameters'}
-                  {state.modelType === 'reranking' && 'Reranking Parameters'}
-                </h2>
-              </div>
+            {/* 4. Inference Parameters - Conditional based on model type */}
+            <CollapsibleSection 
+              title={
+                state.modelType === 'generation' ? 'Inference Parameters' :
+                state.modelType === 'embedding' ? 'Embedding Parameters' :
+                'Reranking Parameters'
+              }
+              icon={Zap} 
+              iconColor="text-orange-600"
+              defaultOpen={false}
+            >
               {state.modelType === 'generation' && <InferenceParameters />}
               {state.modelType === 'embedding' && <EmbeddingParameters />}
               {state.modelType === 'reranking' && <RerankingParameters />}
-            </div>
+            </CollapsibleSection>
+
+            {/* 5. Quantization Settings */}
+            <CollapsibleSection 
+              title="Quantization Settings" 
+              icon={Layers} 
+              iconColor="text-purple-600"
+              defaultOpen={false}
+            >
+              <QuantizationOptions />
+            </CollapsibleSection>
           </div>
 
           {/* Right Column - Results */}
