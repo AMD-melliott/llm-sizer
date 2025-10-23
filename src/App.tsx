@@ -1,4 +1,4 @@
-import { Github, Brain, Cpu, Box, Zap, Layers } from 'lucide-react';
+import { Github, Brain, Cpu, Box, Zap, Layers, BookOpen } from 'lucide-react';
 import useAppStore from './store/useAppStore';
 import { useMemoryCalculation } from './hooks/useMemoryCalculation';
 import ModelTypeSelector from './components/ModelTypeSelector';
@@ -11,6 +11,9 @@ import RerankingParameters from './components/RerankingParameters';
 import ResultsDisplay from './components/ResultsDisplay';
 import MemoryVisualization from './components/MemoryVisualization';
 import CollapsibleSection from './components/CollapsibleSection';
+import { TabContainer } from './components/Tabs';
+import { DocLayout } from './components/Documentation';
+import { documentationSections } from './content/documentation';
 
 function App() {
   const state = useAppStore();
@@ -51,33 +54,8 @@ function App() {
     maxDocLength: state.maxDocLength,
   });
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Brain className="w-8 h-8 text-blue-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">LLM Inference Calculator</h1>
-                <p className="text-sm text-gray-600">Estimate memory requirements and performance for LLM inference</p>
-              </div>
-            </div>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              <Github className="w-6 h-6" />
-            </a>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  const calculatorContent = (
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Configuration */}
           <div className="lg:col-span-1 space-y-6">
@@ -155,6 +133,51 @@ function App() {
           </div>
         </div>
       </main>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Brain className="w-8 h-8 text-blue-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">LLM Inference Calculator</h1>
+                <p className="text-sm text-gray-600">Estimate memory requirements and performance for LLM inference</p>
+              </div>
+            </div>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <Github className="w-6 h-6" />
+            </a>
+          </div>
+        </div>
+      </header>
+
+      {/* Tab Navigation and Content */}
+      <TabContainer
+        tabs={[
+          { id: 'calculator', label: 'Calculator', icon: <Cpu className="w-5 h-5" /> },
+          { id: 'documentation', label: 'Documentation', icon: <BookOpen className="w-5 h-5" /> },
+        ]}
+        defaultTab="calculator"
+        className="flex-1"
+      >
+        {(activeTab) => (
+          <div className="flex-1">
+            {activeTab === 'calculator' && calculatorContent}
+            {activeTab === 'documentation' && (
+              <DocLayout sections={documentationSections} />
+            )}
+          </div>
+        )}
+      </TabContainer>
 
       {/* Footer */}
       <footer className="bg-white border-t mt-12">
