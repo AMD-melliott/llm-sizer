@@ -28,20 +28,18 @@ export function calculateEmbeddingMemory(
   const baseWeights = (model.parameters_millions * 1e6 * bitsPerParam) / 8 / 1e9;
 
   // Calculate batch input memory
-  // Total tokens = batchSize * avgDocumentSize
+  // Total tokens = batchSize * avgDocumentSize (capped at max_tokens)
   // Each token requires hidden_size dimensions stored as fp32 during processing
-  const totalTokens = batchSize * avgDocumentSize;
-  const batchInputMemory = (totalTokens * model.hidden_size * 4) / 1e9; // 4 bytes for FP32
+  const seqLength = Math.min(avgDocumentSize, model.max_tokens);
+  const batchInputMemory = (batchSize * seqLength * model.hidden_size * 4) / 1e9; // 4 bytes for FP32
 
   // Calculate attention memory for transformer-based embedders
-  // Self-attention matrices: (seq_len x seq_len) per head, per layer
-  // Using max_tokens as the sequence length limit
-  const seqLength = Math.min(avgDocumentSize, model.max_tokens);
+  // Self-attention matrices: (seq_len x seq_len) per head
+  // Only ONE layer's attention is stored at a time during forward pass
   const attentionMemory = (
     batchSize * 
     seqLength * seqLength * 
     model.num_heads * 
-    model.num_layers * 
     4 // FP32 attention scores
   ) / 1e9;
 
@@ -49,7 +47,7 @@ export function calculateEmbeddingMemory(
   const embeddingStorage = (batchSize * model.dimensions * 4) / 1e9; // FP32 embeddings
 
   // Intermediate activations (FFN layers, layer norms, etc.)
-  // Rough estimate: ~2x hidden size per layer per token
+  // Factor of 2 accounts for bidirectional processing
   const activations = (
     batchSize * 
     seqLength * 
@@ -60,7 +58,7 @@ export function calculateEmbeddingMemory(
   ) / 1e9;
 
   // Framework overhead (10% of model weights + activations)
-  const frameworkOverhead = (baseWeights + activations) * 0.1;
+  const frameworkOverhead = (baseWeights + activations) * 0.10;
 
   // Multi-GPU overhead (2% per additional GPU for communication)
   const multiGPUOverhead = numGPUs > 1
@@ -75,12 +73,13 @@ export function calculateEmbeddingMemory(
   // Calculate throughput estimates
   // Base estimate: tokens processed per second
   // This is a simplified estimation based on GPU compute capability
+  const totalTokens = batchSize * seqLength;
   const computeIntensity = model.parameters_millions / 100; // Relative compute factor
   const baseTokensPerSecond = (gpu.compute_tflops_fp16 * 1e12) / 
                                (model.hidden_size * model.num_layers * 4 * computeIntensity);
   
   const tokensPerSecond = Math.min(baseTokensPerSecond, totalTokens * 10); // Conservative estimate
-  const documentsPerSecond = tokensPerSecond / avgDocumentSize;
+  const documentsPerSecond = tokensPerSecond / seqLength;
   const embeddingsPerSecond = documentsPerSecond * documentsPerBatch;
 
   const memoryBreakdown: MemoryBreakdown = {
@@ -89,6 +88,9 @@ export function calculateEmbeddingMemory(
     kvCache: 0, // Embeddings don't use KV cache
     frameworkOverhead,
     multiGPUOverhead,
+    batchInputMemory,
+    attentionMemory,
+    embeddingStorage,
   };
 
   // Determine status

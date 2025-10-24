@@ -129,6 +129,9 @@ export function calculateRerankingMemory(
     kvCache: 0, // Reranking doesn't use KV cache
     frameworkOverhead,
     multiGPUOverhead,
+    pairBatchMemory,
+    attentionMemory,
+    scoringMemory,
   };
 
   // Determine status
@@ -161,6 +164,8 @@ export function calculateRerankingMemory(
     },
     status,
     message,
+    totalPairs,
+    effectiveBatchSize,
   };
 }
 

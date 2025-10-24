@@ -12,8 +12,8 @@ import ResultsDisplay from './components/ResultsDisplay';
 import MemoryVisualization from './components/MemoryVisualization';
 import CollapsibleSection from './components/CollapsibleSection';
 import { TabContainer } from './components/Tabs';
-import { DocLayout } from './components/Documentation';
-import { documentationSections } from './content/documentation';
+import { MultiPageDocLayout } from './components/Documentation';
+import { documentationPages } from './content/documentation-pages';
 
 function App() {
   const state = useAppStore();
@@ -173,7 +173,7 @@ function App() {
           <div className="flex-1">
             {activeTab === 'calculator' && calculatorContent}
             {activeTab === 'documentation' && (
-              <DocLayout sections={documentationSections} />
+              <MultiPageDocLayout pages={documentationPages} />
             )}
           </div>
         )}

@@ -103,6 +103,15 @@ export interface MemoryBreakdown {
   projectorWeights?: number;
   imagePreprocessing?: number;
   imageTokensKV?: number;
+
+  // Embedding memory components
+  batchInputMemory?: number;
+  attentionMemory?: number;
+  embeddingStorage?: number;
+
+  // Reranking memory components
+  pairBatchMemory?: number;
+  scoringMemory?: number;
 }
 
 // Performance Metrics
@@ -131,6 +140,9 @@ export interface CalculationResults {
   performance: PerformanceMetrics;
   status: 'okay' | 'warning' | 'error';
   message?: string;
+  // Reranking specific results
+  totalPairs?: number;
+  effectiveBatchSize?: number;
 }
 
 // Application State

@@ -105,6 +105,11 @@ input[type="range"]:focus::-moz-range-thumb {
   max-width: 65ch;
 }
 
+/* Allow max-w-none to override prose max-width */
+.prose.max-w-none {
+  max-width: none;
+}
+
 .prose p {
   margin-top: 1.25em;
   margin-bottom: 1.25em;

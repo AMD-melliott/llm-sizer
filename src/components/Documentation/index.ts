@@ -1,4 +1,5 @@
 export { DocLayout } from './DocLayout';
+export { MultiPageDocLayout } from './MultiPageDocLayout';
 export { FormulaBlock } from './FormulaBlock';
 export { ExampleCalculation } from './ExampleCalculation';
 export { Glossary } from './Glossary';

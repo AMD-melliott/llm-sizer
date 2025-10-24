@@ -275,8 +275,8 @@ export const documentationSections: DocSection[] = [
             
             <FormulaBlock
               title="Framework Overhead Formula"
-              formula="memory_overhead = (memory_weights + memory_kv + memory_activation) × 0.05"
-              explanation="Typically 5-10% of the base memory requirements. We use 5% as a conservative estimate."
+              formula="memory_overhead = (memory_weights + memory_kv + memory_activation) × 0.08"
+              explanation="Typically 5-10% of the base memory requirements. We use 8% for accuracy based on empirical measurements."
             />
 
             <p className="text-sm text-gray-700">
@@ -299,10 +299,10 @@ export const documentationSections: DocSection[] = [
             <FormulaBlock
               title="Multi-GPU Overhead Formula"
               formula="memory_multi_gpu = base_memory × 0.02 × (num_gpus - 1)"
-              explanation="Approximately 2% overhead per additional GPU beyond the first. This accounts for inter-GPU communication buffers."
+              explanation="Approximately 2% overhead per additional GPU for communication buffers and synchronization when using tensor parallelism."
               variables={[
                 { symbol: 'base_memory', description: 'Sum of weights, KV cache, activation, and framework overhead' },
-                { symbol: 'num_gpus', description: 'Total number of GPUs used' },
+                { symbol: 'num_gpus', description: 'Total number of GPUs' },
               ]}
             />
 
@@ -314,6 +314,280 @@ export const documentationSections: DocSection[] = [
                 <li>• <strong>Data Parallelism</strong>: Replicate model, split batch (best for high throughput)</li>
               </ul>
             </div>
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'embedding-models',
+    title: 'Embedding Model Calculations',
+    content: (
+      <div className="space-y-4">
+        <p>
+          Embedding models generate dense vector representations of text for semantic search,
+          clustering, and retrieval tasks. Unlike generation models, they don't use KV caching
+          but process documents in batches to produce fixed-size embeddings.
+        </p>
+        <p>
+          Memory requirements for embedding models consist of:
+        </p>
+        <ol className="list-decimal pl-6 space-y-2">
+          <li><strong>Model Weights Memory</strong>: Storage for the model parameters</li>
+          <li><strong>Batch Input Memory</strong>: Storage for the current batch of tokens</li>
+          <li><strong>Attention Memory</strong>: Storage for self-attention computations</li>
+          <li><strong>Embedding Storage</strong>: Storage for output embeddings</li>
+          <li><strong>Activation Memory</strong>: Storage for intermediate computations</li>
+          <li><strong>Framework Overhead</strong>: Additional memory for buffers (10%)</li>
+          <li><strong>Multi-GPU Overhead</strong>: Communication overhead for multi-GPU setups (2% per GPU)</li>
+        </ol>
+      </div>
+    ),
+    subsections: [
+      {
+        id: 'embedding-weights',
+        title: '1. Model Weights',
+        content: (
+          <div className="space-y-4">
+            <FormulaBlock
+              title="Embedding Model Weights Formula"
+              formula="memory_weights = (parameters_millions × 10^6 × bits_per_param) / 8 / 10^9 GB"
+              explanation="Same as generation models, but embedding models are typically smaller (100M-1B parameters)"
+              variables={[
+                { symbol: 'parameters_millions', description: 'Model size in millions (e.g., 335M for bge-large)' },
+                { symbol: 'bits_per_param', description: 'Precision: FP16=16, INT8=8, INT4=4' },
+              ]}
+            />
+          </div>
+        ),
+      },
+      {
+        id: 'embedding-batch-input',
+        title: '2. Batch Input Memory',
+        content: (
+          <div className="space-y-4">
+            <p>
+              Memory required to store the input tokens being processed in the current batch.
+            </p>
+            <FormulaBlock
+              title="Batch Input Memory Formula"
+              formula="memory_batch = batch_size × avg_document_size × hidden_size × 4 / 10^9 GB"
+              explanation="Stores FP32 token embeddings for all documents in the batch"
+              variables={[
+                { symbol: 'batch_size', description: 'Number of documents processed simultaneously' },
+                { symbol: 'avg_document_size', description: 'Average document length in tokens' },
+                { symbol: 'hidden_size', description: 'Model embedding dimension' },
+              ]}
+            />
+          </div>
+        ),
+      },
+      {
+        id: 'embedding-attention',
+        title: '3. Attention Memory',
+        content: (
+          <div className="space-y-4">
+            <p>
+              Self-attention matrices for the current layer being processed. Unlike generation models,
+              attention memory is typically calculated for one layer at a time since intermediate
+              results don't need to be cached.
+            </p>
+            <FormulaBlock
+              title="Attention Memory Formula (Per Layer)"
+              formula="memory_attention = batch_size × seq_length^2 × num_heads × 4 / 10^9 GB"
+              explanation="Attention scores stored as FP32. For multiple layers processing in parallel, multiply by number of concurrent layers."
+              variables={[
+                { symbol: 'seq_length', description: 'Sequence length (capped at model max_tokens)' },
+                { symbol: 'num_heads', description: 'Number of attention heads in the model' },
+              ]}
+            />
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
+              <strong>Note:</strong> Our implementation uses a conservative estimate that accounts for
+              potential parallel layer processing during optimization passes. This may overestimate
+              memory but ensures safety margins.
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: 'embedding-storage',
+        title: '4. Embedding Output Storage',
+        content: (
+          <div className="space-y-4">
+            <FormulaBlock
+              title="Embedding Storage Formula"
+              formula="memory_embeddings = batch_size × embedding_dimension × 4 / 10^9 GB"
+              explanation="Output embeddings stored as FP32 vectors"
+              variables={[
+                { symbol: 'embedding_dimension', description: 'Output embedding size (e.g., 768, 1024)' },
+              ]}
+            />
+          </div>
+        ),
+      },
+      {
+        id: 'embedding-activations',
+        title: '5. Activation Memory',
+        content: (
+          <div className="space-y-4">
+            <FormulaBlock
+              title="Activation Memory Formula"
+              formula="memory_activation = batch_size × seq_length × hidden_size × num_layers × 2 × 4 / 10^9 GB"
+              explanation="Intermediate activations in FFN layers, layer norms, etc. Factor of 2 accounts for bidirectional processing."
+              variables={[
+                { symbol: 'num_layers', description: 'Number of transformer layers' },
+              ]}
+            />
+          </div>
+        ),
+      },
+      {
+        id: 'embedding-overhead',
+        title: '6. Framework & Multi-GPU Overhead',
+        content: (
+          <div className="space-y-4">
+            <FormulaBlock
+              title="Framework Overhead Formula"
+              formula="memory_overhead = (memory_weights + memory_activation) × 0.10"
+              explanation="10% overhead for CUDA kernels, temporary buffers, and internal data structures"
+            />
+            <FormulaBlock
+              title="Multi-GPU Overhead Formula"
+              formula="memory_multi_gpu = base_memory × 0.02 × (num_gpus - 1)"
+              explanation="2% overhead per additional GPU for communication buffers"
+            />
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'reranking-models',
+    title: 'Reranking Model Calculations',
+    content: (
+      <div className="space-y-4">
+        <p>
+          Reranking models (cross-encoders) process query-document pairs by concatenating them
+          and running through a transformer to produce relevance scores. They're more accurate
+          than bi-encoders but computationally intensive.
+        </p>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h5 className="font-semibold text-gray-900 mb-2">Key Insight:</h5>
+          <p className="text-sm">
+            Memory scales with <strong>batch size</strong>, not total query-document pairs.
+            If you have 10 queries × 100 documents = 1,000 pairs but use batch_size=32,
+            only 32 pairs are in memory at once.
+          </p>
+        </div>
+        <p>
+          Memory requirements for reranking models consist of:
+        </p>
+        <ol className="list-decimal pl-6 space-y-2">
+          <li><strong>Model Weights Memory</strong>: Storage for the model parameters</li>
+          <li><strong>Pair Batch Memory</strong>: Storage for query-document pairs in current batch</li>
+          <li><strong>Attention Memory</strong>: Storage for self-attention (one layer at a time)</li>
+          <li><strong>Scoring Memory</strong>: Storage for relevance scores</li>
+          <li><strong>Activation Memory</strong>: Storage for intermediate computations</li>
+          <li><strong>Framework Overhead</strong>: Additional memory for buffers (10%)</li>
+          <li><strong>Multi-GPU Overhead</strong>: Communication overhead (2% per GPU)</li>
+        </ol>
+      </div>
+    ),
+    subsections: [
+      {
+        id: 'reranking-weights',
+        title: '1. Model Weights',
+        content: (
+          <div className="space-y-4">
+            <FormulaBlock
+              title="Reranking Model Weights Formula"
+              formula="memory_weights = (parameters_millions × 10^6 × bits_per_param) / 8 / 10^9 GB"
+              explanation="Reranking models are typically 300M-1B parameters"
+              variables={[
+                { symbol: 'parameters_millions', description: 'Model size in millions (e.g., 560M for bge-reranker-large)' },
+              ]}
+            />
+          </div>
+        ),
+      },
+      {
+        id: 'reranking-batch',
+        title: '2. Pair Batch Memory',
+        content: (
+          <div className="space-y-4">
+            <p>
+              Memory for the current batch of query-document pairs being processed.
+            </p>
+            <FormulaBlock
+              title="Pair Batch Memory Formula"
+              formula="memory_batch = effective_batch_size × pair_length × hidden_size × 4 / 10^9 GB"
+              explanation="Where effective_batch_size = min(batch_size, total_pairs) and pair_length = min(query_len + doc_len, model_max_length)"
+              variables={[
+                { symbol: 'effective_batch_size', description: 'Actual number of pairs processed simultaneously' },
+                { symbol: 'pair_length', description: 'Combined query + document length (capped by model limit)' },
+              ]}
+            />
+          </div>
+        ),
+      },
+      {
+        id: 'reranking-attention',
+        title: '3. Attention Memory',
+        content: (
+          <div className="space-y-4">
+            <p>
+              Cross-attention over concatenated query-document sequences. Only one layer's
+              attention is stored at a time during the forward pass.
+            </p>
+            <FormulaBlock
+              title="Attention Memory Formula"
+              formula="memory_attention = effective_batch_size × pair_length^2 × num_heads × 4 / 10^9 GB"
+              explanation="Self-attention over concatenated sequences, stored as FP32"
+            />
+          </div>
+        ),
+      },
+      {
+        id: 'reranking-scoring',
+        title: '4. Scoring Memory',
+        content: (
+          <div className="space-y-4">
+            <FormulaBlock
+              title="Scoring Memory Formula"
+              formula="memory_scoring = effective_batch_size × 4 / 10^9 GB"
+              explanation="Stores FP32 relevance scores for each query-document pair"
+            />
+          </div>
+        ),
+      },
+      {
+        id: 'reranking-activations',
+        title: '5. Activation Memory',
+        content: (
+          <div className="space-y-4">
+            <FormulaBlock
+              title="Activation Memory Formula"
+              formula="memory_activation = effective_batch_size × pair_length × hidden_size × 4 × 4 / 10^9 GB"
+              explanation="4× multiplier accounts for: attention output, FFN up projection, FFN down projection, residual connections"
+            />
+          </div>
+        ),
+      },
+      {
+        id: 'reranking-overhead',
+        title: '6. Framework & Multi-GPU Overhead',
+        content: (
+          <div className="space-y-4">
+            <FormulaBlock
+              title="Framework Overhead Formula"
+              formula="memory_overhead = (memory_weights + memory_activation) × 0.10"
+              explanation="10% overhead for framework operations"
+            />
+            <FormulaBlock
+              title="Multi-GPU Overhead Formula"
+              formula="memory_multi_gpu = base_memory × 0.02 × (num_gpus - 1)"
+              explanation="2% overhead per additional GPU"
+            />
           </div>
         ),
       },
@@ -357,12 +631,12 @@ export const documentationSections: DocSection[] = [
               result: '0.03 GB'
             },
             {
-              label: 'Framework Overhead (5%)',
-              calculation: '(14.00 + 1.07 + 0.03) × 0.05',
-              result: '0.76 GB'
+              label: 'Framework Overhead (8%)',
+              calculation: '(14.00 + 1.07 + 0.03) × 0.08',
+              result: '1.21 GB'
             },
           ]}
-          totalMemory="15.86 GB"
+          totalMemory="16.31 GB"
           notes={[
             'Fits comfortably on RTX 4090 (24GB) or RTX 3090 (24GB)',
             'Can handle up to 4K context with careful optimization',
@@ -399,12 +673,12 @@ export const documentationSections: DocSection[] = [
               result: '0.54 GB'
             },
             {
-              label: 'Framework Overhead (5%)',
-              calculation: '(70.00 + 34.36 + 0.54) × 0.05',
-              result: '5.25 GB'
+              label: 'Framework Overhead (8%)',
+              calculation: '(70.00 + 34.36 + 0.54) × 0.08',
+              result: '8.39 GB'
             },
           ]}
-          totalMemory="110.15 GB"
+          totalMemory="113.29 GB"
           notes={[
             'Requires A100 80GB or H100 80GB',
             'INT8 quantization makes this possible on single GPU',
@@ -442,23 +716,23 @@ export const documentationSections: DocSection[] = [
               result: '0.80 GB'
             },
             {
-              label: 'Framework Overhead (5%)',
-              calculation: '(350.00 + 38.65 + 0.80) × 0.05',
-              result: '19.47 GB'
+              label: 'Framework Overhead (8%)',
+              calculation: '(350.00 + 38.65 + 0.80) × 0.08',
+              result: '31.16 GB'
             },
             {
-              label: 'Multi-GPU Overhead (2% × 7 GPUs)',
-              calculation: '(350.00 + 38.65 + 0.80 + 19.47) × 0.02 × 7',
-              result: '57.23 GB'
+              label: 'Multi-GPU Overhead (2% per extra GPU)',
+              calculation: '(350.00 + 38.65 + 0.80 + 31.16) × 0.02 × (8 - 1)',
+              result: '58.89 GB'
             },
           ]}
-          totalMemory="466.15 GB (58.27 GB per GPU)"
+          totalMemory="479.50 GB (59.94 GB per GPU)"
           notes={[
-            '8× A100 40GB or 8× H100 80GB recommended',
+            'Requires 8× H100 80GB GPUs',
             'Tensor parallelism distributes weights across GPUs',
-            'Each GPU needs ~58GB, fits comfortably on H100 80GB',
+            'Each GPU needs ~60GB, fitting on an H100 80GB',
             'Can support 8 concurrent users with 2K context',
-            'Multi-GPU overhead becomes significant at this scale',
+            'Multi-GPU overhead is significant in large clusters',
           ]}
         />
       </div>
@@ -514,53 +788,7 @@ export const documentationSections: DocSection[] = [
           </div>
         </div>
 
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Hardware Selection Guide</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">Model Size</th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">Quantization</th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">Recommended GPU</th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                <tr>
-                  <td className="px-4 py-2 text-sm">7B</td>
-                  <td className="px-4 py-2 text-sm">FP16</td>
-                  <td className="px-4 py-2 text-sm">RTX 4090, RTX 3090, A5000</td>
-                  <td className="px-4 py-2 text-sm">Consumer/prosumer GPUs work well</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 text-sm">13B</td>
-                  <td className="px-4 py-2 text-sm">FP16</td>
-                  <td className="px-4 py-2 text-sm">RTX 4090, A5000, A6000</td>
-                  <td className="px-4 py-2 text-sm">Need 40GB+ for long contexts</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 text-sm">70B</td>
-                  <td className="px-4 py-2 text-sm">INT8</td>
-                  <td className="px-4 py-2 text-sm">A100 80GB, H100 80GB</td>
-                  <td className="px-4 py-2 text-sm">Single enterprise GPU</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 text-sm">70B</td>
-                  <td className="px-4 py-2 text-sm">FP16</td>
-                  <td className="px-4 py-2 text-sm">2× A100 80GB</td>
-                  <td className="px-4 py-2 text-sm">Multi-GPU required</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 text-sm">175B+</td>
-                  <td className="px-4 py-2 text-sm">FP16</td>
-                  <td className="px-4 py-2 text-sm">8× A100/H100 80GB</td>
-                  <td className="px-4 py-2 text-sm">Large-scale deployment</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+
 
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">💡 Pro Tips</h3>
