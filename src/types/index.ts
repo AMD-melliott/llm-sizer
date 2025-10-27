@@ -15,10 +15,62 @@ export interface GPU {
   tdp_watts: number;
   multi_gpu_capable: boolean;
   release_year: number;
+
+  // Partitioning support for AMD Instinct GPUs
+  partitioning?: {
+    supported: boolean;
+    modes: PartitionMode[];
+  };
+}
+
+// GPU Partitioning Types
+export type PartitionModeType = 'SPX' | 'DPX' | 'CPX';
+
+export interface PartitionMode {
+  mode: PartitionModeType;
+  name: string;
+  description: string;
+  partitionCount: number;
+  vramPerPartition: number;
+  bandwidthPerPartition: number;
+  computeFP16PerPartition: number;
+  computeFP8PerPartition?: number;
+}
+
+export interface PartitionConfiguration {
+  gpu: GPU;
+  mode: PartitionMode;
+  inferenceQuantization: InferenceQuantization;
+  kvCacheQuantization: KVCacheQuantization;
+  batchSize: number;
+  sequenceLength: number;
+  concurrentUsers: number;
+}
+
+export interface PartitionMemoryResult {
+  partitionIndex: number;
+  model: Model | EmbeddingModel | RerankingModel;
+  memoryUsed: number;
+  memoryAvailable: number;
+  percentUsed: number;
+  fits: boolean;
+  status: 'fits' | 'tight' | 'no-fit';
+  memoryBreakdown: MemoryBreakdown;
+  // Recommended quantization that would allow fit (highest quality that fits)
+  recommendedQuantization?: InferenceQuantization;
+}
+
+export interface PartitionAnalysisResults {
+  configuration: PartitionConfiguration;
+  compatibleModels: PartitionMemoryResult[];
+  modelType: PartitionModelSelection;
 }
 
 // Model Type
 export type ModelType = 'generation' | 'embedding' | 'reranking';
+
+// Partition Model Selection (includes 'all' option)
+export type PartitionModelSelection = ModelType | 'all';
 
 // Model Configuration Types
 export interface Model {
@@ -96,6 +148,8 @@ export interface MemoryBreakdown {
   kvCache: number;
   frameworkOverhead: number;
   multiGPUOverhead: number;
+  // Optional safety margin added to calculations
+  safetyMargin?: number;
   
   // Multimodal memory components
   visionWeights?: number;
@@ -189,6 +243,12 @@ export interface AppState {
   maxQueryLength: number;
   maxDocLength: number;
 
+  // Partitioning State
+  partitioningGPU: string | null;
+  partitioningMode: PartitionModeType;
+  partitioningModelType: PartitionModelSelection;
+  partitioningShowOnlyFits: boolean;
+
   // Computed Results
   results: CalculationResults | null;
 }
@@ -219,6 +279,12 @@ export interface AppActions {
   setMaxQueryLength: (length: number) => void;
   setMaxDocLength: (length: number) => void;
   calculateResults: () => void;
+
+  // Partitioning Actions
+  setPartitioningGPU: (gpuId: string | null) => void;
+  setPartitioningMode: (mode: PartitionModeType) => void;
+  setPartitioningModelType: (type: PartitionModelSelection) => void;
+  setPartitioningShowOnlyFits: (show: boolean) => void;
 }
 
 export type AppStore = AppState & AppActions;

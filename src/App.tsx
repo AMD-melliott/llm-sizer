@@ -14,6 +14,7 @@ import CollapsibleSection from './components/CollapsibleSection';
 import { TabContainer } from './components/Tabs';
 import { MultiPageDocLayout } from './components/Documentation';
 import { documentationPages } from './content/documentation-pages';
+import PartitioningTab from './components/Tabs/PartitioningTab';
 
 function App() {
   const state = useAppStore();
@@ -164,6 +165,7 @@ function App() {
       <TabContainer
         tabs={[
           { id: 'calculator', label: 'Calculator', icon: <Cpu className="w-5 h-5" /> },
+          { id: 'partitioning', label: 'Partitioning', icon: <Layers className="w-5 h-5" /> },
           { id: 'documentation', label: 'Documentation', icon: <BookOpen className="w-5 h-5" /> },
         ]}
         defaultTab="calculator"
@@ -172,6 +174,7 @@ function App() {
         {(activeTab) => (
           <div className="flex-1">
             {activeTab === 'calculator' && calculatorContent}
+            {activeTab === 'partitioning' && <PartitioningTab />}
             {activeTab === 'documentation' && (
               <MultiPageDocLayout pages={documentationPages} />
             )}

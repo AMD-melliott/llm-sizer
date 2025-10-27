@@ -31,6 +31,12 @@ const useAppStore = create<AppStore>((set) => ({
   maxDocLength: 512,
   results: null,
 
+  // Partitioning state
+  partitioningGPU: null,
+  partitioningMode: 'SPX',
+  partitioningModelType: 'generation',
+  partitioningShowOnlyFits: false,
+
   // Actions
   setModelType: (type) => set((state) => {
     // Set appropriate default model when switching types
@@ -70,6 +76,12 @@ const useAppStore = create<AppStore>((set) => ({
     // This is handled by the useMemoryCalculation hook
     console.log('Calculating results...');
   },
+
+  // Partitioning actions
+  setPartitioningGPU: (gpuId: string | null) => set({ partitioningGPU: gpuId }),
+  setPartitioningMode: (mode) => set({ partitioningMode: mode }),
+  setPartitioningModelType: (type) => set({ partitioningModelType: type }),
+  setPartitioningShowOnlyFits: (show: boolean) => set({ partitioningShowOnlyFits: show }),
 }));
 
 export default useAppStore;

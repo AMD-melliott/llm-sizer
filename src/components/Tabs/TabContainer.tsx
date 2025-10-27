@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export type TabId = 'calculator' | 'documentation';
+export type TabId = 'calculator' | 'partitioning' | 'documentation';
 
 interface Tab {
   id: TabId;
