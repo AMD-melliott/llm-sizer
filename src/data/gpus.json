@@ -15,7 +15,42 @@
       "pcie_gen": 5,
       "tdp_watts": 1000,
       "multi_gpu_capable": true,
-      "release_year": 2025
+      "release_year": 2025,
+      "partitioning": {
+        "supported": true,
+        "modes": [
+          {
+            "mode": "SPX",
+            "name": "Single Partition X-celerator",
+            "description": "Full GPU resources (8 XCDs as single logical GPU)",
+            "partitionCount": 1,
+            "vramPerPartition": 288,
+            "bandwidthPerPartition": 8000,
+            "computeFP16PerPartition": 2300,
+            "computeFP8PerPartition": 4600
+          },
+          {
+            "mode": "DPX",
+            "name": "Dual Partition Extended",
+            "description": "2 isolated partitions",
+            "partitionCount": 2,
+            "vramPerPartition": 144,
+            "bandwidthPerPartition": 4000,
+            "computeFP16PerPartition": 1150,
+            "computeFP8PerPartition": 2300
+          },
+          {
+            "mode": "CPX",
+            "name": "Core Partition Extended",
+            "description": "8 partitions (each XCD as separate logical GPU)",
+            "partitionCount": 8,
+            "vramPerPartition": 36,
+            "bandwidthPerPartition": 1000,
+            "computeFP16PerPartition": 287.5,
+            "computeFP8PerPartition": 575
+          }
+        ]
+      }
     },
     {
       "id": "mi350x",
@@ -31,7 +66,42 @@
       "pcie_gen": 5,
       "tdp_watts": 1000,
       "multi_gpu_capable": true,
-      "release_year": 2025
+      "release_year": 2025,
+      "partitioning": {
+        "supported": true,
+        "modes": [
+          {
+            "mode": "SPX",
+            "name": "Single Partition X-celerator",
+            "description": "Full GPU resources (8 XCDs as single logical GPU)",
+            "partitionCount": 1,
+            "vramPerPartition": 288,
+            "bandwidthPerPartition": 8000,
+            "computeFP16PerPartition": 2300,
+            "computeFP8PerPartition": 4600
+          },
+          {
+            "mode": "DPX",
+            "name": "Dual Partition Extended",
+            "description": "2 isolated partitions",
+            "partitionCount": 2,
+            "vramPerPartition": 144,
+            "bandwidthPerPartition": 4000,
+            "computeFP16PerPartition": 1150,
+            "computeFP8PerPartition": 2300
+          },
+          {
+            "mode": "CPX",
+            "name": "Core Partition Extended",
+            "description": "8 partitions (each XCD as separate logical GPU)",
+            "partitionCount": 8,
+            "vramPerPartition": 36,
+            "bandwidthPerPartition": 1000,
+            "computeFP16PerPartition": 287.5,
+            "computeFP8PerPartition": 575
+          }
+        ]
+      }
     },
     {
       "id": "mi325x",
@@ -48,7 +118,42 @@
       "pcie_gen": 5,
       "tdp_watts": 1000,
       "multi_gpu_capable": true,
-      "release_year": 2024
+      "release_year": 2024,
+      "partitioning": {
+        "supported": true,
+        "modes": [
+          {
+            "mode": "SPX",
+            "name": "Single Partition X-celerator",
+            "description": "Full GPU resources (8 XCDs as single logical GPU)",
+            "partitionCount": 1,
+            "vramPerPartition": 256,
+            "bandwidthPerPartition": 6000,
+            "computeFP16PerPartition": 1307,
+            "computeFP8PerPartition": 2615
+          },
+          {
+            "mode": "DPX",
+            "name": "Dual Partition Extended",
+            "description": "2 isolated partitions",
+            "partitionCount": 2,
+            "vramPerPartition": 128,
+            "bandwidthPerPartition": 3000,
+            "computeFP16PerPartition": 653.5,
+            "computeFP8PerPartition": 1307.5
+          },
+          {
+            "mode": "CPX",
+            "name": "Core Partition Extended",
+            "description": "8 partitions (each XCD as separate logical GPU)",
+            "partitionCount": 8,
+            "vramPerPartition": 32,
+            "bandwidthPerPartition": 750,
+            "computeFP16PerPartition": 163.4,
+            "computeFP8PerPartition": 326.9
+          }
+        ]
+      }
     },
     {
       "id": "mi300x",
@@ -65,7 +170,42 @@
       "pcie_gen": 5,
       "tdp_watts": 750,
       "multi_gpu_capable": true,
-      "release_year": 2023
+      "release_year": 2023,
+      "partitioning": {
+        "supported": true,
+        "modes": [
+          {
+            "mode": "SPX",
+            "name": "Single Partition X-celerator",
+            "description": "Full GPU resources (8 XCDs as single logical GPU)",
+            "partitionCount": 1,
+            "vramPerPartition": 192,
+            "bandwidthPerPartition": 5300,
+            "computeFP16PerPartition": 1300,
+            "computeFP8PerPartition": 2600
+          },
+          {
+            "mode": "DPX",
+            "name": "Dual Partition Extended",
+            "description": "2 isolated partitions",
+            "partitionCount": 2,
+            "vramPerPartition": 96,
+            "bandwidthPerPartition": 2650,
+            "computeFP16PerPartition": 650,
+            "computeFP8PerPartition": 1300
+          },
+          {
+            "mode": "CPX",
+            "name": "Core Partition Extended",
+            "description": "8 partitions (each XCD as separate logical GPU)",
+            "partitionCount": 8,
+            "vramPerPartition": 24,
+            "bandwidthPerPartition": 662.5,
+            "computeFP16PerPartition": 162.5,
+            "computeFP8PerPartition": 325
+          }
+        ]
+      }
     },
     {
       "id": "mi300a",
@@ -81,7 +221,42 @@
       "pcie_gen": 5,
       "tdp_watts": 760,
       "multi_gpu_capable": true,
-      "release_year": 2023
+      "release_year": 2023,
+      "partitioning": {
+        "supported": true,
+        "modes": [
+          {
+            "mode": "SPX",
+            "name": "Single Partition X-celerator",
+            "description": "Full GPU resources",
+            "partitionCount": 1,
+            "vramPerPartition": 128,
+            "bandwidthPerPartition": 5300,
+            "computeFP16PerPartition": 1300,
+            "computeFP8PerPartition": 2600
+          },
+          {
+            "mode": "DPX",
+            "name": "Dual Partition Extended",
+            "description": "2 isolated partitions",
+            "partitionCount": 2,
+            "vramPerPartition": 64,
+            "bandwidthPerPartition": 2650,
+            "computeFP16PerPartition": 650,
+            "computeFP8PerPartition": 1300
+          },
+          {
+            "mode": "CPX",
+            "name": "Core Partition Extended",
+            "description": "4 partitions",
+            "partitionCount": 4,
+            "vramPerPartition": 32,
+            "bandwidthPerPartition": 1325,
+            "computeFP16PerPartition": 325,
+            "computeFP8PerPartition": 650
+          }
+        ]
+      }
     },
     {
       "id": "mi250x",
@@ -96,7 +271,39 @@
       "pcie_gen": 4,
       "tdp_watts": 560,
       "multi_gpu_capable": true,
-      "release_year": 2021
+      "release_year": 2021,
+      "partitioning": {
+        "supported": true,
+        "modes": [
+          {
+            "mode": "SPX",
+            "name": "Single Partition X-celerator",
+            "description": "Full GPU resources",
+            "partitionCount": 1,
+            "vramPerPartition": 128,
+            "bandwidthPerPartition": 3200,
+            "computeFP16PerPartition": 383
+          },
+          {
+            "mode": "DPX",
+            "name": "Dual Partition Extended",
+            "description": "2 isolated partitions",
+            "partitionCount": 2,
+            "vramPerPartition": 64,
+            "bandwidthPerPartition": 1600,
+            "computeFP16PerPartition": 191.5
+          },
+          {
+            "mode": "CPX",
+            "name": "Core Partition Extended",
+            "description": "4 partitions",
+            "partitionCount": 4,
+            "vramPerPartition": 32,
+            "bandwidthPerPartition": 800,
+            "computeFP16PerPartition": 95.75
+          }
+        ]
+      }
     },
     {
       "id": "mi210",
@@ -111,7 +318,39 @@
       "pcie_gen": 4,
       "tdp_watts": 300,
       "multi_gpu_capable": true,
-      "release_year": 2021
+      "release_year": 2021,
+      "partitioning": {
+        "supported": true,
+        "modes": [
+          {
+            "mode": "SPX",
+            "name": "Single Partition X-celerator",
+            "description": "Full GPU resources",
+            "partitionCount": 1,
+            "vramPerPartition": 64,
+            "bandwidthPerPartition": 1638,
+            "computeFP16PerPartition": 181
+          },
+          {
+            "mode": "DPX",
+            "name": "Dual Partition Extended",
+            "description": "2 isolated partitions",
+            "partitionCount": 2,
+            "vramPerPartition": 32,
+            "bandwidthPerPartition": 819,
+            "computeFP16PerPartition": 90.5
+          },
+          {
+            "mode": "CPX",
+            "name": "Core Partition Extended",
+            "description": "4 partitions",
+            "partitionCount": 4,
+            "vramPerPartition": 16,
+            "bandwidthPerPartition": 409.5,
+            "computeFP16PerPartition": 45.25
+          }
+        ]
+      }
     },
     {
       "id": "b200",
