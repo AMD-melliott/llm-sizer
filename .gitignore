@@ -5,3 +5,5 @@ dist/
 .vscode/
 models.backup*.json
 *.log
+.mcp.json
+docs/architecture/
