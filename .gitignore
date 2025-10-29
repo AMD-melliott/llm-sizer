@@ -7,3 +7,7 @@ models.backup*.json
 *.log
 .mcp.json
 docs/architecture/
+
+# Memory profiling results (keep directory structure)
+results/memory-profiles/*.json
+!results/memory-profiles/.gitkeep
