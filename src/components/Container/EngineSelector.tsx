@@ -22,21 +22,18 @@ export const EngineSelector: React.FC = () => {
       >
         {engines.map((engine) => (
           <option key={engine.id} value={engine.id}>
-            {engine.name} v{engine.version}
+            {engine.name}
           </option>
         ))}
       </select>
       
       {selectedEngine && (
-        <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            {selectedEngine.description}
-          </p>
+        <div className="mt-2">
           <a
             href={selectedEngine.documentation}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-1 inline-block"
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-block"
           >
             View Documentation →
           </a>

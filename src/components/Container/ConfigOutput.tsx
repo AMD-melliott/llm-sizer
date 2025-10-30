@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useContainerStore } from '../../store/useContainerStore';
-import { generateDockerRunCommand } from '../../utils/dockerCommandBuilder';
+import { generateDockerRunCommand, generateDockerCommandOnly } from '../../utils/dockerCommandBuilder';
 import { generateDockerCompose } from '../../utils/dockerComposeBuilder';
 
 export const ConfigOutput: React.FC = () => {
   const { generatedConfig, outputFormat, setOutputFormat, enableHealthcheck } = useContainerStore();
   const [copySuccess, setCopySuccess] = useState(false);
+  const [copyPlainSuccess, setCopyPlainSuccess] = useState(false);
   
   if (!generatedConfig) {
     return (
@@ -26,11 +27,26 @@ export const ConfigOutput: React.FC = () => {
     ? generateDockerRunCommand(generatedConfig, { includeComments: true, includeManagementCommands: true })
     : generateDockerCompose(generatedConfig, { includeComments: true, enableHealthcheck });
   
+  const plainCommand = outputFormat === 'docker-run' 
+    ? generateDockerCommandOnly(generatedConfig)
+    : null;
+  
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(output);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+  
+  const handleCopyPlain = async () => {
+    if (!plainCommand) return;
+    try {
+      await navigator.clipboard.writeText(plainCommand);
+      setCopyPlainSuccess(true);
+      setTimeout(() => setCopyPlainSuccess(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
     }
@@ -54,6 +70,49 @@ export const ConfigOutput: React.FC = () => {
   
   return (
     <div className="space-y-3">
+      {/* Plain Docker Run Command (for docker-run mode only) */}
+      {outputFormat === 'docker-run' && plainCommand && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                Docker Run Command
+              </h3>
+            </div>
+            <button
+              onClick={handleCopyPlain}
+              className="flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-md transition-colors"
+              title="Copy command to clipboard"
+            >
+              {copyPlainSuccess ? (
+                <>
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy
+                </>
+              )}
+            </button>
+          </div>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+            Copy this command to paste directly into your server terminal. No bash scripting needed.
+          </p>
+          <pre className="bg-gray-900 text-gray-100 p-3 rounded-md overflow-x-auto text-xs leading-relaxed font-mono border border-gray-700">
+            <code>{plainCommand}</code>
+          </pre>
+        </div>
+      )}
+      
       {/* Format Toggle */}
       <div className="flex items-center justify-between">
         <div className="flex space-x-2">

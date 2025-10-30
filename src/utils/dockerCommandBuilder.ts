@@ -25,6 +25,33 @@ export function generateDockerRunCommand(
     lines.push(`# Model: ${config.model.name}`);
     lines.push(`# Parameters: ${config.model.parameters}B`);
     lines.push(`# GPUs: ${config.gpuCount}x ${config.gpus[0]?.name || 'GPU'}`);
+    
+    // Get tensor parallelism from engine params
+    const tensorParallelParam = config.engineParams.find(p => p.flag === '--tensor-parallel-size');
+    const tensorParallelSize = tensorParallelParam?.value || config.gpuCount;
+    lines.push(`# Tensor Parallelism: ${tensorParallelSize}`);
+    
+    // Derive GPU architecture from ID (e.g., "MI300X" -> "MI300X", "A100" -> "Ampere")
+    const gpuId = config.gpus[0]?.id || '';
+    let gpuArch = 'N/A';
+    if (gpuId.includes('MI300')) gpuArch = 'CDNA3 (gfx942)';
+    else if (gpuId.includes('MI250')) gpuArch = 'CDNA2 (gfx90a)';
+    else if (gpuId.includes('MI210')) gpuArch = 'CDNA2 (gfx90a)';
+    else if (gpuId.includes('MI100')) gpuArch = 'CDNA1 (gfx908)';
+    else if (gpuId.includes('7900')) gpuArch = 'RDNA3 (gfx1100)';
+    else if (gpuId) gpuArch = gpuId;
+    lines.push(`# GPU Architecture: ${gpuArch}`);
+    
+    // Get quantization from engine params
+    const quantizationParam = config.engineParams.find(p => p.flag === '--quantization');
+    const quantization = quantizationParam?.value || 'None';
+    lines.push(`# Quantization: ${quantization}`);
+    
+    // Get dtype from engine params
+    const dtypeParam = config.engineParams.find(p => p.flag === '--dtype');
+    const dtype = dtypeParam?.value || 'auto';
+    lines.push(`# Data Type: ${dtype}`);
+    
     lines.push(`# Estimated VRAM: ${config.memoryUsage.estimated.toFixed(1)}GB / ${config.memoryUsage.available.toFixed(1)}GB (${config.memoryUsage.percentage.toFixed(1)}%)`);
     lines.push('#');
     lines.push('# Prerequisites:');

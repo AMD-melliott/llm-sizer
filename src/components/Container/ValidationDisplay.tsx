@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useContainerStore } from '../../store/useContainerStore';
 import type { ValidationLevel } from '../../types';
 
 export const ValidationDisplay: React.FC = () => {
   const { validationResult } = useContainerStore();
+  const [isExpanded, setIsExpanded] = useState(true);
   
   if (!validationResult) {
     return null;
@@ -57,7 +58,52 @@ export const ValidationDisplay: React.FC = () => {
   const hasWarnings = messages.some(m => m.level === 'warning') || securityIssues.some(m => m.level === 'warning');
   
   return (
-    <div className="space-y-3">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      {/* Header - Clickable to toggle */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg"
+      >
+        <div className="flex items-center">
+          <svg
+            className="w-5 h-5 mr-2 text-yellow-500"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            Validation Status
+          </h4>
+          {hasErrors && (
+            <span className="ml-3 px-2 py-1 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded">
+              {messages.filter(m => m.level === 'error').length + securityIssues.filter(m => m.level === 'error').length} Error(s)
+            </span>
+          )}
+          {hasWarnings && !hasErrors && (
+            <span className="ml-3 px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded">
+              {messages.filter(m => m.level === 'warning').length + securityIssues.filter(m => m.level === 'warning').length} Warning(s)
+            </span>
+          )}
+          {!hasErrors && !hasWarnings && (
+            <span className="ml-3 px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded">
+              Valid
+            </span>
+          )}
+        </div>
+        <svg
+          className={`w-5 h-5 text-gray-500 transition-transform ${isExpanded ? 'transform rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Content - Collapsible */}
+      {isExpanded && (
+        <div className="p-4 pt-0 space-y-3">
       {/* Overall Status */}
       <div className={`p-4 rounded-lg border ${
         hasErrors
@@ -96,6 +142,13 @@ export const ValidationDisplay: React.FC = () => {
             </>
           )}
         </div>
+        {hasErrors && (
+          <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded">
+            <p className="text-sm font-medium text-red-900 dark:text-red-200">
+              ⚠️ Configuration cannot be used until errors are resolved
+            </p>
+          </div>
+        )}
       </div>
       
       {/* Security Issues */}
@@ -185,6 +238,8 @@ export const ValidationDisplay: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
         </div>
       )}
     </div>

@@ -12,6 +12,8 @@ export const VolumeConfiguration: React.FC = () => {
     setMountHFCache,
     useContainerToolkit,
     setUseContainerToolkit,
+    useHostNetwork,
+    setUseHostNetwork,
     customVolumes,
     addCustomVolume,
     removeCustomVolume,
@@ -103,6 +105,40 @@ export const VolumeConfiguration: React.FC = () => {
           onChange={(e) => setMountHFCache(e.target.checked)}
           className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
         />
+      </div>
+      
+      {/* Host Network Mode */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+          <div className="flex-1">
+            <label htmlFor="use-host-network" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Use Host Network
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Share the host's network stack (bypasses Docker networking)
+            </p>
+          </div>
+          <input
+            id="use-host-network"
+            type="checkbox"
+            checked={useHostNetwork}
+            onChange={(e) => setUseHostNetwork(e.target.checked)}
+            className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+        </div>
+        
+        {/* Security Warning */}
+        {useHostNetwork && (
+          <div className="mt-2 flex items-start space-x-2 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded">
+            <svg className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <div className="text-xs text-orange-700 dark:text-orange-300">
+              <p className="font-medium">Security Notice:</p>
+              <p>Host network mode bypasses Docker's network isolation. The container shares the host's network stack directly. Only use this if you understand the security implications.</p>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Custom Volumes */}

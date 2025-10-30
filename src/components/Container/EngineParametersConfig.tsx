@@ -179,10 +179,13 @@ export const EngineParametersConfig: React.FC = () => {
     }
   };
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      {/* Header - Clickable to toggle */}
+      <div className="w-full flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg">
+        <div className="flex items-center cursor-pointer flex-1" onClick={() => setIsExpanded(!isExpanded)}>
           <svg
             className="w-5 h-5 mr-2 text-purple-500"
             fill="none"
@@ -199,14 +202,34 @@ export const EngineParametersConfig: React.FC = () => {
           <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
             Engine Parameters
           </h4>
+          {customEngineParams.size > 0 && (
+            <span className="ml-3 px-2 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 rounded">
+              {customEngineParams.size} Custom
+            </span>
+          )}
         </div>
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-        >
-          {showAdvanced ? 'Hide Advanced' : 'Show Advanced'}
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            {showAdvanced ? 'Hide Advanced' : 'Show Advanced'}
+          </button>
+          <svg
+            className={`w-5 h-5 text-gray-500 transition-transform cursor-pointer ${isExpanded ? 'transform rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </div>
+
+      {/* Content - Collapsible */}
+      {isExpanded && (
+        <div className="p-4 pt-0">
 
       {/* Info */}
       <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
@@ -288,6 +311,8 @@ export const EngineParametersConfig: React.FC = () => {
               Clear All
             </button>
           </div>
+        </div>
+      )}
         </div>
       )}
     </div>

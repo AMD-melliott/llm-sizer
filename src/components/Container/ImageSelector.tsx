@@ -33,24 +33,18 @@ export const ImageSelector: React.FC = () => {
       
       {selectedImage && (
         <div className="mt-2">
-          {/* Description */}
-          <div className="p-3 rounded-md bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-              {selectedImage.description}
-            </p>
-            <a
-              href={`https://hub.docker.com/r/${selectedImage.repository}/tags`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-xs text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-              </svg>
-              View on Docker Hub for prerequisites and details
-            </a>
-          </div>
+          <a
+            href={`https://hub.docker.com/r/${selectedImage.repository}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+              <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+            </svg>
+            View on Docker Hub
+          </a>
         </div>
       )}
     </div>

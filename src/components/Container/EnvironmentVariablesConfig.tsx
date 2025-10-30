@@ -23,15 +23,33 @@ const ENV_PRESETS = [
     sensitive: false,
   },
   {
-    key: 'CUDA_VISIBLE_DEVICES',
-    value: '',
-    description: 'Override CUDA device visibility (use with caution)',
-    sensitive: false,
-  },
-  {
     key: 'HF_HUB_OFFLINE',
     value: '0',
     description: 'Set to 1 to use offline mode for HuggingFace Hub',
+    sensitive: false,
+  },
+  {
+    key: 'NCCL_DEBUG',
+    value: 'INFO',
+    description: 'NCCL debugging level for multi-GPU communication',
+    sensitive: false,
+  },
+  {
+    key: 'PYTORCH_ROCM_ARCH',
+    value: 'gfx90a;gfx942',
+    description: 'Target ROCm GPU architectures (semicolon-separated)',
+    sensitive: false,
+  },
+  {
+    key: 'HF_HOME',
+    value: '/models/.cache',
+    description: 'Override HuggingFace cache directory',
+    sensitive: false,
+  },
+  {
+    key: 'VLLM_USE_MODELSCOPE',
+    value: 'False',
+    description: 'Disable ModelScope hub (use HuggingFace)',
     sensitive: false,
   },
 ];
@@ -42,6 +60,7 @@ export const EnvironmentVariablesConfig: React.FC = () => {
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [newEnvVar, setNewEnvVar] = useState<EnvironmentVariable>({
     key: '',
     value: '',
@@ -77,9 +96,10 @@ export const EnvironmentVariablesConfig: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      {/* Header - Clickable to toggle */}
+      <div className="w-full flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg">
+        <div className="flex items-center cursor-pointer flex-1" onClick={() => setIsExpanded(!isExpanded)}>
           <svg
             className="w-5 h-5 mr-2 text-green-500"
             fill="none"
@@ -102,8 +122,13 @@ export const EnvironmentVariablesConfig: React.FC = () => {
           <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
             Environment Variables
           </h4>
+          {customEnvironment.length > 0 && (
+            <span className="ml-3 px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded">
+              {customEnvironment.length} Added
+            </span>
+          )}
         </div>
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowPresets(!showPresets)}
             className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
@@ -116,8 +141,21 @@ export const EnvironmentVariablesConfig: React.FC = () => {
           >
             {showAddForm ? 'Cancel' : '+ Add Variable'}
           </button>
+          <svg
+            className={`w-5 h-5 text-gray-500 transition-transform cursor-pointer ${isExpanded ? 'transform rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
       </div>
+
+      {/* Content - Collapsible */}
+      {isExpanded && (
+        <div className="p-4 pt-0">
 
       <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
         Additional environment variables to pass to the container. Use ${'{'}VAR{'}'} syntax for
@@ -272,6 +310,8 @@ export const EnvironmentVariablesConfig: React.FC = () => {
         <div className="text-center py-4 text-xs text-gray-500 dark:text-gray-400">
           No custom environment variables added. Default variables (AMD_VISIBLE_DEVICES, HF_TOKEN)
           are automatically included.
+        </div>
+      )}
         </div>
       )}
     </div>

@@ -6,6 +6,7 @@ export const SharedMemoryConfig: React.FC = () => {
   const { generatedConfig, customShmSize, setCustomShmSize } = useContainerStore();
   const [showDetails, setShowDetails] = useState(false);
   const [overrideValue, setOverrideValue] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!generatedConfig) {
     return null;
@@ -44,9 +45,10 @@ export const SharedMemoryConfig: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      {/* Header - Clickable to toggle */}
+      <div className="w-full flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg">
+        <div className="flex items-center cursor-pointer flex-1" onClick={() => setIsExpanded(!isExpanded)}>
           <svg
             className="w-5 h-5 mr-2 text-blue-500"
             fill="none"
@@ -64,13 +66,28 @@ export const SharedMemoryConfig: React.FC = () => {
             Shared Memory Configuration
           </h4>
         </div>
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-        >
-          {showDetails ? 'Hide Details' : 'Show Details'}
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            {showDetails ? 'Hide Details' : 'Show Details'}
+          </button>
+          <svg
+            className={`w-5 h-5 text-gray-500 transition-transform cursor-pointer ${isExpanded ? 'transform rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </div>
+
+      {/* Content - Collapsible */}
+      {isExpanded && (
+        <div className="p-4 pt-0">
 
       {/* Current Status */}
       <div className="mb-3">
@@ -218,6 +235,8 @@ export const SharedMemoryConfig: React.FC = () => {
           </p>
         )}
       </div>
+        </div>
+      )}
     </div>
   );
 };
