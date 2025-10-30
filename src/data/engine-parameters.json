@@ -1,0 +1,142 @@
+{
+  "engines": [
+    {
+      "id": "vllm",
+      "name": "vLLM",
+      "version": "0.6.0",
+      "description": "Fast LLM inference with PagedAttention for efficient memory management",
+      "documentation": "https://docs.vllm.ai/",
+      "parameters": [
+        {
+          "flag": "--model",
+          "type": "string",
+          "required": true,
+          "description": "HuggingFace model ID or path to model weights",
+          "source": "calculator"
+        },
+        {
+          "flag": "--tensor-parallel-size",
+          "type": "number",
+          "required": true,
+          "description": "Number of GPUs for tensor parallelism (must match GPU count)",
+          "source": "calculator",
+          "validation": {
+            "min": 1,
+            "mustMatchGpuCount": true
+          }
+        },
+        {
+          "flag": "--dtype",
+          "type": "select",
+          "required": false,
+          "description": "Data type for model weights",
+          "default": "auto",
+          "options": [
+            {
+              "value": "auto",
+              "label": "Auto (let vLLM choose)",
+              "description": "Automatically select based on model configuration"
+            },
+            {
+              "value": "float16",
+              "label": "FP16 (float16)",
+              "description": "Half precision floating point"
+            },
+            {
+              "value": "bfloat16",
+              "label": "BF16 (bfloat16)",
+              "description": "Brain floating point format"
+            }
+          ],
+          "source": "calculator"
+        },
+        {
+          "flag": "--quantization",
+          "type": "select",
+          "required": false,
+          "description": "Quantization method for reduced memory usage",
+          "default": null,
+          "options": [
+            {
+              "value": "awq",
+              "label": "AWQ (4-bit)",
+              "description": "Activation-aware Weight Quantization"
+            },
+            {
+              "value": "gptq",
+              "label": "GPTQ (4-bit)",
+              "description": "GPT Quantization"
+            },
+            {
+              "value": "squeezellm",
+              "label": "SqueezeLLM",
+              "description": "Dense-and-Sparse quantization"
+            }
+          ],
+          "source": "calculator"
+        },
+        {
+          "flag": "--max-model-len",
+          "type": "number",
+          "required": false,
+          "description": "Maximum sequence length (context window)",
+          "source": "calculator",
+          "validation": {
+            "min": 128,
+            "max": 128000
+          }
+        },
+        {
+          "flag": "--kv-cache-dtype",
+          "type": "select",
+          "required": false,
+          "description": "Data type for KV cache",
+          "default": "auto",
+          "options": [
+            {
+              "value": "auto",
+              "label": "Auto",
+              "description": "Match model dtype"
+            },
+            {
+              "value": "fp8",
+              "label": "FP8",
+              "description": "8-bit floating point (saves memory)"
+            }
+          ],
+          "source": "calculator"
+        },
+        {
+          "flag": "--gpu-memory-utilization",
+          "type": "number",
+          "required": false,
+          "description": "Fraction of GPU memory to use (0.0-1.0)",
+          "default": 0.9,
+          "validation": {
+            "min": 0.1,
+            "max": 1.0
+          }
+        },
+        {
+          "flag": "--max-num-seqs",
+          "type": "number",
+          "required": false,
+          "description": "Maximum number of sequences to process in parallel",
+          "default": 256,
+          "validation": {
+            "min": 1,
+            "max": 2048
+          }
+        },
+        {
+          "flag": "--trust-remote-code",
+          "type": "boolean",
+          "required": false,
+          "description": "Allow execution of remote code from HuggingFace",
+          "default": false,
+          "security_warning": "Only enable for trusted models"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "images": [
+    {
+      "engine": "vllm",
+      "repository": "rocm/vllm",
+      "tag": "latest",
+      "fullImage": "rocm/vllm:latest",
+      "stability": "stable",
+      "rocmVersion": "6.0",
+      "pythonVersion": "3.10",
+      "description": "Production-ready vLLM with ROCm 6.0 support. Recommended for production deployments.",
+      "features": [
+        "Stable and tested",
+        "ROCm 6.0 support",
+        "AMD Instinct MI200/MI300 series optimizations",
+        "Regular security updates"
+      ],
+      "requirements": {
+        "minDockerVersion": "19.03",
+        "requiresContainerToolkit": false,
+        "recommendsContainerToolkit": true
+      }
+    },
+    {
+      "engine": "vllm",
+      "repository": "rocm/vllm",
+      "tag": "v0.6.0",
+      "fullImage": "rocm/vllm:v0.6.0",
+      "stability": "stable",
+      "rocmVersion": "6.0",
+      "pythonVersion": "3.10",
+      "description": "Specific vLLM version 0.6.0 with ROCm 6.0. Use for reproducible deployments.",
+      "features": [
+        "Version-locked for reproducibility",
+        "ROCm 6.0 support",
+        "Tested and validated",
+        "Recommended for production"
+      ],
+      "requirements": {
+        "minDockerVersion": "19.03",
+        "requiresContainerToolkit": false,
+        "recommendsContainerToolkit": true
+      }
+    },
+    {
+      "engine": "vllm",
+      "repository": "rocm/vllm-dev",
+      "tag": "nightly",
+      "fullImage": "rocm/vllm-dev:nightly",
+      "stability": "nightly",
+      "rocmVersion": "6.1",
+      "pythonVersion": "3.11",
+      "description": "Latest development build with cutting-edge features. May be unstable.",
+      "features": [
+        "Latest features and optimizations",
+        "ROCm 6.1 development version",
+        "Experimental features enabled",
+        "Not recommended for production"
+      ],
+      "warnings": [
+        "May contain bugs",
+        "API may change without notice",
+        "Limited support",
+        "Use for testing only"
+      ],
+      "requirements": {
+        "minDockerVersion": "20.10",
+        "requiresContainerToolkit": true,
+        "recommendsContainerToolkit": true
+      }
+    },
+    {
+      "engine": "vllm",
+      "repository": "rocm/vllm",
+      "tag": "rocm6.1",
+      "fullImage": "rocm/vllm:rocm6.1",
+      "stability": "stable",
+      "rocmVersion": "6.1",
+      "pythonVersion": "3.10",
+      "description": "vLLM with ROCm 6.1 for latest AMD GPU features and optimizations.",
+      "features": [
+        "ROCm 6.1 support",
+        "Improved MI300X performance",
+        "Latest driver compatibility",
+        "Production-ready"
+      ],
+      "requirements": {
+        "minDockerVersion": "19.03",
+        "requiresContainerToolkit": false,
+        "recommendsContainerToolkit": true
+      }
+    }
+  ],
+  "metadata": {
+    "lastUpdated": "2025-10-29",
+    "documentationUrl": "https://rocm.docs.amd.com/projects/container-toolkit",
+    "containerRegistryUrl": "https://hub.docker.com/u/rocm"
+  }
+}

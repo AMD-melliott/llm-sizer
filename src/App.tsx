@@ -1,4 +1,5 @@
-import { Github, Brain, Cpu, Box, Zap, Layers, BookOpen } from 'lucide-react';
+import { useEffect } from 'react';
+import { Github, Brain, Cpu, Box, Zap, Layers, BookOpen, Container } from 'lucide-react';
 import useAppStore from './store/useAppStore';
 import { useMemoryCalculation } from './hooks/useMemoryCalculation';
 import ModelTypeSelector from './components/ModelTypeSelector';
@@ -15,9 +16,11 @@ import { TabContainer } from './components/Tabs';
 import { MultiPageDocLayout } from './components/Documentation';
 import { documentationPages } from './content/documentation-pages';
 import PartitioningTab from './components/Tabs/PartitioningTab';
+import { ContainerConfigTab } from './components/Container';
 
 function App() {
   const state = useAppStore();
+  const setResults = useAppStore((state) => state.setResults);
 
   const {
     results,
@@ -54,6 +57,11 @@ function App() {
     maxQueryLength: state.maxQueryLength,
     maxDocLength: state.maxDocLength,
   });
+
+  // Store calculation results in global state so other components can access them
+  useEffect(() => {
+    setResults(results);
+  }, [results, setResults]);
 
   const calculatorContent = (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -166,6 +174,7 @@ function App() {
         tabs={[
           { id: 'calculator', label: 'Calculator', icon: <Cpu className="w-5 h-5" /> },
           { id: 'partitioning', label: 'Partitioning', icon: <Layers className="w-5 h-5" /> },
+          { id: 'container', label: 'Container Config', icon: <Container className="w-5 h-5" /> },
           { id: 'documentation', label: 'Documentation', icon: <BookOpen className="w-5 h-5" /> },
         ]}
         defaultTab="calculator"
@@ -175,6 +184,7 @@ function App() {
           <div className="flex-1">
             {activeTab === 'calculator' && calculatorContent}
             {activeTab === 'partitioning' && <PartitioningTab />}
+            {activeTab === 'container' && <ContainerConfigTab />}
             {activeTab === 'documentation' && (
               <MultiPageDocLayout pages={documentationPages} />
             )}

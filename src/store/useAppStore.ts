@@ -76,6 +76,7 @@ const useAppStore = create<AppStore>((set) => ({
     // This is handled by the useMemoryCalculation hook
     console.log('Calculating results...');
   },
+  setResults: (results) => set({ results }),
 
   // Partitioning actions
   setPartitioningGPU: (gpuId: string | null) => set({ partitioningGPU: gpuId }),

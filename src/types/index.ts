@@ -279,6 +279,7 @@ export interface AppActions {
   setMaxQueryLength: (length: number) => void;
   setMaxDocLength: (length: number) => void;
   calculateResults: () => void;
+  setResults: (results: CalculationResults | null) => void;
 
   // Partitioning Actions
   setPartitioningGPU: (gpuId: string | null) => void;
@@ -288,3 +289,250 @@ export interface AppActions {
 }
 
 export type AppStore = AppState & AppActions;
+
+// Container Configuration Types
+export interface EngineParameter {
+  flag: string;
+  type: 'string' | 'number' | 'boolean' | 'select';
+  required: boolean;
+  description: string;
+  default?: string | number | boolean | null;
+  options?: EngineParameterOption[];
+  source?: 'calculator' | 'manual' | 'computed';
+  validation?: {
+    min?: number;
+    max?: number;
+    mustMatchGpuCount?: boolean;
+  };
+  security_warning?: string;
+}
+
+export interface EngineParameterOption {
+  value: string;
+  label: string;
+  description: string;
+}
+
+export interface InferenceEngine {
+  id: string;
+  name: string;
+  version: string;
+  description: string;
+  documentation: string;
+  parameters: EngineParameter[];
+}
+
+export interface EngineParametersData {
+  engines: InferenceEngine[];
+}
+
+export interface ContainerImagesData {
+  images: ContainerImage[];
+}
+
+export interface ContainerImageRequirements {
+  minDockerVersion: string;
+  requiresContainerToolkit: boolean;
+  recommendsContainerToolkit: boolean;
+}
+
+export interface ContainerImage {
+  engine: string;
+  repository: string;
+  tag: string;
+  fullImage: string;
+  stability: 'stable' | 'nightly' | 'experimental';
+  rocmVersion: string;
+  pythonVersion: string;
+  description: string;
+  features: string[];
+  warnings?: string[];
+  requirements: ContainerImageRequirements;
+}
+
+export interface VolumeMount {
+  hostPath: string;
+  containerPath: string;
+  readOnly: boolean;
+  description?: string;
+}
+
+export interface EnvironmentVariable {
+  key: string;
+  value: string;
+  description?: string;
+  sensitive?: boolean;
+}
+
+export interface PortMapping {
+  host: number;
+  container: number;
+  protocol?: 'tcp' | 'udp';
+  description?: string;
+}
+
+export interface ResourceLimits {
+  shmSize: string;
+  memoryLimit?: string;
+  cpuLimit?: string;
+}
+
+export interface ContainerConfig {
+  // Engine and Image
+  engine: InferenceEngine;
+  image: ContainerImage;
+  
+  // Container Runtime
+  containerName: string;
+  useContainerToolkit: boolean;
+  
+  // GPU Configuration
+  gpuIds: string[];
+  gpuCount: number;
+  
+  // Resources
+  shmSize: string;
+  resourceLimits?: ResourceLimits;
+  
+  // Volumes
+  volumes: VolumeMount[];
+  
+  // Environment
+  environment: EnvironmentVariable[];
+  
+  // Network
+  ports: PortMapping[];
+  useHostNetwork: boolean;
+  
+  // Engine Parameters (mapped from calculator and custom)
+  engineParams: Array<{
+    flag: string;
+    value: string | number | boolean;
+  }>;
+  
+  // Model information from calculator
+  model: {
+    id: string;
+    name: string;
+    parameters: number;
+  };
+  
+  // GPU information from calculator
+  gpus: Array<{
+    id: string;
+    name: string;
+    vram: number;
+  }>;
+  
+  // Memory calculation from calculator
+  memoryUsage: {
+    estimated: number;
+    available: number;
+    percentage: number;
+  };
+}
+
+export type ValidationLevel = 'error' | 'warning' | 'info' | 'success';
+
+export interface ValidationMessage {
+  level: ValidationLevel;
+  message: string;
+  suggestion?: string;
+  field?: string;
+}
+
+export interface ConfigValidationResult {
+  valid: boolean;
+  messages: ValidationMessage[];
+  securityIssues: ValidationMessage[];
+  recommendations: ValidationMessage[];
+}
+
+export type ConfigOutputFormat = 'docker-run' | 'docker-compose';
+
+// Container Store State
+export interface ContainerState {
+  // Configuration
+  selectedEngineId: string;
+  selectedImageId: string;
+  useContainerToolkit: boolean;
+  containerName: string;
+  
+  // Volumes
+  modelPath: string;
+  mountModelPath: boolean;
+  mountHFCache: boolean;
+  customVolumes: VolumeMount[];
+  
+  // Environment
+  customEnvironment: EnvironmentVariable[];
+  
+  // Ports
+  apiPort: number;
+  customPorts: PortMapping[];
+  
+  // Advanced Options
+  useHostNetwork: boolean;
+  customShmSize?: string;
+  trustRemoteCode: boolean;
+  enableHealthcheck: boolean;
+  
+  // Engine Parameters (custom overrides)
+  customEngineParams: Map<string, string | number | boolean>;
+  
+  // Output
+  outputFormat: ConfigOutputFormat;
+  
+  // Generated config
+  generatedConfig: ContainerConfig | null;
+  validationResult: ConfigValidationResult | null;
+}
+
+// Container Store Actions
+export interface ContainerActions {
+  // Engine and Image Selection
+  setSelectedEngineId: (engineId: string) => void;
+  setSelectedImageId: (imageId: string) => void;
+  
+  // Container Runtime
+  setUseContainerToolkit: (use: boolean) => void;
+  setContainerName: (name: string) => void;
+  
+  // Volumes
+  setModelPath: (path: string) => void;
+  setMountModelPath: (mount: boolean) => void;
+  setMountHFCache: (mount: boolean) => void;
+  addCustomVolume: (volume: VolumeMount) => void;
+  removeCustomVolume: (index: number) => void;
+  
+  // Environment
+  addEnvironmentVariable: (env: EnvironmentVariable) => void;
+  removeEnvironmentVariable: (index: number) => void;
+  
+  // Ports
+  setApiPort: (port: number) => void;
+  addCustomPort: (port: PortMapping) => void;
+  removeCustomPort: (index: number) => void;
+  
+  // Advanced Options
+  setUseHostNetwork: (use: boolean) => void;
+  setCustomShmSize: (size: string | undefined) => void;
+  setTrustRemoteCode: (trust: boolean) => void;
+  setEnableHealthcheck: (enable: boolean) => void;
+  
+  // Engine Parameters
+  setCustomEngineParam: (flag: string, value: string | number | boolean | null) => void;
+  clearCustomEngineParam: (flag: string) => void;
+  
+  // Output
+  setOutputFormat: (format: ConfigOutputFormat) => void;
+  
+  // Generation
+  generateConfig: () => void;
+  validateConfig: (config: ContainerConfig) => ConfigValidationResult;
+  
+  // Reset
+  resetToDefaults: () => void;
+}
+
+export type ContainerStore = ContainerState & ContainerActions;
