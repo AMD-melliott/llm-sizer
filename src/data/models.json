@@ -66,6 +66,21 @@
       "parameters_billions": 1.2358144
     },
     {
+      "id": "qwen2-5-1-5b-instruct",
+      "name": "Qwen2.5 1.5B Instruct",
+      "hf_model_id": "Qwen/Qwen2.5-1.5B-Instruct",
+      "hidden_size": 1536,
+      "num_layers": 28,
+      "num_heads": 12,
+      "default_context_length": 32768,
+      "architecture": "transformer",
+      "modality": "text",
+      "num_kv_heads": 2,
+      "intermediate_size": 8960,
+      "vocab_size": 151936,
+      "parameters_billions": 1.543714304
+    },
+    {
       "id": "Qwen3-VL-2B-Instruct",
       "name": "Qwen3 VL 2B Instruct",
       "hf_model_id": "Qwen/Qwen3-VL-2B-Instruct",
@@ -112,6 +127,21 @@
       "intermediate_size": 9216,
       "vocab_size": 256000,
       "parameters_billions": 2.614341888
+    },
+    {
+      "id": "qwen2-5-3b-instruct",
+      "name": "Qwen2.5 3B Instruct",
+      "hf_model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "hidden_size": 2048,
+      "num_layers": 36,
+      "num_heads": 16,
+      "default_context_length": 32768,
+      "architecture": "transformer",
+      "modality": "text",
+      "num_kv_heads": 2,
+      "intermediate_size": 11008,
+      "vocab_size": 151936,
+      "parameters_billions": 3.085938688
     },
     {
       "id": "Llama-3.2-3B-Instruct",

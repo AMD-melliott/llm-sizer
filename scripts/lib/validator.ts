@@ -42,6 +42,20 @@ export function validateModel(model: ModelEntry): ValidationResult {
     }
   }
 
+  // Validate hf_model_id format if present
+  if (model.hf_model_id) {
+    // Format: org/model or simple-name (for legacy models like gpt2)
+    if (!model.hf_model_id.match(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$|^[a-z0-9-]+$/)) {
+      errors.push('hf_model_id contains invalid characters or incorrect format');
+    }
+    
+    // Should contain org prefix for most models
+    const legacyModels = ['gpt2', 'distilbert-base-uncased', 'bert-base-uncased'];
+    if (!model.hf_model_id.includes('/') && !legacyModels.includes(model.hf_model_id)) {
+      warnings.push('hf_model_id should include organization prefix for clarity (e.g., "microsoft/Phi-4")');
+    }
+  }
+
   // Warn about missing optional fields
   if (!model.num_kv_heads && model.architecture === 'transformer') {
     warnings.push('Missing num_kv_heads (useful for GQA models)');
@@ -95,4 +109,11 @@ export function validateModel(model: ModelEntry): ValidationResult {
  */
 export function isDuplicateModel(modelId: string, existingModels: ModelEntry[]): boolean {
   return existingModels.some(m => m.id === modelId);
+}
+
+/**
+ * Check if a HuggingFace model ID already exists in the models list
+ */
+export function isDuplicateHfModel(hfModelId: string, existingModels: ModelEntry[]): boolean {
+  return existingModels.some(m => m.hf_model_id === hfModelId);
 }

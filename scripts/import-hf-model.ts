@@ -8,7 +8,7 @@ import { dirname } from 'path';
 import * as readline from 'readline';
 import { parseModelId, fetchModelConfig, fetchParameterCount, validateModelExists } from './lib/hf-client.js';
 import { transformHFConfig, parseParameterCount, displayModelInfo, isMultimodal } from './lib/model-parser.js';
-import { validateModel, isDuplicateModel } from './lib/validator.js';
+import { validateModel, isDuplicateModel, isDuplicateHfModel } from './lib/validator.js';
 import { readModelsFile, writeModelsFile, createBackup, addModelToList, showDiff } from './lib/file-handler.js';
 import { ImportOptions, ModelEntry } from './lib/types.js';
 
@@ -148,9 +148,19 @@ async function importModel(modelInput: string, opts: ImportOptions): Promise<boo
     const modelsPath = join(__dirname, '..', 'src', 'data', 'models.json');
     const modelsData = readModelsFile(modelsPath);
 
-    // Check for duplicates
+    // Check for duplicates by ID
     if (isDuplicateModel(model.id, modelsData.models)) {
       console.error(chalk.red(`❌ Model with ID "${model.id}" already exists`));
+      return false;
+    }
+
+    // Check for duplicates by HuggingFace model ID
+    if (model.hf_model_id && isDuplicateHfModel(model.hf_model_id, modelsData.models)) {
+      console.error(chalk.red(`❌ Model with HuggingFace ID "${model.hf_model_id}" already exists`));
+      const existing = modelsData.models.find(m => m.hf_model_id === model.hf_model_id);
+      if (existing) {
+        console.log(chalk.yellow(`   Existing model ID: "${existing.id}" (${existing.name})`));
+      }
       return false;
     }
 

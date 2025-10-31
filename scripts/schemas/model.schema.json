@@ -48,6 +48,11 @@
       "type": "string",
       "enum": ["transformer", "moe"]
     },
+    "hf_model_id": {
+      "type": "string",
+      "description": "Original HuggingFace model ID with organization prefix and proper casing (e.g., 'microsoft/Phi-4')",
+      "pattern": "^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$|^[a-z0-9-]+$"
+    },
     "num_kv_heads": {
       "type": "number",
       "minimum": 1,

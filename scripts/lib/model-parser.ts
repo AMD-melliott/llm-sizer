@@ -414,6 +414,9 @@ export function displayModelInfo(model: Partial<ModelEntry>): void {
   console.log(chalk.bold('\nExtracted Model Information:'));
   console.log(chalk.cyan(`  ID:              ${model.id}`));
   console.log(chalk.cyan(`  Name:            ${model.name}`));
+  if (model.hf_model_id) {
+    console.log(chalk.cyan(`  HF Model ID:     ${model.hf_model_id}`));
+  }
   console.log(chalk.cyan(`  Modality:        ${model.modality || 'text'} ${model.modality === 'multimodal' ? '🖼️' : ''}`));
   console.log(chalk.cyan(`  Parameters:      ${model.parameters_billions}B`));
   console.log(chalk.cyan(`  Hidden Size:     ${model.hidden_size}`));
