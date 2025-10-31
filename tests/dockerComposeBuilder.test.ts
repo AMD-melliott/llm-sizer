@@ -34,6 +34,7 @@ describe('Docker Compose Builder Tests', () => {
     },
     containerName: 'vllm-llama3-70b',
     useContainerToolkit: true,
+    autoRemove: false,
     gpuIds: ['0', '1', '2', '3'],
     gpuCount: 4,
     shmSize: '32g',
@@ -247,10 +248,30 @@ describe('Docker Compose Builder Tests', () => {
       expect(yaml).not.toContain('ports:');
     });
 
-    test('should include restart policy', () => {
+    test('should include restart policy when autoRemove is false', () => {
       const yaml = generateDockerCompose(mockConfig);
 
       expect(yaml).toContain('restart: unless-stopped');
+    });
+
+    test('should NOT include restart policy when autoRemove is true', () => {
+      const configWithAutoRemove = { ...mockConfig, autoRemove: true };
+      const yaml = generateDockerCompose(configWithAutoRemove, {
+        includeComments: true,
+      });
+
+      expect(yaml).not.toContain('restart: unless-stopped');
+      expect(yaml).toContain('# Note: Auto-remove (--rm) is not supported in Docker Compose');
+    });
+
+    test('should include comment explaining auto-remove limitation in Compose', () => {
+      const configWithAutoRemove = { ...mockConfig, autoRemove: true };
+      const yaml = generateDockerCompose(configWithAutoRemove, {
+        includeComments: true,
+      });
+
+      expect(yaml).toContain('# Note: Auto-remove (--rm) is not supported in Docker Compose');
+      expect(yaml).toContain('# Container will persist. Use "docker-compose down" to remove.');
     });
 
     test('should include engine parameters as command', () => {

@@ -35,6 +35,7 @@ describe('Docker Command Builder Tests', () => {
     },
     containerName: 'vllm-llama3-70b',
     useContainerToolkit: true,
+    autoRemove: false,
     gpuIds: ['0', '1', '2', '3'],
     gpuCount: 4,
     shmSize: '32g',
@@ -192,9 +193,9 @@ describe('Docker Command Builder Tests', () => {
     test('should include all engine parameters', () => {
       const command = generateDockerRunCommand(mockConfig);
 
-      expect(command).toContain('--model meta-llama/Llama-3-70b');
+      expect(command).toContain('--model "meta-llama/Llama-3-70b"');
       expect(command).toContain('--tensor-parallel-size 4');
-      expect(command).toContain('--dtype float16');
+      expect(command).toContain('--dtype "float16"');
       expect(command).toContain('--max-model-len 4096');
     });
 
@@ -214,9 +215,32 @@ describe('Docker Command Builder Tests', () => {
       expect(command).not.toContain('--disable-log');
     });
 
-    test('should include restart policy', () => {
+    test('should include restart policy when autoRemove is false', () => {
       const command = generateDockerRunCommand(mockConfig);
       expect(command).toContain('--restart unless-stopped');
+      expect(command).not.toContain('--rm');
+    });
+
+    test('should include --rm flag when autoRemove is true', () => {
+      const configWithAutoRemove = { ...mockConfig, autoRemove: true };
+      const command = generateDockerRunCommand(configWithAutoRemove);
+      expect(command).toContain('--rm');
+      expect(command).not.toContain('--restart');
+    });
+
+    test('should NOT include both --rm and --restart flags', () => {
+      // Test with autoRemove false
+      const commandWithRestart = generateDockerRunCommand(mockConfig);
+      const hasRestart = commandWithRestart.includes('--restart');
+      const hasRm = commandWithRestart.includes('--rm');
+      expect(hasRestart && hasRm).toBe(false);
+
+      // Test with autoRemove true
+      const configWithAutoRemove = { ...mockConfig, autoRemove: true };
+      const commandWithRm = generateDockerRunCommand(configWithAutoRemove);
+      const hasRestart2 = commandWithRm.includes('--restart');
+      const hasRm2 = commandWithRm.includes('--rm');
+      expect(hasRestart2 && hasRm2).toBe(false);
     });
 
     test('should include resource limits when specified', () => {

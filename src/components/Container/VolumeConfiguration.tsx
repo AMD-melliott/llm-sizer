@@ -14,6 +14,8 @@ export const VolumeConfiguration: React.FC = () => {
     setUseContainerToolkit,
     useHostNetwork,
     setUseHostNetwork,
+    autoRemoveContainer,
+    setAutoRemoveContainer,
     customVolumes,
     addCustomVolume,
     removeCustomVolume,
@@ -136,6 +138,40 @@ export const VolumeConfiguration: React.FC = () => {
             <div className="text-xs text-orange-700 dark:text-orange-300">
               <p className="font-medium">Security Notice:</p>
               <p>Host network mode bypasses Docker's network isolation. The container shares the host's network stack directly. Only use this if you understand the security implications.</p>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Auto-Remove Container */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+          <div className="flex-1">
+            <label htmlFor="auto-remove" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Auto-Remove Container (--rm)
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Automatically remove container when it exits (ephemeral mode)
+            </p>
+          </div>
+          <input
+            id="auto-remove"
+            type="checkbox"
+            checked={autoRemoveContainer}
+            onChange={(e) => setAutoRemoveContainer(e.target.checked)}
+            className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+        </div>
+        
+        {/* Info notice when auto-remove is enabled */}
+        {autoRemoveContainer && (
+          <div className="mt-2 flex items-start space-x-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+            <svg className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div className="text-xs text-blue-700 dark:text-blue-300">
+              <p className="font-medium">Ephemeral Container Mode:</p>
+              <p>Container will be removed when stopped. No restart policy will be applied. Mounted volumes will persist, but container state will be lost. Use for testing or temporary deployments.</p>
             </div>
           </div>
         )}

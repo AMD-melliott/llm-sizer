@@ -76,6 +76,7 @@ export type PartitionModelSelection = ModelType | 'all';
 export interface Model {
   id: string;
   name: string;
+  hf_model_id?: string; // Full HuggingFace model ID with org prefix (e.g., "meta-llama/Llama-3-70b")
   parameters_billions: number;
   hidden_size: number;
   num_layers: number;
@@ -341,6 +342,7 @@ export interface ContainerImage {
   repository: string;
   tag: string;
   fullImage: string;
+  entrypoint?: string; // Command to run after the container image (e.g., "python3 -m vllm.entrypoints.openai.api_server")
   stability: 'stable' | 'nightly' | 'experimental';
   rocmVersion: string;
   pythonVersion: string;
@@ -385,6 +387,7 @@ export interface ContainerConfig {
   // Container Runtime
   containerName: string;
   useContainerToolkit: boolean;
+  autoRemove: boolean;
   
   // GPU Configuration
   gpuIds: string[];
@@ -476,6 +479,7 @@ export interface ContainerState {
   customShmSize?: string;
   trustRemoteCode: boolean;
   enableHealthcheck: boolean;
+  autoRemoveContainer: boolean;
   
   // Engine Parameters (custom overrides)
   customEngineParams: Map<string, string | number | boolean>;
@@ -519,6 +523,7 @@ export interface ContainerActions {
   setCustomShmSize: (size: string | undefined) => void;
   setTrustRemoteCode: (trust: boolean) => void;
   setEnableHealthcheck: (enable: boolean) => void;
+  setAutoRemoveContainer: (autoRemove: boolean) => void;
   
   // Engine Parameters
   setCustomEngineParam: (flag: string, value: string | number | boolean | null) => void;

@@ -1,8 +1,9 @@
 {
   "models": [
     {
-      "id": "florence-2-base",
+      "id": "Florence-2-base",
       "name": "Florence 2 base",
+      "hf_model_id": "microsoft/Florence-2-base",
       "hidden_size": 768,
       "num_layers": 6,
       "num_heads": 12,
@@ -39,6 +40,7 @@
     {
       "id": "gemma-3-1b-it",
       "name": "gemma 3 1b it",
+      "hf_model_id": "google/gemma-3-1b-it",
       "hidden_size": 1152,
       "num_layers": 26,
       "num_heads": 4,
@@ -50,8 +52,9 @@
       "parameters_billions": 0.999885952
     },
     {
-      "id": "llama-3-2-1b-instruct",
+      "id": "Llama-3.2-1B-Instruct",
       "name": "Llama 3.2 1B Instruct",
+      "hf_model_id": "meta-llama/Llama-3.2-1B-Instruct",
       "hidden_size": 2048,
       "num_layers": 16,
       "num_heads": 32,
@@ -63,8 +66,9 @@
       "parameters_billions": 1.2358144
     },
     {
-      "id": "qwen3-vl-2b-instruct",
+      "id": "Qwen3-VL-2B-Instruct",
       "name": "Qwen3 VL 2B Instruct",
+      "hf_model_id": "Qwen/Qwen3-VL-2B-Instruct",
       "hidden_size": 2048,
       "num_layers": 28,
       "num_heads": 16,
@@ -98,6 +102,7 @@
     {
       "id": "gemma-2-2b-it",
       "name": "gemma 2 2b it",
+      "hf_model_id": "google/gemma-2b-it",
       "hidden_size": 2304,
       "num_layers": 26,
       "num_heads": 8,
@@ -109,8 +114,9 @@
       "parameters_billions": 2.614341888
     },
     {
-      "id": "llama-3-2-3b-instruct",
+      "id": "Llama-3.2-3B-Instruct",
       "name": "Llama 3.2 3B Instruct",
+      "hf_model_id": "meta-llama/Llama-3.2-3B-Instruct",
       "hidden_size": 3072,
       "num_layers": 28,
       "num_heads": 24,
@@ -122,8 +128,9 @@
       "parameters_billions": 3.212749824
     },
     {
-      "id": "phi-3-mini-4k-instruct",
+      "id": "Phi-3-mini-4k-instruct",
       "name": "Phi 3 mini 4k instruct",
+      "hf_model_id": "microsoft/Phi-3-mini-4k-instruct",
       "hidden_size": 3072,
       "num_layers": 32,
       "num_heads": 32,
@@ -135,8 +142,9 @@
       "parameters_billions": 3.821079552
     },
     {
-      "id": "qwen3-vl-4b-instruct",
+      "id": "Qwen3-VL-4B-Instruct",
       "name": "Qwen3 VL 4B Instruct",
+      "hf_model_id": "Qwen/Qwen3-VL-4B-Instruct",
       "hidden_size": 2560,
       "num_layers": 36,
       "num_heads": 32,
@@ -148,8 +156,9 @@
       "parameters_billions": 4
     },
     {
-      "id": "phi-3-vision-128k-instruct",
+      "id": "Phi-3-vision-128k-instruct",
       "name": "Phi 3 vision 128k instruct",
+      "hf_model_id": "microsoft/Phi-3-vision-128k-instruct",
       "hidden_size": 3072,
       "num_layers": 32,
       "num_heads": 32,
@@ -181,8 +190,9 @@
       "parameters_billions": 4.14662144
     },
     {
-      "id": "deepseek-r1-7b",
+      "id": "DeepSeek-R1-Distill-Qwen-7B",
       "name": "DeepSeek-R1 7B",
+      "hf_model_id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
       "parameters_billions": 7,
       "hidden_size": 4096,
       "num_layers": 32,
@@ -191,8 +201,9 @@
       "architecture": "transformer"
     },
     {
-      "id": "mistral-7b",
+      "id": "Mistral-7B-v0.1",
       "name": "Mistral 7B",
+      "hf_model_id": "mistralai/Mistral-7B-v0.1",
       "parameters_billions": 7,
       "hidden_size": 4096,
       "num_layers": 32,
@@ -201,8 +212,9 @@
       "architecture": "transformer"
     },
     {
-      "id": "mistral-7b-instruct-v0-3",
+      "id": "Mistral-7B-Instruct-v0.3",
       "name": "Mistral 7B Instruct v0.3",
+      "hf_model_id": "mistralai/Mistral-7B-Instruct-v0.3",
       "hidden_size": 4096,
       "num_layers": 32,
       "num_heads": 32,
@@ -214,8 +226,9 @@
       "parameters_billions": 7.248023552
     },
     {
-      "id": "qwen2-5-7b-instruct",
+      "id": "Qwen2.5-7B-Instruct",
       "name": "Qwen2.5 7B Instruct",
+      "hf_model_id": "Qwen/Qwen2.5-7B-Instruct",
       "hidden_size": 3584,
       "num_layers": 28,
       "num_heads": 28,
@@ -227,8 +240,9 @@
       "parameters_billions": 7.615616512
     },
     {
-      "id": "llama-3-8b",
+      "id": "Meta-Llama-3-8B",
       "name": "Llama 3 8B",
+      "hf_model_id": "meta-llama/Meta-Llama-3-8B",
       "parameters_billions": 8,
       "hidden_size": 4096,
       "num_layers": 32,
@@ -237,8 +251,9 @@
       "architecture": "transformer"
     },
     {
-      "id": "qwen3-vl-8b-instruct",
+      "id": "Qwen3-VL-8B-Instruct",
       "name": "Qwen3 VL 8B Instruct",
+      "hf_model_id": "Qwen/Qwen3-VL-8B-Instruct",
       "hidden_size": 4096,
       "num_layers": 36,
       "num_heads": 32,
@@ -250,8 +265,9 @@
       "parameters_billions": 8
     },
     {
-      "id": "llama-3-1-8b-instruct",
+      "id": "Llama-3.1-8B-Instruct",
       "name": "Llama 3.1 8B Instruct",
+      "hf_model_id": "meta-llama/Llama-3.1-8B-Instruct",
       "hidden_size": 4096,
       "num_layers": 32,
       "num_heads": 32,
@@ -265,6 +281,7 @@
     {
       "id": "gemma-2-9b-it",
       "name": "gemma 2 9b it",
+      "hf_model_id": "google/gemma-2-9b-it",
       "hidden_size": 3584,
       "num_layers": 42,
       "num_heads": 16,
@@ -276,8 +293,9 @@
       "parameters_billions": 9.241705984
     },
     {
-      "id": "glm-4-1v-9b-thinking",
+      "id": "GLM-4.1V-9B-Thinking",
       "name": "GLM 4.1V 9B Thinking",
+      "hf_model_id": "zai-org/GLM-4.1V-9B-Thinking",
       "hidden_size": 4096,
       "num_layers": 40,
       "num_heads": 32,
@@ -309,8 +327,9 @@
       "parameters_billions": 10.292777472
     },
     {
-      "id": "deepseek-r1-14b",
+      "id": "DeepSeek-R1-Distill-Qwen-14B",
       "name": "DeepSeek-R1 14B",
+      "hf_model_id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
       "parameters_billions": 14,
       "hidden_size": 4096,
       "num_layers": 48,
@@ -321,6 +340,7 @@
     {
       "id": "phi-4",
       "name": "phi 4",
+      "hf_model_id": "microsoft/phi-4",
       "hidden_size": 5120,
       "num_layers": 40,
       "num_heads": 40,
@@ -332,8 +352,9 @@
       "parameters_billions": 14.6595072
     },
     {
-      "id": "qwen2-5-14b-instruct",
+      "id": "Qwen2.5-14B-Instruct",
       "name": "Qwen2.5 14B Instruct",
+      "hf_model_id": "Qwen/Qwen2.5-14B-Instruct",
       "hidden_size": 5120,
       "num_layers": 48,
       "num_heads": 40,
@@ -345,8 +366,9 @@
       "parameters_billions": 14.770033664
     },
     {
-      "id": "kimi-vl-a3b-instruct",
+      "id": "Kimi-VL-A3B-Instruct",
       "name": "Kimi VL A3B Instruct",
+      "hf_model_id": "moonshotai/Kimi-VL-A3B-Instruct",
       "hidden_size": 2048,
       "num_layers": 27,
       "num_heads": 16,
@@ -379,8 +401,9 @@
       "parameters_billions": 16.407657776
     },
     {
-      "id": "kimi-vl-a3b-thinking",
+      "id": "Kimi-VL-A3B-Thinking",
       "name": "Kimi VL A3B Thinking",
+      "hf_model_id": "moonshotai/Kimi-VL-A3B-Instruct",
       "hidden_size": 2048,
       "num_layers": 27,
       "num_heads": 16,
@@ -415,6 +438,7 @@
     {
       "id": "gpt-oss-20b",
       "name": "gpt oss 20b",
+      "hf_model_id": "openai/gpt-oss-20b",
       "hidden_size": 2880,
       "num_layers": 24,
       "num_heads": 64,
@@ -429,8 +453,9 @@
       "parameters_billions": 21.511953984
     },
     {
-      "id": "mistral-small-instruct-2409",
+      "id": "Mistral-Small-Instruct-2409",
       "name": "Mistral Small Instruct 2409",
+      "hf_model_id": "mistralai/Mistral-Small-Instruct-2409",
       "hidden_size": 6144,
       "num_layers": 56,
       "num_heads": 48,
@@ -444,6 +469,7 @@
     {
       "id": "gemma-2-27b-it",
       "name": "gemma 2 27b it",
+      "hf_model_id": "google/gemma-3-27b-it",
       "hidden_size": 4608,
       "num_layers": 46,
       "num_heads": 32,
@@ -455,8 +481,9 @@
       "parameters_billions": 27.22712832
     },
     {
-      "id": "qwen3-vl-30b-a3b-instruct",
+      "id": "Qwen3-VL-30B-A3B-Instruct",
       "name": "Qwen3 VL 30B A3B Instruct",
+      "hf_model_id": "Qwen/Qwen3-VL-30B-A3B-Instruct",
       "hidden_size": 2048,
       "num_layers": 48,
       "num_heads": 32,
@@ -470,8 +497,9 @@
       "parameters_billions": 30
     },
     {
-      "id": "deepseek-r1-32b",
+      "id": "DeepSeek-R1-Distill-Qwen-32B",
       "name": "DeepSeek-R1 32B",
+      "hf_model_id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
       "parameters_billions": 32,
       "hidden_size": 5120,
       "num_layers": 60,
@@ -480,8 +508,9 @@
       "architecture": "transformer"
     },
     {
-      "id": "kimi-k2-instruct",
+      "id": "Kimi-K2-Instruct",
       "name": "Kimi K2 Instruct",
+      "hf_model_id": "moonshotai/Kimi-K2-Instruct",
       "hidden_size": 7168,
       "num_layers": 61,
       "num_heads": 64,
@@ -495,8 +524,9 @@
       "parameters_billions": 32
     },
     {
-      "id": "glm-z1-32b-0414",
+      "id": "GLM-Z1-32B-0414",
       "name": "GLM Z1 32B 0414",
+      "hf_model_id": "zai-org/GLM-Z1-32B-0414",
       "hidden_size": 6144,
       "num_layers": 61,
       "num_heads": 48,
@@ -509,8 +539,9 @@
       "parameters_billions": 32.566081536
     },
     {
-      "id": "glm-4-32b-0414",
+      "id": "GLM-4-32B-0414",
       "name": "GLM 4 32B 0414",
+      "hf_model_id": "zai-org/GLM-4-32B-0414",
       "hidden_size": 6144,
       "num_layers": 61,
       "num_heads": 48,
@@ -523,8 +554,9 @@
       "parameters_billions": 32.566081536
     },
     {
-      "id": "qwen2-5-32b-instruct",
+      "id": "Qwen2.5-32B-Instruct",
       "name": "Qwen2.5 32B Instruct",
+      "hf_model_id": "Qwen/Qwen2.5-32B-Instruct",
       "hidden_size": 5120,
       "num_layers": 64,
       "num_heads": 40,
@@ -536,8 +568,9 @@
       "parameters_billions": 32.763876352
     },
     {
-      "id": "qwen3-vl-32b-instruct",
+      "id": "Qwen3-VL-32B-Instruct",
       "name": "Qwen3 VL 32B Instruct",
+      "hf_model_id": "Qwen/Qwen3-VL-32B-Instruct",
       "hidden_size": 5120,
       "num_layers": 64,
       "num_heads": 64,
@@ -569,8 +602,9 @@
       "parameters_billions": 33.357390064
     },
     {
-      "id": "yi-34b",
+      "id": "Yi-34B",
       "name": "Yi 34B",
+      "hf_model_id": "01-ai/Yi-34B",
       "parameters_billions": 34,
       "hidden_size": 7168,
       "num_layers": 60,
@@ -579,8 +613,9 @@
       "architecture": "transformer"
     },
     {
-      "id": "mixtral-8x7b",
+      "id": "Mixtral-8x7B-v0.1",
       "name": "Mixtral 8x7B",
+      "hf_model_id": "mistralai/Mixtral-8x7B-v0.1",
       "parameters_billions": 46.7,
       "hidden_size": 4096,
       "num_layers": 32,
@@ -589,8 +624,9 @@
       "architecture": "moe"
     },
     {
-      "id": "deepseek-r1-70b",
+      "id": "DeepSeek-R1-Distill-Llama-70B",
       "name": "DeepSeek-R1 70B",
+      "hf_model_id": "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
       "parameters_billions": 70,
       "hidden_size": 8192,
       "num_layers": 80,
@@ -599,8 +635,9 @@
       "architecture": "transformer"
     },
     {
-      "id": "llama-3-70b",
+      "id": "Meta-Llama-3-70B-Instruct",
       "name": "Llama 3 70B",
+      "hf_model_id": "meta-llama/Meta-Llama-3-70B-Instruct",
       "parameters_billions": 70,
       "hidden_size": 8192,
       "num_layers": 80,
@@ -609,8 +646,9 @@
       "architecture": "transformer"
     },
     {
-      "id": "qwen-72b",
+      "id": "Qwen2-72B-Instruct",
       "name": "Qwen 72B",
+      "hf_model_id": "Qwen/Qwen2-72B-Instruct",
       "parameters_billions": 72,
       "hidden_size": 8192,
       "num_layers": 80,
@@ -619,8 +657,9 @@
       "architecture": "transformer"
     },
     {
-      "id": "glm-4-5v",
+      "id": "GLM-4.5V",
       "name": "GLM 4.5V",
+      "hf_model_id": "zai-org/GLM-4.5V",
       "hidden_size": 4096,
       "num_layers": 46,
       "num_heads": 96,
@@ -653,8 +692,9 @@
       "parameters_billions": 107.71093312
     },
     {
-      "id": "glm-4-5-air",
+      "id": "GLM-4.5-Air",
       "name": "GLM 4.5 Air",
+      "hf_model_id": "zai-org/GLM-4.5-Air",
       "hidden_size": 4096,
       "num_layers": 46,
       "num_heads": 96,
@@ -670,6 +710,7 @@
     {
       "id": "gpt-oss-120b",
       "name": "gpt oss 120b",
+      "hf_model_id": "openai/gpt-oss-120b",
       "hidden_size": 2880,
       "num_layers": 36,
       "num_heads": 64,
@@ -684,8 +725,9 @@
       "parameters_billions": 120.412337472
     },
     {
-      "id": "mixtral-8x22b",
+      "id": "Mixtral-8x22B-v0.1",
       "name": "Mixtral 8x22B",
+      "hf_model_id": "mistralai/Mixtral-8x22B-v0.1",
       "parameters_billions": 141,
       "hidden_size": 6144,
       "num_layers": 56,
@@ -714,8 +756,9 @@
       "architecture": "transformer"
     },
     {
-      "id": "qwen3-vl-235b-a22b-instruct",
+      "id": "Qwen3-VL-235B-A22B-Instruct",
       "name": "Qwen3 VL 235B A22B Instruct",
+      "hf_model_id": "Qwen/Qwen3-VL-235B-A22B-Instruct",
       "hidden_size": 4096,
       "num_layers": 94,
       "num_heads": 64,
@@ -729,8 +772,9 @@
       "parameters_billions": 235
     },
     {
-      "id": "glm-4-6",
+      "id": "GLM-4.6",
       "name": "GLM 4.6",
+      "hf_model_id": "zai-org/GLM-4.6",
       "hidden_size": 5120,
       "num_layers": 92,
       "num_heads": 96,
@@ -744,8 +788,9 @@
       "parameters_billions": 356.785898816
     },
     {
-      "id": "glm-4-5",
+      "id": "GLM-4.5",
       "name": "GLM 4.5",
+      "hf_model_id": "zai-org/GLM-4.5",
       "hidden_size": 5120,
       "num_layers": 92,
       "num_heads": 96,
@@ -761,6 +806,7 @@
     {
       "id": "snowflake-arctic-instruct",
       "name": "snowflake arctic instruct",
+      "hf_model_id": "Snowflake/snowflake-arctic-instruct",
       "hidden_size": 7168,
       "num_layers": 35,
       "num_heads": 56,
@@ -774,8 +820,9 @@
       "parameters_billions": 478.584608768
     },
     {
-      "id": "deepseek-v3",
+      "id": "DeepSeek-V3",
       "name": "DeepSeek V3",
+      "hf_model_id": "deepseek-ai/DeepSeek-V3",
       "hidden_size": 7168,
       "num_layers": 61,
       "num_heads": 128,
@@ -788,8 +835,9 @@
       "parameters_billions": 684.531386
     },
     {
-      "id": "deepseek-r1",
+      "id": "DeepSeek-R1",
       "name": "DeepSeek R1",
+      "hf_model_id": "deepseek-ai/DeepSeek-R1",
       "hidden_size": 7168,
       "num_layers": 61,
       "num_heads": 128,

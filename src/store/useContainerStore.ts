@@ -35,6 +35,7 @@ const initialState: ContainerState = {
   customShmSize: undefined,
   trustRemoteCode: false,
   enableHealthcheck: true,
+  autoRemoveContainer: true,
   
   customEngineParams: new Map(),
   
@@ -132,6 +133,8 @@ export const useContainerStore = create<ContainerStore>((set, get) => ({
   setTrustRemoteCode: (trust: boolean) => set({ trustRemoteCode: trust }),
   
   setEnableHealthcheck: (enable: boolean) => set({ enableHealthcheck: enable }),
+  
+  setAutoRemoveContainer: (autoRemove: boolean) => set({ autoRemoveContainer: autoRemove }),
   
   // Engine Parameters
   setCustomEngineParam: (flag: string, value: string | number | boolean | null) =>
@@ -348,6 +351,7 @@ export const useContainerStore = create<ContainerStore>((set, get) => ({
         image,
         containerName: state.containerName,
         useContainerToolkit: state.useContainerToolkit,
+        autoRemove: state.autoRemoveContainer,
         gpuIds,
         gpuCount: numGPUs,
         shmSize,
@@ -432,9 +436,11 @@ function buildEngineParams(
   const getCustom = (flag: string) => containerState.customEngineParams.get(flag);
   
   // Model (always required, but can be overridden)
+  // Use hf_model_id if available (includes org prefix), otherwise fallback to id
+  const modelIdentifier = model.hf_model_id || model.id;
   params.push({
     flag: '--model',
-    value: hasCustom('--model') ? (getCustom('--model') as string) : model.id,
+    value: hasCustom('--model') ? (getCustom('--model') as string) : modelIdentifier,
   });
   
   // Tensor parallelism (can be overridden for advanced use cases)

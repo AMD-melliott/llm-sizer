@@ -104,15 +104,28 @@ export function generateDockerCompose(
     lines.push('    network_mode: host');
   }
   
-  // Restart policy
-  lines.push('    restart: unless-stopped');
+  // Restart policy (only when not using auto-remove)
+  // Note: Docker Compose does not support --rm flag, so auto-remove is ignored in Compose
+  if (!config.autoRemove) {
+    lines.push('    restart: unless-stopped');
+  } else if (includeComments) {
+    lines.push('    # Note: Auto-remove (--rm) is not supported in Docker Compose');
+    lines.push('    # Container will persist. Use "docker-compose down" to remove.');
+  }
   
-  // Command (engine parameters)
-  if (config.engineParams.length > 0) {
+  // Command (entrypoint + engine parameters)
+  if (config.image.entrypoint || config.engineParams.length > 0) {
     lines.push('    command:');
     
     // Build command as array for better readability
     const commandParts: string[] = [];
+    
+    // Add entrypoint if specified (as separate shell tokens)
+    if (config.image.entrypoint) {
+      commandParts.push(...config.image.entrypoint.split(' '));
+    }
+    
+    // Add engine parameters
     config.engineParams.forEach(param => {
       if (typeof param.value === 'boolean') {
         if (param.value) {

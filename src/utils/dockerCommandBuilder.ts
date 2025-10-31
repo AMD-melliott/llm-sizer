@@ -172,11 +172,26 @@ export function generateDockerRunCommand(
     lines.push(`  -v ${vol.hostPath}:${vol.containerPath}${ro} \\`);
   });
   
-  // Restart policy
-  lines.push('  --restart unless-stopped \\');
+  // Container lifecycle policy (--rm and --restart are mutually exclusive)
+  if (config.autoRemove) {
+    if (includeComments) {
+      lines.push('  # Auto-remove container when stopped (ephemeral mode)');
+    }
+    lines.push('  --rm \\');
+  } else {
+    if (includeComments) {
+      lines.push('  # Restart policy for persistent container');
+    }
+    lines.push('  --restart unless-stopped \\');
+  }
   
   // Image
   lines.push(`  ${config.image.fullImage} \\`);
+  
+  // Entrypoint command (if specified)
+  if (config.image.entrypoint) {
+    lines.push(`  ${config.image.entrypoint} \\`);
+  }
   
   // Engine parameters
   config.engineParams.forEach((param, i) => {
@@ -188,7 +203,9 @@ export function generateDockerRunCommand(
         lines.push(`  ${param.flag}${suffix}`);
       }
     } else {
-      lines.push(`  ${param.flag} ${param.value}${suffix}`);
+      // Quote string values for safety (especially important for model names with special chars)
+      const quotedValue = typeof param.value === 'string' ? `"${param.value}"` : param.value;
+      lines.push(`  ${param.flag} ${quotedValue}${suffix}`);
     }
   });
   

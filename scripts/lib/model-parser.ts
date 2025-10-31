@@ -350,6 +350,7 @@ export function transformHFConfig(
   const model: Partial<ModelEntry> = {
     id: generateModelId(modelId),
     name: generateModelName(modelName),
+    hf_model_id: modelId, // Store the original HuggingFace model ID with org prefix
     hidden_size,
     num_layers,
     num_heads,

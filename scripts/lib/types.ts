@@ -104,6 +104,7 @@ export interface MultimodalConfig {
 export interface ModelEntry {
   id: string;
   name: string;
+  hf_model_id?: string;  // Full HuggingFace model ID with org prefix (e.g., "meta-llama/Llama-3-70b")
   parameters_billions: number;
   hidden_size: number;
   num_layers: number;
