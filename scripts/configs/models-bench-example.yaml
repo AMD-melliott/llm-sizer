@@ -1,0 +1,92 @@
+# Example configuration file for batch-profile-bench.py
+#
+# This config demonstrates profiling models using the vLLM bench approach.
+# Each model runs with exact parameter control (input-len, output-len, batch-size)
+#
+# Usage:
+#   python scripts/batch-profile-bench.py --config scripts/configs/models-bench-example.yaml
+
+models:
+  # Example 1: Small model with comprehensive testing
+  - model_id: "meta-llama/Llama-2-7b-hf"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 6.7e9
+
+  # Example 2: GLM model (as shown in user's docker command)
+  - model_id: "zai-org/GLM-4.5-Air"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 8]
+    dtype: "float16"
+    tensor_parallel_size: 4  # Using 4 GPUs
+    quantization: null
+    model_params: null  # Will be auto-detected if possible
+
+  # Example 3: Quantized model
+  - model_id: "TheBloke/Llama-2-13B-chat-AWQ"
+    container_name: "vllm-quantized"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 8, 16]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: "awq"
+    model_params: 13e9
+
+  # Example 4: Large model with multi-GPU
+  - model_id: "meta-llama/Llama-2-70b-hf"
+    container_name: "vllm-70b"
+    input_lengths: [512, 1024]
+    output_lengths: [512]
+    batch_sizes: [1, 4, 8, 16]
+    dtype: "float16"
+    tensor_parallel_size: 4
+    quantization: null
+    model_params: 70e9
+
+# Configuration notes:
+#
+# model_id:
+#   - HuggingFace model ID or path to model directory
+#   - Must be accessible from inside the container
+#
+# container_name:
+#   - Name of Docker container with vLLM installed
+#   - Container should be running but NOT have vLLM server started
+#   - Use "sleep infinity" to keep container alive
+#
+# input_lengths:
+#   - List of input sequence lengths to test
+#   - Exact token counts (not approximate via prompts)
+#
+# output_lengths:
+#   - List of output sequence lengths to test
+#   - Forces exact generation (ignores EOS)
+#
+# batch_sizes:
+#   - List of concurrent batch sizes to test
+#   - True batching (not sequential requests)
+#
+# dtype:
+#   - Data type: "float16", "bfloat16", "float32", "fp8"
+#   - Must match what model supports
+#
+# tensor_parallel_size:
+#   - Number of GPUs for tensor parallelism
+#   - Must match GPU configuration in container
+#
+# quantization:
+#   - Quantization method: "awq", "gptq", "fp8", "int4", "int8"
+#   - Set to null for no quantization
+#
+# model_params:
+#   - Number of model parameters (e.g., 6.7e9 for 6.7B)
+#   - Used for more accurate memory breakdown estimation
+#   - Set to null to skip parameter-based calculations

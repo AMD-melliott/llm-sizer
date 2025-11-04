@@ -1,0 +1,72 @@
+# Batch Size Scaling Study
+# Objective: Understand framework overhead scaling with batch size
+# Estimated time: 6-8 hours
+
+models:
+  # Small model (1B) - Framework overhead dominates
+  - model_id: "amd/Llama-3.2-1B-Instruct-FP8-KV"
+    container_name: "vllm-inference"
+    input_lengths: [1024]
+    output_lengths: [512]
+    batch_sizes: [1, 2, 4, 8, 16, 32, 64, 128]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 1.24e9
+    num_layers: 16
+    num_heads: 32
+    hidden_size: 2048
+    head_dim: 64
+    kv_cache_dtype: "fp8"
+  
+  # Medium model (7B) - Balanced overhead
+  - model_id: "mistralai/Mistral-7B-Instruct-v0.2"
+    container_name: "vllm-inference"
+    input_lengths: [1024]
+    output_lengths: [512]
+    batch_sizes: [1, 2, 4, 8, 16, 32, 64]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 7.24e9
+    num_layers: 32
+    num_heads: 32
+    hidden_size: 4096
+    head_dim: 128
+  
+  # Medium-large model (13B)
+  - model_id: "meta-llama/Llama-2-13b-hf"
+    container_name: "vllm-inference"
+    input_lengths: [1024]
+    output_lengths: [512]
+    batch_sizes: [1, 2, 4, 8, 16, 32]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 13.0e9
+    num_layers: 40
+    num_heads: 40
+    hidden_size: 5120
+    head_dim: 128
+  
+  # DeepSeek-R1-0528 (new reasoning model)
+  - model_id: "deepseek-ai/DeepSeek-R1-0528"
+    container_name: "vllm-inference"
+    input_lengths: [1024]
+    output_lengths: [512]
+    batch_sizes: [1, 2, 4, 8, 16]
+    dtype: "bfloat16"
+    tensor_parallel_size: 2
+    quantization: null
+    model_params: 32.0e9
+    num_layers: 60
+    num_heads: 32
+    hidden_size: 4096
+    head_dim: 128
+    trust_remote_code: true
+
+# Expected outcomes:
+# - Overhead curve as function of batch size
+# - Identify if overhead is constant, linear, or logarithmic
+# - Find optimal batch size for each model size
+# - Validate calculator's batch scaling formula

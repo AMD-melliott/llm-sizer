@@ -1,0 +1,417 @@
+# Comprehensive Batch Profiling Configuration (Enhanced v2.0)
+# 
+# This configuration profiles a comprehensive set of models including:
+# - GLM models (4.5, 4.5-Air, 4.5-FP8, 4.6)
+# - Llama models (3.1-8B, 3.1-70B, 3.2-1B, 3.3-70B)
+# - Qwen models (Qwen3-4B, 8B, 14B, 30B, 235B)
+# - Kimi K2
+# - DeepSeek R1 and V3.1
+# - GPT-OSS (20B, 120B)
+# - Mistral/Mixtral models
+#
+# Usage:
+#   python scripts/batch-profile-bench-enhanced.py --config scripts/configs/models-comprehensive-enhanced.yaml
+#
+# Note: Uses enhanced profiler (v2.0) with comprehensive metadata capture
+
+models:
+  # ==========================================
+  # GLM Models (Zhipu AI / zai-org)
+  # ==========================================
+  
+  - model_id: "zai-org/GLM-4.5-Air"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "bfloat16"
+    tensor_parallel_size: 4
+    quantization: null
+    # GLM-4.5-Air is a MoE model (12B active from 106B total)
+    model_params: 106.0e9  # Total parameters
+    num_layers: 40
+    num_heads: 40
+    hidden_size: 6144
+    head_dim: 96
+    kv_cache_dtype: null
+  
+  - model_id: "zai-org/GLM-4.5"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4]
+    dtype: "bfloat16"
+    tensor_parallel_size: 8
+    quantization: null
+    # GLM-4.5 full model (32B active from 355B total, MoE)
+    model_params: 355.0e9
+    num_layers: 40
+    num_heads: 40
+    hidden_size: 4096
+    kv_cache_dtype: null
+  
+  - model_id: "zai-org/GLM-4.5-FP8"
+    container_name: "vllm-inference"
+    input_lengths: [512, 1024]
+    output_lengths: [512]
+    batch_sizes: [1, 8, 16]
+    dtype: "fp8"
+    tensor_parallel_size: 4
+    quantization: "fp8"
+    model_params: 13.0e9
+    num_layers: 40
+    num_heads: 40
+    hidden_size: 4096
+    kv_cache_dtype: "fp8"
+  
+  - model_id: "zai-org/GLM-4.6"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512]
+    output_lengths: [256]
+    batch_sizes: [1, 4, 8]
+    dtype: "bfloat16"
+    tensor_parallel_size: 4
+    quantization: null
+    model_params: 13.0e9
+    num_layers: 40
+    num_heads: 40
+    hidden_size: 4096
+    kv_cache_dtype: null
+
+  # ==========================================
+  # Llama Models (AMD optimized FP8-KV)
+  # ==========================================
+  
+  - model_id: "amd/Llama-3.2-1B-Instruct-FP8-KV"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024, 2048]
+    output_lengths: [256, 512, 1024]
+    batch_sizes: [1, 8, 16, 32]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 1.24e9
+    num_layers: 16
+    num_heads: 32
+    hidden_size: 2048
+    head_dim: 64
+    kv_cache_dtype: "fp8"
+  
+  - model_id: "amd/Llama-3.1-8B-Instruct-FP8-KV"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8, 16]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 8.03e9
+    num_layers: 32
+    num_heads: 32
+    hidden_size: 4096
+    head_dim: 128
+    kv_cache_dtype: "fp8"
+  
+  - model_id: "amd/Llama-3.1-70B-Instruct-FP8-KV"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "float16"
+    tensor_parallel_size: 4
+    quantization: null
+    model_params: 70.6e9
+    num_layers: 80
+    num_heads: 64
+    hidden_size: 8192
+    head_dim: 128
+    kv_cache_dtype: "fp8"
+  
+  - model_id: "amd/Llama-3.3-70B-Instruct-FP8-KV"
+    container_name: "vllm-inference"
+    input_lengths: [512, 1024]
+    output_lengths: [512]
+    batch_sizes: [1, 4, 8]
+    dtype: "float16"
+    tensor_parallel_size: 4
+    quantization: null
+    model_params: 70.6e9
+    num_layers: 80
+    num_heads: 64
+    hidden_size: 8192
+    head_dim: 128
+    kv_cache_dtype: "fp8"
+
+  # ==========================================
+  # Qwen Models
+  # ==========================================
+  
+  - model_id: "Qwen/Qwen3-4B"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 8, 16]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 4.0e9
+    num_layers: 28
+    num_heads: 28
+    hidden_size: 2560
+    head_dim: 128
+    kv_cache_dtype: null
+  
+  - model_id: "Qwen/Qwen3-8B"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8, 16]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 8.0e9
+    num_layers: 32
+    num_heads: 32
+    hidden_size: 4096
+    head_dim: 128
+    kv_cache_dtype: null
+  
+  - model_id: "Qwen/Qwen3-14B"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "float16"
+    tensor_parallel_size: 2
+    quantization: null
+    model_params: 14.0e9
+    num_layers: 40
+    num_heads: 40
+    hidden_size: 5120
+    head_dim: 128
+    kv_cache_dtype: null
+  
+  - model_id: "Qwen/Qwen3-30B-A3B-Instruct-2507"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "bfloat16"
+    tensor_parallel_size: 4
+    quantization: null
+    # Qwen3-30B with 3B active (MoE)
+    model_params: 30.0e9
+    num_layers: 32
+    num_heads: 32
+    hidden_size: 4096
+    kv_cache_dtype: null
+  
+  - model_id: "Qwen/Qwen3-235B-A22B-Instruct-2507"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512]
+    output_lengths: [256]
+    batch_sizes: [1, 2, 4]
+    dtype: "bfloat16"
+    tensor_parallel_size: 8
+    quantization: null
+    # Qwen3-235B with 22B active (MoE)
+    model_params: 235.0e9
+    num_layers: 64
+    num_heads: 64
+    hidden_size: 8192
+    kv_cache_dtype: null
+
+  # ==========================================
+  # Kimi K2 (Moonshot AI)
+  # ==========================================
+  
+  - model_id: "moonshotai/Kimi-K2-Instruct-0905"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "bfloat16"
+    tensor_parallel_size: 4
+    quantization: null
+    # Kimi K2 - 1 trillion parameters (32B active, MoE)
+    model_params: 1000.0e9
+    num_layers: 40
+    num_heads: 40
+    hidden_size: 4096
+    kv_cache_dtype: null
+
+  # ==========================================
+  # DeepSeek Models
+  # ==========================================
+  
+  - model_id: "deepseek-ai/DeepSeek-R1-0528"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "bfloat16"
+    tensor_parallel_size: 8
+    quantization: null
+    # DeepSeek R1 - reasoning model, 145B total (2.8B active, MoE)
+    model_params: 145.0e9
+    num_layers: 80
+    num_heads: 64
+    hidden_size: 8192
+    kv_cache_dtype: null
+  
+  - model_id: "deepseek-ai/DeepSeek-V3.1"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512]
+    output_lengths: [256]
+    batch_sizes: [1, 2, 4]
+    dtype: "bfloat16"
+    tensor_parallel_size: 8
+    quantization: null
+    # DeepSeek V3.1 - large MoE model, ~671B total with ~37B active
+    model_params: 671.0e9
+    num_layers: 61
+    num_heads: 128
+    hidden_size: 7168
+    kv_cache_dtype: null
+  
+  - model_id: "deepseek-ai/DeepSeek-V3.1-Base"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512]
+    output_lengths: [256]
+    batch_sizes: [1, 2]
+    dtype: "bfloat16"
+    tensor_parallel_size: 8
+    quantization: null
+    model_params: 671.0e9
+    num_layers: 61
+    num_heads: 128
+    hidden_size: 7168
+    kv_cache_dtype: null
+
+  # ==========================================
+  # GPT-OSS Models (OpenAI open-source style)
+  # ==========================================
+  
+  - model_id: "openai/gpt-oss-20b"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "float16"
+    tensor_parallel_size: 2
+    quantization: null
+    # gpt-oss-20b is 21B total (3.6B active, MoE)
+    model_params: 21.0e9
+    num_layers: 44
+    num_heads: 40
+    hidden_size: 5120
+    head_dim: 128
+    kv_cache_dtype: null
+  
+  - model_id: "openai/gpt-oss-120b"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4]
+    dtype: "bfloat16"
+    tensor_parallel_size: 8
+    quantization: null
+    # gpt-oss-120b is 117B total (5.1B active, MoE)
+    model_params: 117.0e9
+    num_layers: 96
+    num_heads: 80
+    hidden_size: 10240
+    head_dim: 128
+    kv_cache_dtype: null
+
+  # ==========================================
+  # Mistral Models (for comparison)
+  # ==========================================
+  
+  - model_id: "mistralai/Mistral-7B-Instruct-v0.2"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 8, 16]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 7.24e9
+    num_layers: 32
+    num_heads: 32
+    hidden_size: 4096
+    head_dim: 128
+    kv_cache_dtype: null
+  
+  - model_id: "mistralai/Mixtral-8x7B-Instruct-v0.1"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "bfloat16"
+    tensor_parallel_size: 4
+    quantization: null
+    # Mixtral 8x7B - MoE with ~13B active from 46.7B total
+    model_params: 46.7e9
+    num_layers: 32
+    num_heads: 32
+    hidden_size: 4096
+    head_dim: 128
+    kv_cache_dtype: null
+
+  # ==========================================
+  # Gemma Models (Google)
+  # ==========================================
+  
+  - model_id: "google/gemma-3-12b-it"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "bfloat16"
+    tensor_parallel_size: 2
+    quantization: null
+    model_params: 12.0e9
+    num_layers: 42
+    num_heads: 16
+    hidden_size: 3584
+    head_dim: 256
+    kv_cache_dtype: null
+  
+  - model_id: "google/gemma-3-27b-it"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4]
+    dtype: "bfloat16"
+    tensor_parallel_size: 4
+    quantization: null
+    model_params: 27.0e9
+    num_layers: 46
+    num_heads: 32
+    hidden_size: 4608
+    head_dim: 128
+    kv_cache_dtype: null
+
+# Notes:
+# - All models use the enhanced profiler (v2.0) with comprehensive metadata
+# - Architecture parameters provided for high-confidence estimation
+# - FP8-KV models explicitly set kv_cache_dtype: "fp8"
+# - Tensor parallel sizes adjusted based on model size and available GPUs
+# - Batch sizes and sequence lengths scaled appropriately per model size
+# - MoE models include total parameter count (active params noted in comments)
+#
+# Estimated profiling time:
+# - Small models (1-8B): ~2-3 min per config
+# - Medium models (14-30B): ~5-8 min per config
+# - Large models (70-120B): ~10-20 min per config
+# - Massive models (235B+, 671B): ~30-60 min per config
+#
+# Total configs: ~23 models × avg 12 configs each = ~276 configurations
+# Estimated total time: 30-50 hours (run overnight or in batches)
+#
+# Recommended approach:
+# 1. Start with small models first to validate setup
+# 2. Run medium models in parallel if multiple GPUs available
+# 3. Schedule large models for overnight runs
+# 4. Monitor for OOM errors and adjust tensor_parallel_size as needed

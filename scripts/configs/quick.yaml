@@ -1,0 +1,109 @@
+# Quick Test Configuration (Enhanced v2.0)
+# 
+# Smaller set of models for quick validation and testing
+# Focuses on one model from each family for initial profiling
+#
+# Usage:
+#   python scripts/batch-profile-bench-enhanced.py --config scripts/configs/models-quick-test-enhanced.yaml
+#
+# Estimated time: 2-3 hours
+
+models:
+  # GLM-4.5-Air (MoE model, medium complexity)
+  - model_id: "zai-org/GLM-4.5-Air"
+    container_name: "vllm-inference"
+    input_lengths: [1024]
+    output_lengths: [1024]
+    batch_sizes: [1, 8]
+    dtype: "bfloat16"
+    tensor_parallel_size: 4
+    quantization: null
+    model_params: 54.0e9
+    num_layers: 40
+    num_heads: 40
+    hidden_size: 6144
+    head_dim: 96
+  
+  # Llama-3.2-1B (smallest, fastest to test)
+  - model_id: "amd/Llama-3.2-1B-Instruct-FP8-KV"
+    container_name: "vllm-inference"
+    input_lengths: [1024]
+    output_lengths: [1024]
+    batch_sizes: [1, 8]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 1.24e9
+    num_layers: 16
+    num_heads: 32
+    hidden_size: 2048
+    head_dim: 64
+    kv_cache_dtype: "fp8"
+  
+  # Llama-3.1-8B (popular size)
+  - model_id: "amd/Llama-3.1-8B-Instruct-FP8-KV"
+    container_name: "vllm-inference"
+    input_lengths: [1024]
+    output_lengths: [1024]
+    batch_sizes: [1, 8]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 8.03e9
+    num_layers: 32
+    num_heads: 32
+    hidden_size: 4096
+    head_dim: 128
+    kv_cache_dtype: "fp8"
+  
+  # Qwen3-8B (representative Qwen model)
+  - model_id: "Qwen/Qwen3-8B"
+    container_name: "vllm-inference"
+    input_lengths: [1024]
+    output_lengths: [1024]
+    batch_sizes: [1, 8]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 8.0e9
+    num_layers: 32
+    num_heads: 32
+    hidden_size: 4096
+    head_dim: 128
+  
+  # Kimi K2 (Moonshot AI)
+  - model_id: "moonshotai/Kimi-K2-Instruct-0905"
+    container_name: "vllm-inference"
+    input_lengths: [1024]
+    output_lengths: [1024]
+    batch_sizes: [1, 4]
+    dtype: "bfloat16"
+    tensor_parallel_size: 8
+    quantization: null
+    model_params: 14.0e9
+    num_layers: 40
+    num_heads: 40
+    hidden_size: 4096
+  
+  # Mistral-7B (baseline comparison)
+  - model_id: "mistralai/Mistral-7B-Instruct-v0.2"
+    container_name: "vllm-inference"
+    input_lengths: [1024]
+    output_lengths: [1024]
+    batch_sizes: [1, 8]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 7.24e9
+    num_layers: 32
+    num_heads: 32
+    hidden_size: 4096
+    head_dim: 128
+
+# Quick test summary:
+# - 6 models
+# - 2-3 configs per model
+# - Total: ~15 configurations
+# - Estimated time: 2-3 hours
+# - Mix of sizes: 1B, 7-8B, 14B, 54B (MoE)
+# - Tests: FP8-KV, standard FP16, MoE, different architectures

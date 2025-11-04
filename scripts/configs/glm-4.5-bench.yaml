@@ -1,0 +1,16 @@
+# Configuration for profiling GLM-4.5-Air model
+# Based on user's docker run command with 4 GPUs
+#
+# Usage:
+#   python scripts/batch-profile-bench.py --config scripts/configs/glm-4.5-bench.yaml
+
+models:
+  - model_id: "zai-org/GLM-4.5-Air"
+    container_name: "vllm-inference"
+    input_lengths: [256, 512, 1024]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 8, 16]
+    dtype: "float16"
+    tensor_parallel_size: 4
+    quantization: null
+    model_params: null

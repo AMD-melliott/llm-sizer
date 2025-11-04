@@ -1,0 +1,197 @@
+# Validation Campaign Configuration
+#
+# This config profiles popular models across various sizes and architectures
+# to build a comprehensive validation dataset for calculator accuracy testing.
+#
+# Estimated profiling time: 4-6 hours (depending on hardware)
+# Total profiles generated: ~45 (15 models × 3 configs each)
+
+models:
+  # === SMALL MODELS (7-13B) ===
+  
+  - model_id: "meta-llama/Llama-2-7b-chat-hf"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 4, 8]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    model_params: 7
+    notes: "Baseline small model"
+  
+  - model_id: "mistralai/Mistral-7B-Instruct-v0.3"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 4, 8]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    model_params: 7.24
+    notes: "Popular instruction-tuned model"
+  
+  - model_id: "meta-llama/Llama-2-13b-chat-hf"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 4]
+    dtype: "float16"
+    tensor_parallel_size: 2
+    model_params: 13
+    notes: "Medium model with 2-way TP"
+  
+  # === MEDIUM MODELS (20-40B) ===
+  
+  - model_id: "Qwen/Qwen2.5-32B-Instruct"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 4]
+    dtype: "float16"
+    tensor_parallel_size: 2
+    model_params: 32.5
+    notes: "Qwen 2.5 architecture"
+  
+  - model_id: "zai-org/GLM-4.5-Air"
+    container_name: "vllm-validator"
+    input_lengths: [256, 512]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "float16"
+    tensor_parallel_size: 4
+    model_params: 31.7
+    notes: "MoE model - already profiled, include for completeness"
+  
+  - model_id: "01-ai/Yi-34B-Chat"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 4]
+    dtype: "float16"
+    tensor_parallel_size: 4
+    model_params: 34
+    notes: "Yi architecture baseline"
+  
+  # === LARGE MODELS (40-80B) ===
+  
+  - model_id: "zai-org/GLM-4.5"
+    container_name: "vllm-validator"
+    input_lengths: [256, 512]
+    output_lengths: [256, 512]
+    batch_sizes: [1, 4, 8]
+    dtype: "float16"
+    tensor_parallel_size: 8
+    model_params: 42.2
+    notes: "MoE model - already profiled, include for completeness"
+  
+  - model_id: "meta-llama/Llama-2-70b-chat-hf"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 2]
+    dtype: "float16"
+    tensor_parallel_size: 4
+    model_params: 70
+    notes: "Large dense model - 4-way TP"
+  
+  - model_id: "Qwen/Qwen2.5-72B-Instruct"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 2]
+    dtype: "float16"
+    tensor_parallel_size: 4
+    model_params: 72.7
+    notes: "Large Qwen model"
+  
+  # === QUANTIZED VARIANTS (Testing quantization accuracy) ===
+  
+  - model_id: "meta-llama/Llama-2-7b-chat-hf"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 4]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: "fp8"
+    model_params: 7
+    notes: "FP8 quantization test"
+  
+  - model_id: "mistralai/Mistral-7B-Instruct-v0.3"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 4]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: "int8"
+    model_params: 7.24
+    notes: "INT8 quantization test"
+  
+  # === DIFFERENT BATCH/SEQUENCE SIZES (Scaling tests) ===
+  
+  - model_id: "meta-llama/Llama-2-13b-chat-hf"
+    container_name: "vllm-validator"
+    input_lengths: [128, 256, 1024, 2048]
+    output_lengths: [128, 256, 1024, 2048]
+    batch_sizes: [1]
+    dtype: "float16"
+    tensor_parallel_size: 2
+    model_params: 13
+    notes: "Sequence length scaling test"
+  
+  - model_id: "meta-llama/Llama-2-13b-chat-hf"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 2, 4, 8, 16, 32]
+    dtype: "float16"
+    tensor_parallel_size: 2
+    model_params: 13
+    notes: "Batch size scaling test"
+  
+  # === SPECIAL ARCHITECTURES ===
+  
+  - model_id: "deepseek-ai/deepseek-coder-33b-instruct"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 4]
+    dtype: "float16"
+    tensor_parallel_size: 4
+    model_params: 33
+    notes: "DeepSeek architecture"
+  
+  - model_id: "codellama/CodeLlama-34b-Instruct-hf"
+    container_name: "vllm-validator"
+    input_lengths: [512]
+    output_lengths: [512]
+    batch_sizes: [1, 4]
+    dtype: "float16"
+    tensor_parallel_size: 4
+    model_params: 34
+    notes: "Code-specialized Llama"
+
+# Profiling Notes:
+# ================
+# 
+# Prerequisites:
+# 1. Docker container "vllm-validator" must be running with vLLM installed
+# 2. Models will be downloaded on first run (ensure sufficient disk space)
+# 3. Recommended: 4-8 GPUs with at least 80GB VRAM each (H100, MI300X, etc.)
+#
+# Estimated Times:
+# - Small models (7-13B): ~5-10 min each
+# - Medium models (20-40B): ~10-20 min each  
+# - Large models (40-80B): ~20-30 min each
+#
+# Total Estimated Time: 4-6 hours for all 15 models
+#
+# Usage:
+#   python scripts/batch-profile-bench.py configs/validation-campaign.yaml
+#
+# Output:
+#   results/memory-profiles/*.json (one per model configuration)
+#
+# After Profiling:
+#   npm run batch-validate -- results/memory-profiles/
+#   python scripts/analyze-validation.py validation-results.csv --detailed

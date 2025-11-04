@@ -1,0 +1,30 @@
+# Test Configuration for Cleanup Validation
+# 
+# This minimal config tests the cleanup functionality with just 2 runs
+# to verify that GPU memory is properly cleaned between configurations.
+#
+# Expected behavior:
+# - Run 1: Baseline ~0.3-2 GB (clean start)
+# - Cleanup: GPU memory drops to <1 GB
+# - Run 2: Baseline ~0.3-2 GB (successfully cleaned, NOT 748 GB)
+#
+# Usage:
+#   python scripts/batch-profile-bench-enhanced.py \
+#       --config scripts/configs/test-cleanup.yaml \
+#       --results-dir results/test-cleanup
+
+models:
+  # Llama-3.2-1B (smallest, fastest to test)
+  - model_id: "amd/Llama-3.2-1B-Instruct-FP8-KV"
+    container_name: "vllm-inference"
+    input_lengths: [1024]
+    output_lengths: [1024]
+    batch_sizes: [1, 8]
+    dtype: "float16"
+    tensor_parallel_size: 1
+    quantization: null
+    model_params: 1.24e9
+    num_layers: 16
+    num_heads: 32
+    hidden_size: 2048
+    head_dim: 64

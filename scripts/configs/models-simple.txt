@@ -1,0 +1,23 @@
+# Simple Batch Profiling Configuration (for bash script)
+# Format: model_id,container_name,batch_size,max_tokens,tensor_parallel,prompt(optional)
+#
+# Usage:
+#   ./scripts/batch-profile-models.sh scripts/configs/models-simple.txt
+
+# Header (required)
+model_id,container_name,batch_size,max_tokens,tensor_parallel,prompt
+
+# Small models - single GPU
+meta-llama/Llama-3.2-3B-Instruct,llama-3b,1,512,1,Explain quantum computing
+meta-llama/Llama-3.2-3B-Instruct,llama-3b,4,1024,1,Explain quantum computing
+meta-llama/Llama-3.2-3B-Instruct,llama-3b,8,2048,1,Explain quantum computing
+
+# Medium model
+meta-llama/Llama-3.1-8B-Instruct,llama-8b,1,512,1
+meta-llama/Llama-3.1-8B-Instruct,llama-8b,4,1024,1
+meta-llama/Llama-3.1-8B-Instruct,llama-8b,8,2048,1
+
+# Large model with tensor parallelism
+meta-llama/Llama-3.1-70B-Instruct,llama-70b,1,512,4
+meta-llama/Llama-3.1-70B-Instruct,llama-70b,4,1024,4
+meta-llama/Llama-3.1-70B-Instruct,llama-70b,8,2048,4
