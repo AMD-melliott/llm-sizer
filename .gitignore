@@ -1,5 +1,6 @@
 **/__pycache__/
 *.pyc
+*.csv
 node_modules/
 dist/
 .env
@@ -9,6 +10,7 @@ models.backup*.json
 *.log
 .mcp.json
 docs/architecture/
+.github/instructions/
 
 # Memory profiling results (keep directory structure)
 results/
