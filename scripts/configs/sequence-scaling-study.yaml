@@ -1,56 +1,50 @@
-# Sequence Length Scaling Study
-# Objective: Validate KV cache grows linearly with sequence length
-# Estimated time: 4-5 hours
-
 models:
-  # Mistral-7B with FP16 KV cache
-  - model_id: "mistralai/Mistral-7B-Instruct-v0.2"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512, 1024, 2048, 4096, 8192]
-    output_lengths: [256]  # Fixed output
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    model_params: 7.24e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-  
-  # Llama-3.1-8B with FP8 KV cache (for comparison)
-  - model_id: "amd/Llama-3.1-8B-Instruct-FP8-KV"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512, 1024, 2048, 4096]
-    output_lengths: [256]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    model_params: 8.03e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-    kv_cache_dtype: "fp8"
-  
-  # Qwen3-8B with very long context
-  - model_id: "Qwen/Qwen3-8B"
-    container_name: "vllm-inference"
-    input_lengths: [512, 1024, 2048, 4096]
-    output_lengths: [512]
-    batch_sizes: [1, 4]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    model_params: 8.0e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-
-# Expected outcomes:
-# - KV cache should scale perfectly linearly with sequence length
-# - Overhead should remain constant across sequence lengths
-# - FP8 vs FP16 KV ratio should be consistent at all lengths
-# - Validate: kv_cache = 2 * layers * hidden * seq * batch * bytes / 1e9
+- hf_model_id: mistralai/Mistral-7B-Instruct-v0.2
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 256
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+  - 1024
+  - 2048
+  - 4096
+  - 8192
+- hf_model_id: amd/Llama-3.1-8B-Instruct-FP8-KV
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 256
+  kv_cache_dtype: fp8
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+  - 1024
+  - 2048
+  - 4096
+- hf_model_id: Qwen/Qwen3-8B
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 4
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 512
+  - 1024
+  - 2048
+  - 4096

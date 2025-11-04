@@ -1,131 +1,93 @@
-# MoE (Mixture of Experts) Models Study
-# Objective: Understand sparse expert activation and memory usage
-# Estimated time: 10-12 hours
-
 models:
-  # === Mixtral 8x7B (Most popular MoE) ===
-  
-  - model_id: "mistralai/Mixtral-8x7B-Instruct-v0.1"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 4, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    model_params: 46.7e9  # Total params
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-    # MoE config
-    num_experts: 8
-    experts_per_token: 2
-  
-  - model_id: "mistralai/Mixtral-8x7B-Instruct-v0.1"
-    tensor_parallel_size: 2
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 4, 8]
-    dtype: "float16"
-    quantization: null
-    model_params: 46.7e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-    num_experts: 8
-    experts_per_token: 2
-  
-  - model_id: "mistralai/Mixtral-8x7B-Instruct-v0.1"
-    tensor_parallel_size: 4
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 4, 8]
-    dtype: "float16"
-    quantization: null
-    model_params: 46.7e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-    num_experts: 8
-    experts_per_token: 2
-  
-  # === GLM-4.5-Air (Already have some data, add more configs) ===
-  
-  - model_id: "zai-org/GLM-4.5-Air"
-    container_name: "vllm-inference"
-    input_lengths: [512, 1024, 2048]  # Test different sequence lengths
-    output_lengths: [512]
-    batch_sizes: [1, 4, 8]
-    dtype: "bfloat16"
-    tensor_parallel_size: 4
-    quantization: null
-    model_params: 54.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 6144
-    head_dim: 96
-    num_experts: 8
-    experts_per_token: 2
-  
-  # === Qwen2-57B-MoE (If available) ===
-  
-  - model_id: "Qwen/Qwen2-57B-A14B-Instruct"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 4, 8]
-    dtype: "bfloat16"
-    tensor_parallel_size: 4
-    quantization: null
-    model_params: 57.0e9  # Total params
-    num_layers: 28
-    num_heads: 40
-    hidden_size: 6400
-    # MoE config (approximate - verify)
-    num_experts: 64
-    experts_per_token: 8
-  
-  - model_id: "Qwen/Qwen2-57B-A14B-Instruct"
-    tensor_parallel_size: 8
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 4, 8]
-    dtype: "bfloat16"
-    quantization: null
-    model_params: 57.0e9
-    num_layers: 28
-    num_heads: 40
-    hidden_size: 6400
-    num_experts: 64
-    experts_per_token: 8
-  
-  # === DeepSeek-V2 (Very large MoE, if accessible) ===
-  
-  - model_id: "deepseek-ai/DeepSeek-V2-Lite"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 4]
-    dtype: "bfloat16"
-    tensor_parallel_size: 4
-    quantization: null
-    model_params: 15.7e9  # Active params
-    num_layers: 27
-    num_heads: 16
-    hidden_size: 2048
-    num_experts: 64
-    experts_per_token: 6
-
-# Expected outcomes:
-# - MoE memory ≠ total_params * bytes_per_param
-# - Active memory = shared_params + (expert_params * active_ratio)
-# - For Mixtral: ~13B active params (not 46.7B)
-# - Overhead likely higher due to expert routing
-# - Validate: active_params = shared + (total - shared) * (active_experts / total_experts)
-# - Multi-GPU should distribute experts across GPUs
+- hf_model_id: mistralai/Mixtral-8x7B-Instruct-v0.1
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: mistralai/Mixtral-8x7B-Instruct-v0.1
+  tensor_parallel_size: 2
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: mistralai/Mixtral-8x7B-Instruct-v0.1
+  tensor_parallel_size: 4
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: zai-org/GLM-4.5-Air
+  tensor_parallel_size: 4
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: bfloat16
+  container_name: vllm-inference
+  input_lengths:
+  - 512
+  - 1024
+  - 2048
+- hf_model_id: Qwen/Qwen2-57B-A14B-Instruct
+  tensor_parallel_size: 4
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: bfloat16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: Qwen/Qwen2-57B-A14B-Instruct
+  tensor_parallel_size: 8
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: bfloat16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: deepseek-ai/DeepSeek-V2-Lite
+  tensor_parallel_size: 4
+  batch_sizes:
+  - 1
+  - 4
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: bfloat16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024

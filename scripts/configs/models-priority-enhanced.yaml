@@ -1,274 +1,232 @@
-# Priority Models Configuration (Enhanced v2.0)
-# 
-# Focused on the specifically requested model families:
-# - GLM models (all variants)
-# - Sample of Llama models
-# - Sample of Qwen models  
-# - Kimi K2
-# - DeepSeek R1
-# - GPT-OSS models
-# - Phi models (Note: Not found in cache, using Mistral as substitute)
-#
-# Usage:
-#   python scripts/batch-profile-bench-enhanced.py --config scripts/configs/models-priority-enhanced.yaml
-#
-# Estimated time: 12-18 hours
-
 models:
-  # ==========================================
-  # GLM Models (Complete Set)
-  # ==========================================
-  
-  - model_id: "zai-org/GLM-4.5-Air"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512, 1024]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 4, 8]
-    dtype: "bfloat16"
-    tensor_parallel_size: 4
-    quantization: null
-    model_params: 54.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 6144
-    head_dim: 96
-  
-  - model_id: "zai-org/GLM-4.5"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 4]
-    dtype: "bfloat16"
-    tensor_parallel_size: 8
-    quantization: null
-    model_params: 13.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 4096
-  
-  - model_id: "zai-org/GLM-4.5-FP8"
-    container_name: "vllm-inference"
-    input_lengths: [512]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "fp8"
-    tensor_parallel_size: 4
-    quantization: "fp8"
-    model_params: 13.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 4096
-    kv_cache_dtype: "fp8"
-  
-  - model_id: "zai-org/GLM-4.6"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 4, 8]
-    dtype: "bfloat16"
-    tensor_parallel_size: 4
-    quantization: null
-    model_params: 13.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 4096
-
-  # ==========================================
-  # Llama Models (Representative Sample)
-  # ==========================================
-  
-  - model_id: "amd/Llama-3.2-1B-Instruct-FP8-KV"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512, 1024]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 8, 16]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    model_params: 1.24e9
-    num_layers: 16
-    num_heads: 32
-    hidden_size: 2048
-    head_dim: 64
-    kv_cache_dtype: "fp8"
-  
-  - model_id: "amd/Llama-3.1-8B-Instruct-FP8-KV"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512, 1024]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 4, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    model_params: 8.03e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-    kv_cache_dtype: "fp8"
-  
-  - model_id: "amd/Llama-3.1-70B-Instruct-FP8-KV"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 4]
-    dtype: "float16"
-    tensor_parallel_size: 4
-    quantization: null
-    model_params: 70.6e9
-    num_layers: 80
-    num_heads: 64
-    hidden_size: 8192
-    head_dim: 128
-    kv_cache_dtype: "fp8"
-
-  # ==========================================
-  # Qwen Models (Representative Sample)
-  # ==========================================
-  
-  - model_id: "Qwen/Qwen3-4B"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512, 1024]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 8, 16]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    model_params: 4.0e9
-    num_layers: 28
-    num_heads: 28
-    hidden_size: 2560
-    head_dim: 128
-  
-  - model_id: "Qwen/Qwen3-8B"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512, 1024]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 4, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    model_params: 8.0e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-  
-  - model_id: "Qwen/Qwen3-14B"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 4, 8]
-    dtype: "float16"
-    tensor_parallel_size: 2
-    quantization: null
-    model_params: 14.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 5120
-    head_dim: 128
-
-  # ==========================================
-  # Kimi K2 (Moonshot AI)
-  # ==========================================
-  
-  - model_id: "moonshotai/Kimi-K2-Instruct-0905"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512, 1024]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 4, 8]
-    dtype: "bfloat16"
-    tensor_parallel_size: 4
-    quantization: null
-    trust_remote_code: true  # Required for custom model code
-    model_params: 14.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 4096
-
-  # ==========================================
-  # DeepSeek R1 (Reasoning Model)
-  # ==========================================
-  
-  - model_id: "deepseek-ai/DeepSeek-R1-0528"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 4]
-    dtype: "bfloat16"
-    tensor_parallel_size: 8
-    quantization: null
-    model_params: 70.0e9
-    num_layers: 80
-    num_heads: 64
-    hidden_size: 8192
-
-  # ==========================================
-  # GPT-OSS Models
-  # ==========================================
-  
-  - model_id: "openai/gpt-oss-20b"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512, 1024]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 4, 8]
-    dtype: "float16"
-    tensor_parallel_size: 2
-    quantization: null
-    model_params: 20.0e9
-    num_layers: 44
-    num_heads: 40
-    hidden_size: 5120
-    head_dim: 128
-  
-  - model_id: "openai/gpt-oss-120b"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 4]
-    dtype: "bfloat16"
-    tensor_parallel_size: 8
-    quantization: null
-    model_params: 120.0e9
-    num_layers: 96
-    num_heads: 80
-    hidden_size: 10240
-    head_dim: 128
-
-  # ==========================================
-  # Mistral (Phi substitute - similar size/architecture)
-  # Note: Phi models not found in cache
-  # ==========================================
-  
-  - model_id: "mistralai/Mistral-7B-Instruct-v0.2"
-    container_name: "vllm-inference"
-    input_lengths: [256, 512, 1024]
-    output_lengths: [256, 512]
-    batch_sizes: [1, 8, 16]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    model_params: 7.24e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-
-# Priority Models Summary:
-# - 16 models total
-# - GLM: 4 variants (Air, 4.5, FP8, 4.6)
-# - Llama: 3 sizes (1B, 8B, 70B) with FP8-KV
-# - Qwen: 3 sizes (4B, 8B, 14B)
-# - Kimi K2: 1 model
-# - DeepSeek R1: 1 model
-# - GPT-OSS: 2 models (20B, 120B)
-# - Mistral: 1 model (Phi substitute)
-#
-# Total configurations: ~150-180 configs
-# Estimated time: 12-18 hours
-#
-# Recommended execution:
-# 1. Start with small models (1B, 4B) to validate
-# 2. Run 8B models in parallel
-# 3. Schedule 70B+ models overnight
-# 4. Monitor GLM-4.5-Air carefully (MoE, may need memory tuning)
+- hf_model_id: zai-org/GLM-4.5-Air
+  tensor_parallel_size: 4
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  dtype: bfloat16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+  - 1024
+- hf_model_id: zai-org/GLM-4.5
+  tensor_parallel_size: 8
+  batch_sizes:
+  - 1
+  - 4
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  dtype: bfloat16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+- hf_model_id: zai-org/GLM-4.5-FP8
+  tensor_parallel_size: 4
+  batch_sizes:
+  - 1
+  - 8
+  quantization: fp8
+  output_lengths:
+  - 512
+  kv_cache_dtype: fp8
+  dtype: fp8
+  container_name: vllm-inference
+  input_lengths:
+  - 512
+- hf_model_id: zai-org/GLM-4.6
+  tensor_parallel_size: 4
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  dtype: bfloat16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+- hf_model_id: amd/Llama-3.2-1B-Instruct-FP8-KV
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  - 16
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  kv_cache_dtype: fp8
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+  - 1024
+- hf_model_id: amd/Llama-3.1-8B-Instruct-FP8-KV
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  kv_cache_dtype: fp8
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+  - 1024
+- hf_model_id: amd/Llama-3.1-70B-Instruct-FP8-KV
+  tensor_parallel_size: 4
+  batch_sizes:
+  - 1
+  - 4
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  kv_cache_dtype: fp8
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+- hf_model_id: Qwen/Qwen3-4B
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  - 16
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+  - 1024
+- hf_model_id: Qwen/Qwen3-8B
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+  - 1024
+- hf_model_id: Qwen/Qwen3-14B
+  tensor_parallel_size: 2
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+- hf_model_id: moonshotai/Kimi-K2-Instruct-0905
+  tensor_parallel_size: 4
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  dtype: bfloat16
+  trust_remote_code: true
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+  - 1024
+- hf_model_id: deepseek-ai/DeepSeek-R1-0528
+  tensor_parallel_size: 8
+  batch_sizes:
+  - 1
+  - 4
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  dtype: bfloat16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+- hf_model_id: openai/gpt-oss-20b
+  tensor_parallel_size: 2
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+  - 1024
+- hf_model_id: openai/gpt-oss-120b
+  tensor_parallel_size: 8
+  batch_sizes:
+  - 1
+  - 4
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  dtype: bfloat16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+- hf_model_id: mistralai/Mistral-7B-Instruct-v0.2
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  - 16
+  quantization: null
+  output_lengths:
+  - 256
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 256
+  - 512
+  - 1024

@@ -1,73 +1,57 @@
-# Quick Test Configuration (v2.1 - Model Database Integration)
-#
-# Smaller set of models for quick validation and testing.
-# Focuses on one model from each family for initial profiling.
-#
-# NEW: Model architecture parameters are auto-loaded from src/data/models.json
-#      Only test configuration parameters are specified here.
-#
-# Usage:
-#   python scripts/batch-profile-bench-enhanced.py --config scripts/configs/quick.yaml
-#
-# Estimated time: 2-3 hours
-
 models:
-  # Llama-3.2-1B (smallest, fastest to test)
-  - hf_model_id: "meta-llama/Llama-3.2-1B-Instruct"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [1024]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    kv_cache_dtype: "fp8"  # FP8-KV variant
-    trust_remote_code: false
-
-  # Llama-3.1-8B (popular size)
-  - hf_model_id: "meta-llama/Llama-3.1-8B-Instruct"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [1024]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    kv_cache_dtype: "fp8"  # FP8-KV variant
-    trust_remote_code: false
-
-  # Qwen2.5-7B (representative Qwen model)
-  - hf_model_id: "Qwen/Qwen2.5-7B-Instruct"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [1024]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    kv_cache_dtype: null
-    trust_remote_code: false
-
-  # Mistral-7B (baseline comparison)
-  - hf_model_id: "mistralai/Mistral-7B-Instruct-v0.3"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [1024]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    kv_cache_dtype: null
-    trust_remote_code: false
-
-# Quick test summary:
-# - 4 models (down from 6 in legacy version)
-# - 2 configs per model
-# - Total: ~8 configurations
-# - Estimated time: 1.5-2 hours
-# - Mix of sizes: 1B, 7-8B
-# - Tests: FP8-KV, standard FP16, different architectures
-#
-# Removed models (not in models.json or not priority):
-#   - GLM-4.5-Air (will add once in models.json)
-#   - Kimi K2 (multi-GPU requirement, not for quick test)
+- hf_model_id: meta-llama/Llama-3.2-1B-Instruct
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 1024
+  kv_cache_dtype: fp8
+  dtype: float16
+  trust_remote_code: false
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: meta-llama/Llama-3.1-8B-Instruct
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 1024
+  kv_cache_dtype: fp8
+  dtype: float16
+  trust_remote_code: false
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: Qwen/Qwen2.5-7B-Instruct
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 1024
+  kv_cache_dtype: null
+  dtype: float16
+  trust_remote_code: false
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: mistralai/Mistral-7B-Instruct-v0.3
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 1024
+  kv_cache_dtype: null
+  dtype: float16
+  trust_remote_code: false
+  container_name: vllm-inference
+  input_lengths:
+  - 1024

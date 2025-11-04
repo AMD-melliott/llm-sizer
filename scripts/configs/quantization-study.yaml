@@ -1,123 +1,86 @@
-# Quantization Study
-# Objective: Measure memory reduction from quantization (AWQ, GPTQ, FP8)
-# Estimated time: 6-8 hours
-
 models:
-  # === Mistral-7B in different quantizations ===
-  
-  # Baseline: FP16 (no quantization)
-  - model_id: "mistralai/Mistral-7B-Instruct-v0.2"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    model_params: 7.24e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-  
-  # AWQ INT4 quantization
-  - model_id: "TheBloke/Mistral-7B-Instruct-v0.2-AWQ"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "float16"  # Activations still FP16
-    tensor_parallel_size: 1
-    quantization: "awq"
-    model_params: 7.24e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-  
-  # GPTQ INT4 quantization
-  - model_id: "TheBloke/Mistral-7B-Instruct-v0.2-GPTQ"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: "gptq"
-    model_params: 7.24e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-  
-  # === Llama-3.1-8B quantized ===
-  
-  # Baseline: FP16 with FP8 KV cache
-  - model_id: "amd/Llama-3.1-8B-Instruct-FP8-KV"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    model_params: 8.03e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-    kv_cache_dtype: "fp8"
-  
-  # AWQ INT4
-  - model_id: "hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: "awq"
-    model_params: 8.03e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-  
-  # GPTQ INT4
-  - model_id: "hugging-quants/Meta-Llama-3.1-8B-Instruct-GPTQ-INT4"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: "gptq"
-    model_params: 8.03e9
-    num_layers: 32
-    num_heads: 32
-    hidden_size: 4096
-    head_dim: 128
-  
-  # === Llama-2-13B quantized ===
-  
-  # AWQ INT4 (13B model)
-  - model_id: "TheBloke/Llama-2-13B-chat-AWQ"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: "awq"
-    model_params: 13.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 5120
-    head_dim: 128
-
-# Expected outcomes:
-# - AWQ/GPTQ: weights should be ~4x smaller (16-bit → 4-bit)
-# - FP8 weights: ~2x smaller (16-bit → 8-bit)
-# - KV cache and activations remain unchanged
-# - Framework overhead may change slightly
-# - Validate: quantized_weights = params * 0.5 / 1e9 (for INT4)
+- hf_model_id: mistralai/Mistral-7B-Instruct-v0.2
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: TheBloke/Mistral-7B-Instruct-v0.2-AWQ
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: awq
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: TheBloke/Mistral-7B-Instruct-v0.2-GPTQ
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: gptq
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: amd/Llama-3.1-8B-Instruct-FP8-KV
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  kv_cache_dtype: fp8
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: awq
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: hugging-quants/Meta-Llama-3.1-8B-Instruct-GPTQ-INT4
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: gptq
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: TheBloke/Llama-2-13B-chat-AWQ
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: awq
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024

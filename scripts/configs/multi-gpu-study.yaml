@@ -1,144 +1,112 @@
-# Multi-GPU Scaling Study
-# Objective: Measure tensor parallelism communication overhead
-# Estimated time: 8-10 hours
-
 models:
-  # === 13B model across different GPU counts ===
-  
-  - model_id: "meta-llama/Llama-2-13b-hf"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    tensor_parallel_size: 1  # Baseline: single GPU
-    quantization: null
-    model_params: 13.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 5120
-    head_dim: 128
-  
-  - model_id: "meta-llama/Llama-2-13b-hf"
-    tensor_parallel_size: 2
-    # ... other params same
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    quantization: null
-    model_params: 13.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 5120
-    head_dim: 128
-  
-  - model_id: "meta-llama/Llama-2-13b-hf"
-    tensor_parallel_size: 4
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    quantization: null
-    model_params: 13.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 5120
-    head_dim: 128
-  
-  - model_id: "meta-llama/Llama-2-13b-hf"
-    tensor_parallel_size: 8
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "float16"
-    quantization: null
-    model_params: 13.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 5120
-    head_dim: 128
-  
-  # === 70B model (requires multi-GPU) ===
-  
-  - model_id: "meta-llama/Llama-2-70b-hf"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 4, 8]
-    dtype: "float16"
-    tensor_parallel_size: 2
-    quantization: null
-    model_params: 70.0e9
-    num_layers: 80
-    num_heads: 64
-    hidden_size: 8192
-    head_dim: 128
-  
-  - model_id: "meta-llama/Llama-2-70b-hf"
-    tensor_parallel_size: 4
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 4, 8]
-    dtype: "float16"
-    quantization: null
-    model_params: 70.0e9
-    num_layers: 80
-    num_heads: 64
-    hidden_size: 8192
-    head_dim: 128
-  
-  - model_id: "meta-llama/Llama-2-70b-hf"
-    tensor_parallel_size: 8
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 4, 8]
-    dtype: "float16"
-    quantization: null
-    model_params: 70.0e9
-    num_layers: 80
-    num_heads: 64
-    hidden_size: 8192
-    head_dim: 128
-  
-  # === GLM-4.5-Air (already validated with TP=4) ===
-  
-  - model_id: "zai-org/GLM-4.5-Air"
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "bfloat16"
-    tensor_parallel_size: 2  # Test lower GPU count
-    quantization: null
-    model_params: 54.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 6144
-    head_dim: 96
-  
-  - model_id: "zai-org/GLM-4.5-Air"
-    tensor_parallel_size: 8  # Test higher GPU count
-    container_name: "vllm-inference"
-    input_lengths: [1024]
-    output_lengths: [512]
-    batch_sizes: [1, 8]
-    dtype: "bfloat16"
-    quantization: null
-    model_params: 54.0e9
-    num_layers: 40
-    num_heads: 40
-    hidden_size: 6144
-    head_dim: 96
-
-# Expected outcomes:
-# - Memory per GPU = total_memory / num_gpus + overhead
-# - Overhead should scale with (num_gpus - 1)
-# - Communication overhead = weights_per_gpu * multiplier * (num_gpus - 1)
-# - Validate multi-GPU formula: overhead_per_gpu = base_overhead + (weights/ngpu * 0.15 * (ngpu-1))
-# - Measure actual speedup vs theoretical (should be <linear due to communication)
+- hf_model_id: meta-llama/Llama-2-13b-hf
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: meta-llama/Llama-2-13b-hf
+  tensor_parallel_size: 2
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: meta-llama/Llama-2-13b-hf
+  tensor_parallel_size: 4
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: meta-llama/Llama-2-13b-hf
+  tensor_parallel_size: 8
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: meta-llama/Llama-2-70b-hf
+  tensor_parallel_size: 2
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: meta-llama/Llama-2-70b-hf
+  tensor_parallel_size: 4
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: meta-llama/Llama-2-70b-hf
+  tensor_parallel_size: 8
+  batch_sizes:
+  - 1
+  - 4
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: float16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: zai-org/GLM-4.5-Air
+  tensor_parallel_size: 2
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: bfloat16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024
+- hf_model_id: zai-org/GLM-4.5-Air
+  tensor_parallel_size: 8
+  batch_sizes:
+  - 1
+  - 8
+  quantization: null
+  output_lengths:
+  - 512
+  dtype: bfloat16
+  container_name: vllm-inference
+  input_lengths:
+  - 1024

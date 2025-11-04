@@ -1,22 +1,13 @@
-# Calculator Integration Test Configuration
-# 
-# Minimal test to verify calculator comparison works
-#
-# Estimated time: ~5 minutes
-
 models:
-  # Llama-3.2-1B (fastest to test)
-  - model_id: "amd/Llama-3.2-1B-Instruct-FP8-KV"
-    container_name: "vllm-inference"
-    input_lengths: [256]
-    output_lengths: [256]
-    batch_sizes: [1]
-    dtype: "float16"
-    tensor_parallel_size: 1
-    quantization: null
-    trust_remote_code: false
-    model_params: 1.24e9
-    num_layers: 16
-    num_heads: 32
-    hidden_size: 2048
-    head_dim: 64
+- hf_model_id: amd/Llama-3.2-1B-Instruct-FP8-KV
+  tensor_parallel_size: 1
+  batch_sizes:
+  - 1
+  quantization: null
+  output_lengths:
+  - 256
+  dtype: float16
+  trust_remote_code: false
+  container_name: vllm-inference
+  input_lengths:
+  - 256
