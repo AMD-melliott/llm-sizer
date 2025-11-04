@@ -1,20 +1,4 @@
 models:
-- hf_model_id: meta-llama/Llama-2-7b-hf
-  tensor_parallel_size: 1
-  batch_sizes:
-  - 1
-  - 4
-  - 8
-  quantization: null
-  output_lengths:
-  - 256
-  - 512
-  dtype: float16
-  container_name: vllm-inference
-  input_lengths:
-  - 256
-  - 512
-  - 1024
 - hf_model_id: zai-org/GLM-4.5-Air
   tensor_parallel_size: 4
   batch_sizes:
@@ -42,18 +26,3 @@ models:
   container_name: vllm-quantized
   input_lengths:
   - 512
-- hf_model_id: meta-llama/Llama-2-70b-hf
-  tensor_parallel_size: 4
-  batch_sizes:
-  - 1
-  - 4
-  - 8
-  - 16
-  quantization: null
-  output_lengths:
-  - 512
-  dtype: float16
-  container_name: vllm-70b
-  input_lengths:
-  - 512
-  - 1024

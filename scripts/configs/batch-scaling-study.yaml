@@ -35,22 +35,6 @@ models:
   container_name: vllm-inference
   input_lengths:
   - 1024
-- hf_model_id: meta-llama/Llama-2-13b-hf
-  tensor_parallel_size: 1
-  batch_sizes:
-  - 1
-  - 2
-  - 4
-  - 8
-  - 16
-  - 32
-  quantization: null
-  output_lengths:
-  - 512
-  dtype: float16
-  container_name: vllm-inference
-  input_lengths:
-  - 1024
 - hf_model_id: deepseek-ai/DeepSeek-R1-0528
   tensor_parallel_size: 2
   batch_sizes:

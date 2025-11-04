@@ -1,17 +1,4 @@
 models:
-- hf_model_id: meta-llama/Llama-2-7b-chat-hf
-  tensor_parallel_size: 1
-  batch_sizes:
-  - 1
-  - 4
-  - 8
-  output_lengths:
-  - 512
-  dtype: float16
-  container_name: vllm-validator
-  input_lengths:
-  - 512
-  notes: Baseline small model
 - hf_model_id: mistralai/Mistral-7B-Instruct-v0.3
   tensor_parallel_size: 1
   batch_sizes:
@@ -25,18 +12,6 @@ models:
   input_lengths:
   - 512
   notes: Popular instruction-tuned model
-- hf_model_id: meta-llama/Llama-2-13b-chat-hf
-  tensor_parallel_size: 2
-  batch_sizes:
-  - 1
-  - 4
-  output_lengths:
-  - 512
-  dtype: float16
-  container_name: vllm-validator
-  input_lengths:
-  - 512
-  notes: Medium model with 2-way TP
 - hf_model_id: Qwen/Qwen2.5-32B-Instruct
   tensor_parallel_size: 2
   batch_sizes:
@@ -91,18 +66,6 @@ models:
   - 256
   - 512
   notes: MoE model - already profiled, include for completeness
-- hf_model_id: meta-llama/Llama-2-70b-chat-hf
-  tensor_parallel_size: 4
-  batch_sizes:
-  - 1
-  - 2
-  output_lengths:
-  - 512
-  dtype: float16
-  container_name: vllm-validator
-  input_lengths:
-  - 512
-  notes: Large dense model - 4-way TP
 - hf_model_id: Qwen/Qwen2.5-72B-Instruct
   tensor_parallel_size: 4
   batch_sizes:
@@ -115,19 +78,6 @@ models:
   input_lengths:
   - 512
   notes: Large Qwen model
-- hf_model_id: meta-llama/Llama-2-7b-chat-hf
-  tensor_parallel_size: 1
-  batch_sizes:
-  - 1
-  - 4
-  quantization: fp8
-  output_lengths:
-  - 512
-  dtype: float16
-  container_name: vllm-validator
-  input_lengths:
-  - 512
-  notes: FP8 quantization test
 - hf_model_id: mistralai/Mistral-7B-Instruct-v0.3
   tensor_parallel_size: 1
   batch_sizes:
@@ -141,39 +91,6 @@ models:
   input_lengths:
   - 512
   notes: INT8 quantization test
-- hf_model_id: meta-llama/Llama-2-13b-chat-hf
-  tensor_parallel_size: 2
-  batch_sizes:
-  - 1
-  output_lengths:
-  - 128
-  - 256
-  - 1024
-  - 2048
-  dtype: float16
-  container_name: vllm-validator
-  input_lengths:
-  - 128
-  - 256
-  - 1024
-  - 2048
-  notes: Sequence length scaling test
-- hf_model_id: meta-llama/Llama-2-13b-chat-hf
-  tensor_parallel_size: 2
-  batch_sizes:
-  - 1
-  - 2
-  - 4
-  - 8
-  - 16
-  - 32
-  output_lengths:
-  - 512
-  dtype: float16
-  container_name: vllm-validator
-  input_lengths:
-  - 512
-  notes: Batch size scaling test
 - hf_model_id: deepseek-ai/deepseek-coder-33b-instruct
   tensor_parallel_size: 4
   batch_sizes:
