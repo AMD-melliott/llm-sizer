@@ -5,7 +5,13 @@ vLLM Benchmark Profiler - Enhanced Version with Phase 1 Improvements
 This script profiles vLLM models using the native `vllm bench latency` command,
 with comprehensive instrumentation for validation and analysis.
 
-Version: 2.0 (Phase 1 Enhancements)
+Version: 2.1 (Model Database Integration)
+Changes from v2.0:
+- Integrated with src/data/models.json for automatic parameter loading
+- Added --hf-model-id parameter to auto-load model architecture
+- Maintains backward compatibility with explicit --model-params etc.
+- Eliminates data duplication across config files
+
 Changes from v1.0:
 - Persist baseline, post-warmup, and post-run memory snapshots
 - Add vLLM engine version detection and storage
@@ -21,19 +27,29 @@ Key improvements:
 - Standardized warmup and iteration counts
 - Better reproducibility
 - Comprehensive memory attribution
+- Single source of truth for model data (models.json)
 
 Usage:
-    # Inside a container with vLLM installed:
+    # NEW: Auto-load model architecture from models.json
+    python profile-vllm-bench-enhanced.py \\
+        --hf-model-id meta-llama/Llama-3.2-1B-Instruct \\
+        --input-len 256 \\
+        --output-len 256 \\
+        --batch-size 8
+
+    # LEGACY: Manual specification still supported
     python profile-vllm-bench-enhanced.py \\
         --model meta-llama/Llama-2-7b-hf \\
         --input-len 256 \\
         --output-len 256 \\
         --batch-size 8 \\
-        --dtype float16
+        --dtype float16 \\
+        --model-params 7e9
 
 Requirements:
     - vLLM installed (in container or locally)
     - GPU with nvidia-smi or rocm-smi
+    - Access to src/data/models.json (for --hf-model-id)
 """
 
 import argparse
@@ -56,6 +72,14 @@ try:
 except ImportError:
     CALCULATOR_AVAILABLE = False
     print("⚠️  Warning: calculator_formulas module not available, calculator comparison will be skipped")
+
+# Import model loader for automatic parameter loading (optional)
+try:
+    from model_loader import get_profiling_params, validate_model_in_db
+    MODEL_LOADER_AVAILABLE = True
+except ImportError:
+    MODEL_LOADER_AVAILABLE = False
+    # Only print warning if user tries to use --hf-model-id (checked later)
 
 
 def get_vllm_version() -> str:
@@ -889,12 +913,17 @@ Examples:
         """
     )
     
-    # Required parameters
-    parser.add_argument(
+    # Model specification (either --model or --hf-model-id required)
+    model_group = parser.add_mutually_exclusive_group(required=True)
+    model_group.add_argument(
         '--model',
         type=str,
-        required=True,
-        help='Model name or path (e.g., meta-llama/Llama-2-7b-hf)'
+        help='Model name or path (e.g., meta-llama/Llama-2-7b-hf) - use with explicit params'
+    )
+    model_group.add_argument(
+        '--hf-model-id',
+        type=str,
+        help='HuggingFace model ID to auto-load architecture from models.json (e.g., meta-llama/Llama-3.2-1B-Instruct)'
     )
     parser.add_argument(
         '--input-len',
@@ -992,25 +1021,69 @@ Examples:
     )
     
     args = parser.parse_args()
-    
+
+    # Handle model specification
+    model_name = None
+    model_params = args.model_params
+    num_layers = args.num_layers
+    num_heads = args.num_heads
+    head_dim = args.head_dim
+    hidden_size = args.hidden_size
+
+    if args.hf_model_id:
+        # Auto-load model architecture from models.json
+        if not MODEL_LOADER_AVAILABLE:
+            print("ERROR: --hf-model-id requires model_loader module")
+            print("  Ensure src/data/models.json exists and model_loader.py is in scripts/lib/")
+            sys.exit(1)
+
+        print(f"Loading model architecture from models.json: {args.hf_model_id}")
+        try:
+            arch_params = get_profiling_params(args.hf_model_id)
+
+            # Use auto-loaded params (but allow CLI overrides)
+            model_name = args.hf_model_id
+            model_params = model_params or arch_params['model_params']
+            num_layers = num_layers or arch_params['num_layers']
+            num_heads = num_heads or arch_params['num_heads']
+            head_dim = head_dim or arch_params['head_dim']
+            hidden_size = hidden_size or arch_params['hidden_size']
+
+            print(f"  ✓ Loaded: {model_params/1e9:.1f}B params, {num_layers} layers, {hidden_size} hidden_size")
+
+        except ValueError as e:
+            print(f"ERROR: Failed to load model from models.json")
+            print(f"  {e}")
+            print(f"\nTip: Check if model exists with:")
+            print(f"  python scripts/lib/model_loader.py search {args.hf_model_id.split('/')[0]}")
+            sys.exit(1)
+    else:
+        # Use explicit --model parameter
+        model_name = args.model
+
+        # Warn if architecture params not provided
+        if not model_params:
+            print("⚠️  Warning: --model-params not provided, memory breakdown will be less accurate")
+            print("   Consider using --hf-model-id to auto-load parameters from models.json")
+
     # Create profiler
     profiler = VLLMBenchProfiler(verbose=not args.quiet)
-    
+
     # Generate report
     try:
         report = profiler.generate_report(
-            model=args.model,
+            model=model_name,
             input_len=args.input_len,
             output_len=args.output_len,
             batch_size=args.batch_size,
             dtype=args.dtype,
             tensor_parallel_size=args.tensor_parallel_size,
             quantization=args.quantization,
-            model_params=args.model_params,
-            num_layers=args.num_layers,
-            num_heads=args.num_heads,
-            head_dim=args.head_dim,
-            hidden_size=args.hidden_size,
+            model_params=model_params,
+            num_layers=num_layers,
+            num_heads=num_heads,
+            head_dim=head_dim,
+            hidden_size=hidden_size,
             kv_cache_dtype=args.kv_cache_dtype,
             trust_remote_code=args.trust_remote_code,
             enforce_eager=args.enforce_eager,

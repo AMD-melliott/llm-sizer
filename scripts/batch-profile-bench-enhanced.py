@@ -60,8 +60,14 @@ from datetime import datetime
 
 @dataclass
 class ModelConfig:
-    """Configuration for a single model profiling run"""
-    model_id: str
+    """
+    Configuration for a single model profiling run
+
+    Model architecture parameters (model_params, num_layers, etc.) are now
+    auto-loaded from src/data/models.json by hf_model_id.
+    Only test configuration parameters should be specified here.
+    """
+    hf_model_id: str  # HuggingFace model ID (references models.json)
     container_name: str
     input_lengths: List[int]
     output_lengths: List[int]
@@ -69,14 +75,18 @@ class ModelConfig:
     dtype: str = "float16"
     tensor_parallel_size: int = 1
     quantization: Optional[str] = None
-    model_params: Optional[float] = None
-    num_layers: Optional[int] = None
-    num_heads: Optional[int] = None
-    head_dim: Optional[int] = None
-    hidden_size: Optional[int] = None
     kv_cache_dtype: Optional[str] = None
     trust_remote_code: bool = False
     gpu_ids: Optional[str] = None
+
+    # Legacy support: these are deprecated and will be removed
+    # Architecture params should come from models.json
+    model_id: Optional[str] = None  # Deprecated: use hf_model_id
+    model_params: Optional[float] = None  # Deprecated: auto-loaded
+    num_layers: Optional[int] = None  # Deprecated: auto-loaded
+    num_heads: Optional[int] = None  # Deprecated: auto-loaded
+    head_dim: Optional[int] = None  # Deprecated: auto-loaded
+    hidden_size: Optional[int] = None  # Deprecated: auto-loaded
 
 
 @dataclass
@@ -197,23 +207,97 @@ class ContainerManager:
         return result.returncode == 0
 
 
+def ensure_latest_scripts(
+    container_name: str,
+    repo_url: str = "https://github.com/AMD-melliott/llm-sizer.git",
+    target_path: str = "/workspace/llm-sizer"
+) -> str:
+    """
+    Clone or pull latest llm-sizer code into container
+
+    This replaces the docker cp approach with git clone/pull for better
+    version tracking and easier development workflow.
+
+    Args:
+        container_name: Name of Docker container
+        repo_url: Git repository URL
+        target_path: Path in container to clone/pull to
+
+    Returns:
+        Current git commit hash for tracking
+
+    Raises:
+        subprocess.CalledProcessError: If git operations fail
+    """
+    # Check if repo exists in container
+    result = ContainerManager.exec_command(
+        container_name,
+        ['test', '-d', f'{target_path}/.git'],
+        check=False
+    )
+
+    if result.returncode != 0:
+        # Clone repo
+        print(f"  📥 Cloning llm-sizer repository to {target_path}...")
+        ContainerManager.exec_command(
+            container_name,
+            ['git', 'clone', repo_url, target_path],
+            check=True
+        )
+        print(f"  ✓ Repository cloned")
+    else:
+        # Pull latest changes
+        print(f"  🔄 Pulling latest changes...")
+        ContainerManager.exec_command(
+            container_name,
+            ['git', '-C', target_path, 'pull'],
+            check=True
+        )
+        print(f"  ✓ Repository updated")
+
+    # Get current commit hash for tracking
+    result = ContainerManager.exec_command(
+        container_name,
+        ['git', '-C', target_path, 'rev-parse', 'HEAD'],
+        check=True
+    )
+    commit_hash = result.stdout.strip()[:8]  # Short hash
+
+    # Get branch name
+    result = ContainerManager.exec_command(
+        container_name,
+        ['git', '-C', target_path, 'rev-parse', '--abbrev-ref', 'HEAD'],
+        check=True
+    )
+    branch = result.stdout.strip()
+
+    print(f"  ✓ Using commit {commit_hash} on branch {branch}")
+
+    return commit_hash
+
+
 class EnhancedBenchProfiler:
     """Run enhanced vLLM bench profiling in containers"""
-    
-    def __init__(self, results_dir: Path, script_dir: Path):
+
+    def __init__(self, results_dir: Path, script_dir: Path, use_git_pull: bool = True):
         self.results_dir = results_dir
         self.script_dir = script_dir
         self.results: List[ProfileResult] = []
+        self.use_git_pull = use_git_pull
+
+        # Paths for legacy docker cp mode (deprecated)
         self.profiler_script = script_dir / 'profile-vllm-bench-enhanced.py'
         self.calculator_module = script_dir / 'lib' / 'calculator_formulas.py'
-        
-        if not self.profiler_script.exists():
-            raise FileNotFoundError(f"Enhanced profiler script not found: {self.profiler_script}")
-        
-        if not self.calculator_module.exists():
-            print(f"⚠️  Warning: Calculator module not found: {self.calculator_module}")
-            print("    Calculator comparison will be unavailable in profiles")
-            self.calculator_module = None
+
+        if not use_git_pull:
+            # Legacy mode: check scripts exist locally
+            if not self.profiler_script.exists():
+                raise FileNotFoundError(f"Enhanced profiler script not found: {self.profiler_script}")
+
+            if not self.calculator_module.exists():
+                print(f"⚠️  Warning: Calculator module not found: {self.calculator_module}")
+                print("    Calculator comparison will be unavailable in profiles")
+                self.calculator_module = None
     
     def profile_model(
         self,
@@ -227,21 +311,34 @@ class EnhancedBenchProfiler:
         """Profile a single model configuration using enhanced vllm bench profiler"""
         
         # Extract model name (last part of path)
-        model_name = config.model_id.split('/')[-1]
-        
-        # Get model size in billions (handle string or float from YAML)
+        model_name = config.hf_model_id.split('/')[-1]
+
+        # Try to get model size from models.json
         size_str = "?"
-        if config.model_params:
-            try:
-                # Convert to float if it's a string (from YAML scientific notation)
-                params = float(config.model_params) if isinstance(config.model_params, str) else config.model_params
-                size_b = params / 1e9
+        try:
+            # Import model_loader to get model info
+            sys.path.insert(0, str(self.script_dir / 'lib'))
+            from model_loader import get_model_info
+
+            model_info = get_model_info(config.hf_model_id)
+            if model_info and 'parameters_billions' in model_info:
+                size_b = model_info['parameters_billions']
                 if size_b >= 1:
                     size_str = f"{size_b:.0f}B"
                 else:
                     size_str = f"{size_b*1000:.0f}M"
-            except (ValueError, TypeError):
-                size_str = "?"
+        except (ImportError, ValueError, TypeError, FileNotFoundError):
+            # Fall back to legacy model_params if available
+            if config.model_params:
+                try:
+                    params = float(config.model_params) if isinstance(config.model_params, str) else config.model_params
+                    size_b = params / 1e9
+                    if size_b >= 1:
+                        size_str = f"{size_b:.0f}B"
+                    else:
+                        size_str = f"{size_b*1000:.0f}M"
+                except (ValueError, TypeError):
+                    size_str = "?"
         
         # Format KV cache dtype (default to same as weight dtype if not specified)
         kv_dtype = config.kv_cache_dtype or config.dtype
@@ -256,44 +353,61 @@ class EnhancedBenchProfiler:
         print(f"    {input_len}→{output_len} tokens, BS={batch_size} | ", end='', flush=True)
         
         start_time = time.time()
-        
-        # Copy enhanced profiler script to container (silent)
-        if not ContainerManager.copy_to_container(
-            config.container_name,
-            self.profiler_script,
-            '/tmp/profile-vllm-bench-enhanced.py'
-        ):
-            error_msg = "Failed to copy profiler script to container"
-            print(f"❌ {error_msg}")
-            return self._create_error_result(
-                config, input_len, output_len, batch_size,
-                error_msg, time.time() - start_time
-            )
-        
-        # Copy calculator module to container if available
-        if self.calculator_module:
-            # Create lib directory in container
-            ContainerManager.exec_command(
-                config.container_name,
-                ['mkdir', '-p', '/tmp/lib'],
-                check=False
-            )
-            
-            # Copy calculator_formulas.py
+
+        # Ensure scripts are available in container
+        if self.use_git_pull:
+            # NEW: Use git clone/pull for latest code
+            try:
+                commit_hash = ensure_latest_scripts(config.container_name)
+            except subprocess.CalledProcessError as e:
+                error_msg = f"Failed to sync repository: {e}"
+                print(f"    ❌ {error_msg}")
+                return self._create_error_result(
+                    config, input_len, output_len, batch_size,
+                    error_msg, time.time() - start_time
+                )
+
+            # Use scripts from cloned repo
+            profiler_path = '/workspace/llm-sizer/scripts/profile-vllm-bench-enhanced.py'
+        else:
+            # LEGACY: Copy profiler script to container
             if not ContainerManager.copy_to_container(
                 config.container_name,
-                self.calculator_module,
-                '/tmp/lib/calculator_formulas.py'
+                self.profiler_script,
+                '/tmp/profile-vllm-bench-enhanced.py'
             ):
-                print(f"  ⚠️  Warning: Failed to copy calculator module (calculator comparison will be unavailable)")
-        
+                error_msg = "Failed to copy profiler script to container"
+                print(f"❌ {error_msg}")
+                return self._create_error_result(
+                    config, input_len, output_len, batch_size,
+                    error_msg, time.time() - start_time
+                )
+
+            # Copy calculator module to container if available
+            if self.calculator_module:
+                ContainerManager.exec_command(
+                    config.container_name,
+                    ['mkdir', '-p', '/tmp/lib'],
+                    check=False
+                )
+
+                if not ContainerManager.copy_to_container(
+                    config.container_name,
+                    self.calculator_module,
+                    '/tmp/lib/calculator_formulas.py'
+                ):
+                    print(f"  ⚠️  Warning: Failed to copy calculator module")
+
+            profiler_path = '/tmp/profile-vllm-bench-enhanced.py'
+
         # Build profiler command to run inside container
         output_filename = f'{config.container_name}_{input_len}in_{output_len}out_bs{batch_size}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
         container_output = f'/tmp/{output_filename}'
-        
+
+        # NEW: Use --hf-model-id to auto-load architecture from models.json
         cmd = [
-            'python3', '/tmp/profile-vllm-bench-enhanced.py',
-            '--model', config.model_id,
+            'python3', profiler_path,
+            '--hf-model-id', config.hf_model_id,
             '--input-len', str(input_len),
             '--output-len', str(output_len),
             '--batch-size', str(batch_size),
@@ -301,28 +415,13 @@ class EnhancedBenchProfiler:
             '--tensor-parallel-size', str(config.tensor_parallel_size),
             '--output', container_output
         ]
-        
+
         if config.quantization:
             cmd.extend(['--quantization', config.quantization])
-        
-        if config.model_params:
-            cmd.extend(['--model-params', str(config.model_params)])
-        
-        if config.num_layers:
-            cmd.extend(['--num-layers', str(config.num_layers)])
-        
-        if config.num_heads:
-            cmd.extend(['--num-heads', str(config.num_heads)])
-        
-        if config.head_dim:
-            cmd.extend(['--head-dim', str(config.head_dim)])
-        
-        if config.hidden_size:
-            cmd.extend(['--hidden-size', str(config.hidden_size)])
-        
+
         if config.kv_cache_dtype:
             cmd.extend(['--kv-cache-dtype', config.kv_cache_dtype])
-        
+
         if config.trust_remote_code:
             cmd.append('--trust-remote-code')
         
@@ -408,7 +507,7 @@ class EnhancedBenchProfiler:
                 print(f"    🧮 Calculator: {calc_comp['note']}")
             
             return ProfileResult(
-                model_id=config.model_id,
+                model_id=config.hf_model_id,
                 container_name=config.container_name,
                 input_len=input_len,
                 output_len=output_len,
@@ -436,7 +535,7 @@ class EnhancedBenchProfiler:
             error_msg = f"Failed to parse profile: {e}"
             print(f"    ⚠️  {error_msg}")
             return ProfileResult(
-                model_id=config.model_id,
+                model_id=config.hf_model_id,
                 container_name=config.container_name,
                 input_len=input_len,
                 output_len=output_len,
@@ -446,7 +545,7 @@ class EnhancedBenchProfiler:
                 duration_seconds=elapsed,
                 error_message=error_msg
             )
-    
+
     def _create_error_result(
         self,
         config: ModelConfig,
@@ -458,7 +557,7 @@ class EnhancedBenchProfiler:
     ) -> ProfileResult:
         """Helper to create error result"""
         return ProfileResult(
-            model_id=config.model_id,
+            model_id=config.hf_model_id,
             container_name=config.container_name,
             input_len=input_len,
             output_len=output_len,
@@ -701,16 +800,27 @@ class EnhancedBenchProfiler:
 
 
 def load_config_file(config_path: Path) -> List[ModelConfig]:
-    """Load model configurations from YAML file"""
-    
+    """
+    Load model configurations from YAML file
+
+    Supports both new format (hf_model_id only) and legacy format
+    (model_id with explicit architecture params).
+    """
+
     with open(config_path) as f:
         data = yaml.safe_load(f)
-    
+
     configs = []
     for model_data in data.get('models', []):
+        # Handle backward compatibility: model_id -> hf_model_id
+        if 'model_id' in model_data and 'hf_model_id' not in model_data:
+            print(f"⚠️  Legacy config format detected for {model_data['model_id']}")
+            print("   Consider updating YAML to use 'hf_model_id' instead of 'model_id'")
+            model_data['hf_model_id'] = model_data['model_id']
+
         config = ModelConfig(**model_data)
         configs.append(config)
-    
+
     return configs
 
 
@@ -860,13 +970,13 @@ def main():
         print(f"   ✓ {config.container_name} is running")
     print()
     
-    # Initialize enhanced profiler
-    profiler = EnhancedBenchProfiler(results_dir, script_dir)
-    
+    # Initialize enhanced profiler (use git pull for latest code)
+    profiler = EnhancedBenchProfiler(results_dir, script_dir, use_git_pull=True)
+
     # Process each model
     for i, config in enumerate(configs, 1):
         print("\n" + "=" * 80)
-        print(f"[{i}/{len(configs)}] Processing: {config.model_id}")
+        print(f"[{i}/{len(configs)}] Processing: {config.hf_model_id}")
         print("=" * 80)
         print(f"Container: {config.container_name}")
         print(f"Configurations to test: {len(config.input_lengths) * len(config.output_lengths) * len(config.batch_sizes)}")
@@ -879,7 +989,7 @@ def main():
             break
         
         except Exception as e:
-            print(f"❌ Error processing {config.model_id}: {e}")
+            print(f"❌ Error processing {config.hf_model_id}: {e}")
             import traceback
             traceback.print_exc()
             continue
