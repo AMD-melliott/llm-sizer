@@ -105,11 +105,17 @@ def parse_vllm_initialization_logs(stdout: str, stderr: str) -> Dict[str, Any]:
     - Memory breakdown (weights, KV cache, activations)
     - Engine configuration
 
-    Example vLLM log output:
-        INFO 11-04 10:23:22 model_runner.py:1049]
-          # GPU blocks: 7326, # CPU blocks: 2048
-          Block size: 16 tokens
-          Total GPU KV cache: 117216 tokens (7.28 GB)
+    Supports both vLLM v0 (< 0.10) and v1 (>= 0.10) log formats.
+
+    v0 Example:
+        # GPU blocks: 7326, # CPU blocks: 2048
+        Block size: 16 tokens
+        Total GPU KV cache: 117216 tokens (7.28 GB)
+
+    v1 Example (0.10.1+):
+        GPU KV cache size: 5,390,560 tokens
+        Model loading took 2.9805 GiB
+        Graph capturing finished in 3 secs, took 0.62 GiB
     """
     combined = stdout + "\n" + stderr
 
@@ -121,14 +127,18 @@ def parse_vllm_initialization_logs(stdout: str, stderr: str) -> Dict[str, Any]:
         'total_gpu_kv_cache_gb': None,
         'total_cpu_kv_cache_tokens': None,
         'total_cpu_kv_cache_gb': None,
+        'available_kv_cache_gb': None,
         'attention_backend': None,
         'model_weights_gb': None,
+        'model_loading_gb': None,
+        'graph_capture_gb': None,
         'activations_gb': None,
         'total_allocated_gb': None,
         'gpu_memory_utilization': None,
         'max_model_len': None,
         'cuda_graphs_enabled': None,
-        'vllm_version': None
+        'vllm_version': None,
+        'log_format_version': None  # Track which format was detected
     }
 
     # Pattern: # GPU blocks: 7326, # CPU blocks: 2048
@@ -207,6 +217,39 @@ def parse_vllm_initialization_logs(stdout: str, stderr: str) -> Dict[str, Any]:
     if version_match:
         info['vllm_version'] = version_match.group(1)
 
+    # ===== vLLM v1 (0.10.1+) Patterns =====
+
+    # Pattern: GPU KV cache size: 5,390,560 tokens (v1 format)
+    v1_kv_tokens_match = re.search(r'GPU KV cache size:\s*([\d,]+)\s*tokens', combined, re.IGNORECASE)
+    if v1_kv_tokens_match:
+        info['total_gpu_kv_cache_tokens'] = int(v1_kv_tokens_match.group(1).replace(',', ''))
+        info['log_format_version'] = 'v1'
+
+    # Pattern: Available KV cache memory: 164.51 GiB
+    avail_kv_match = re.search(r'Available KV cache memory:\s*([0-9.]+)\s*GiB', combined, re.IGNORECASE)
+    if avail_kv_match:
+        info['available_kv_cache_gb'] = float(avail_kv_match.group(1))
+
+    # Pattern: Model loading took 2.9805 GiB and 1.675109 seconds
+    model_load_match = re.search(r'Model loading took\s*([0-9.]+)\s*GiB', combined, re.IGNORECASE)
+    if model_load_match:
+        info['model_loading_gb'] = float(model_load_match.group(1))
+        # Use this as model_weights_gb if not already set
+        if info['model_weights_gb'] is None:
+            info['model_weights_gb'] = float(model_load_match.group(1))
+
+    # Pattern: Graph capturing finished in 3 secs, took 0.62 GiB
+    graph_capture_match = re.search(r'Graph capturing finished .* took\s*([0-9.]+)\s*GiB', combined, re.IGNORECASE)
+    if graph_capture_match:
+        info['graph_capture_gb'] = float(graph_capture_match.group(1))
+
+    # Determine log format version if not already set
+    if info['log_format_version'] is None:
+        if info['num_gpu_blocks'] is not None:
+            info['log_format_version'] = 'v0'
+        else:
+            info['log_format_version'] = 'unknown'
+
     return info
 
 
@@ -226,7 +269,8 @@ class BackgroundMemoryMonitor:
         interval_ms: int = 100,
         gpu_type: str = 'rocm',
         capture_extended: bool = True,
-        gpu_memory_fn = None
+        gpu_memory_fn = None,
+        tensor_parallel_size: int = 1
     ):
         self.interval = interval_ms / 1000.0
         self.gpu_type = gpu_type
@@ -235,6 +279,7 @@ class BackgroundMemoryMonitor:
         self.running = False
         self.thread = None
         self.gpu_memory_fn = gpu_memory_fn  # Function to get GPU memory
+        self.tensor_parallel_size = tensor_parallel_size  # Only monitor these GPUs
 
     def start(self):
         """Start background monitoring thread"""
@@ -279,27 +324,31 @@ class BackgroundMemoryMonitor:
             )
             if result.returncode == 0:
                 data = json.loads(result.stdout)
-                # Aggregate across all GPUs
                 if not data:
                     return {'memory_gb': 0.0}
 
+                # Filter to only GPUs being used (0 to tensor_parallel_size-1)
+                used_gpus = [gpu for gpu in data if gpu.get('gpu', 0) < self.tensor_parallel_size]
+                if not used_gpus:
+                    used_gpus = data[:self.tensor_parallel_size]
+
                 total_mem = sum(
-                    gpu.get('vram_used', {}).get('value', 0) for gpu in data
+                    gpu.get('vram_used', {}).get('value', 0) for gpu in used_gpus
                 ) / 1024  # MB to GB
 
                 avg_power = statistics.mean([
-                    gpu.get('power_usage', {}).get('value', 0) for gpu in data
-                ]) if data else 0
+                    gpu.get('power_usage', {}).get('value', 0) for gpu in used_gpus
+                ]) if used_gpus else 0
 
                 avg_temp = statistics.mean([
-                    gpu.get('hotspot_temperature', {}).get('value', 0) for gpu in data
-                ]) if data else 0
+                    gpu.get('hotspot_temperature', {}).get('value', 0) for gpu in used_gpus
+                ]) if used_gpus else 0
 
                 return {
                     'memory_gb': total_mem,
                     'power_w': avg_power,
                     'temp_c': avg_temp,
-                    'gpus': data  # Full per-GPU breakdown
+                    'gpus': data  # Full per-GPU breakdown (all GPUs for reference)
                 }
         except Exception:
             pass
@@ -307,7 +356,11 @@ class BackgroundMemoryMonitor:
         # Fallback to basic memory if amd-smi fails
         if self.gpu_memory_fn:
             memory = self.gpu_memory_fn()
-            return {'memory_gb': sum(gpu.get('used_gb', 0) for gpu in memory)}
+            # Filter to only used GPUs
+            used_gpus = [gpu for gpu in memory if gpu.get('device', 0) < self.tensor_parallel_size]
+            if not used_gpus:
+                used_gpus = memory[:self.tensor_parallel_size]
+            return {'memory_gb': sum(gpu.get('used_gb', 0) for gpu in used_gpus)}
         return {'memory_gb': 0.0}
 
     def get_statistics(self) -> Optional[Dict[str, Any]]:
@@ -556,8 +609,17 @@ class VLLMBenchProfilerV3:
             self.log(f"WARNING: Could not get CUDA memory info: {e}")
             return []
 
-    def compute_memory_statistics(self, snapshots: List[Dict[str, float]]) -> Dict[str, Any]:
-        """Compute aggregate memory statistics across GPUs"""
+    def compute_memory_statistics(
+        self,
+        snapshots: List[Dict[str, float]],
+        tensor_parallel_size: int = 1
+    ) -> Dict[str, Any]:
+        """
+        Compute aggregate memory statistics across GPUs
+
+        IMPORTANT: Only aggregates GPUs 0 to (tensor_parallel_size - 1)
+        to avoid counting unused GPUs in multi-GPU systems.
+        """
         if not snapshots:
             return {
                 'total_gb': 0.0,
@@ -567,15 +629,23 @@ class VLLMBenchProfilerV3:
                 'num_gpus': 0
             }
 
-        used_values = [gpu['used_gb'] for gpu in snapshots]
+        # Filter to only GPUs being used by vLLM (0 to tensor_parallel_size-1)
+        used_gpus = [gpu for gpu in snapshots if gpu['device'] < tensor_parallel_size]
+
+        if not used_gpus:
+            # Fallback: if no GPUs match, use first N GPUs
+            used_gpus = snapshots[:tensor_parallel_size]
+
+        used_values = [gpu['used_gb'] for gpu in used_gpus]
 
         return {
             'total_gb': round(sum(used_values), 2),
             'max_used_gb': round(max(used_values), 2),
             'mean_used_gb': round(statistics.mean(used_values), 2),
             'stddev_used_gb': round(statistics.stdev(used_values), 2) if len(used_values) > 1 else 0.0,
-            'num_gpus': len(snapshots),
-            'per_gpu_details': snapshots
+            'num_gpus': len(used_gpus),
+            'per_gpu_details': used_gpus,
+            'system_total_gpus': len(snapshots)  # Track total GPUs in system
         }
 
     def run_vllm_bench(
@@ -623,8 +693,10 @@ class VLLMBenchProfilerV3:
         # Phase 0: System baseline
         self.log("\n=== Phase 0: Measuring System Baseline (Pre-vLLM) ===")
         baseline_memory = self.get_gpu_memory_snapshot()
-        baseline_stats = self.compute_memory_statistics(baseline_memory)
+        baseline_stats = self.compute_memory_statistics(baseline_memory, tensor_parallel_size)
         self.log(f"Baseline: {baseline_stats['total_gb']:.2f} GB across {baseline_stats['num_gpus']} GPUs")
+        if baseline_stats.get('system_total_gpus', 0) > tensor_parallel_size:
+            self.log(f"  (System has {baseline_stats['system_total_gpus']} total GPUs, using {tensor_parallel_size})")
 
         # Phase 1: Start background memory monitoring
         self.log("\n=== Phase 1: Starting Real-Time Memory Monitor ===")
@@ -632,10 +704,11 @@ class VLLMBenchProfilerV3:
             interval_ms=100,
             gpu_type=self.gpu_type,
             capture_extended=True,
-            gpu_memory_fn=self.get_gpu_memory_snapshot
+            gpu_memory_fn=self.get_gpu_memory_snapshot,
+            tensor_parallel_size=tensor_parallel_size
         )
         monitor.start()
-        self.log("Background monitor started (sampling every 100ms)")
+        self.log(f"Background monitor started (sampling every 100ms, monitoring {tensor_parallel_size} GPU(s))")
 
         # Create temp file for JSON output if not specified
         use_temp = output_json is None
@@ -708,16 +781,31 @@ class VLLMBenchProfilerV3:
             result.stderr
         )
 
-        # Log what we found
+        # Log what we found (format depends on v0 vs v1)
+        log_version = vllm_metrics.get('log_format_version', 'unknown')
+        self.log(f"Detected log format: {log_version}")
+
         if vllm_metrics.get('num_gpu_blocks'):
             self.log(f"✓ GPU Blocks: {vllm_metrics['num_gpu_blocks']}")
         if vllm_metrics.get('block_size'):
             self.log(f"✓ Block Size: {vllm_metrics['block_size']} tokens")
+
+        if vllm_metrics.get('total_gpu_kv_cache_tokens'):
+            self.log(f"✓ KV Cache Tokens: {vllm_metrics['total_gpu_kv_cache_tokens']:,} tokens")
         if vllm_metrics.get('total_gpu_kv_cache_gb'):
             self.log(f"✓ KV Cache (vLLM reported): {vllm_metrics['total_gpu_kv_cache_gb']:.2f} GB")
+        if vllm_metrics.get('available_kv_cache_gb'):
+            self.log(f"✓ Available KV Cache Memory: {vllm_metrics['available_kv_cache_gb']:.2f} GB")
+
         if vllm_metrics.get('attention_backend'):
             self.log(f"✓ Attention Backend: {vllm_metrics['attention_backend']}")
-        if vllm_metrics.get('model_weights_gb'):
+
+        if vllm_metrics.get('model_loading_gb'):
+            self.log(f"✓ Model Loading: {vllm_metrics['model_loading_gb']:.2f} GB")
+        if vllm_metrics.get('graph_capture_gb'):
+            self.log(f"✓ Graph Capture: {vllm_metrics['graph_capture_gb']:.2f} GB")
+        if vllm_metrics.get('model_weights_gb') and not vllm_metrics.get('model_loading_gb'):
+            # Only show if it's different from model_loading_gb
             self.log(f"✓ Model Weights (vLLM reported): {vllm_metrics['model_weights_gb']:.2f} GB")
 
         # Phase 5: Get detailed GPU metrics (if AMD)
@@ -736,7 +824,7 @@ class VLLMBenchProfilerV3:
         self.log("\n=== Phase 6: Final Memory Snapshot ===")
         time.sleep(1)
         final_memory = self.get_gpu_memory_snapshot()
-        final_stats = self.compute_memory_statistics(final_memory)
+        final_stats = self.compute_memory_statistics(final_memory, tensor_parallel_size)
         self.log(f"Final: {final_stats['total_gb']:.2f} GB")
 
         # Load benchmark results
@@ -1090,15 +1178,30 @@ class VLLMBenchProfilerV3:
 
         # vLLM Internal Metrics (NEW in v3.0)
         vllm = report.get('vllm_internal_metrics', {})
-        if vllm.get('num_gpu_blocks') or vllm.get('total_gpu_kv_cache_gb'):
-            print("\n🔍 vLLM Internal Metrics (Source of Truth):")
+        log_version = vllm.get('log_format_version', 'unknown')
+        if vllm.get('num_gpu_blocks') or vllm.get('total_gpu_kv_cache_tokens') or vllm.get('model_loading_gb'):
+            print(f"\n🔍 vLLM Internal Metrics (Source of Truth - {log_version}):")
+
+            # v0 format metrics
             if vllm.get('num_gpu_blocks'):
                 print(f"  GPU Blocks: {vllm['num_gpu_blocks']}")
             if vllm.get('block_size'):
                 print(f"  Block Size: {vllm['block_size']} tokens")
+
+            # v1 format metrics
+            if vllm.get('total_gpu_kv_cache_tokens'):
+                print(f"  KV Cache Tokens: {vllm['total_gpu_kv_cache_tokens']:,} tokens")
+            if vllm.get('available_kv_cache_gb'):
+                print(f"  Available KV Cache: {vllm['available_kv_cache_gb']:.2f} GB")
+
+            # Common metrics
             if vllm.get('total_gpu_kv_cache_gb'):
                 print(f"  KV Cache (vLLM reported): {vllm['total_gpu_kv_cache_gb']:.2f} GB")
-            if vllm.get('model_weights_gb'):
+            if vllm.get('model_loading_gb'):
+                print(f"  Model Loading: {vllm['model_loading_gb']:.2f} GB")
+            if vllm.get('graph_capture_gb'):
+                print(f"  Graph Capture: {vllm['graph_capture_gb']:.2f} GB")
+            if vllm.get('model_weights_gb') and not vllm.get('model_loading_gb'):
                 print(f"  Model Weights (vLLM reported): {vllm['model_weights_gb']:.2f} GB")
             if vllm.get('activations_gb'):
                 print(f"  Activations (vLLM reported): {vllm['activations_gb']:.2f} GB")
