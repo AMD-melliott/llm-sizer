@@ -210,7 +210,8 @@ class ContainerManager:
 def ensure_latest_scripts(
     container_name: str,
     repo_url: str = "https://github.com/AMD-melliott/llm-sizer.git",
-    target_path: str = "/workspace/llm-sizer"
+    target_path: str = "/app/llm-sizer",
+    branch: str = "calculator-adjustments"
 ) -> str:
     """
     Clone or pull latest llm-sizer code into container
@@ -222,6 +223,7 @@ def ensure_latest_scripts(
         container_name: Name of Docker container
         repo_url: Git repository URL
         target_path: Path in container to clone/pull to
+        branch: Git branch to checkout (default: calculator-adjustments)
 
     Returns:
         Current git commit hash for tracking
@@ -241,19 +243,33 @@ def ensure_latest_scripts(
         print(f"  📥 Cloning llm-sizer repository to {target_path}...")
         ContainerManager.exec_command(
             container_name,
-            ['git', 'clone', repo_url, target_path],
+            ['git', 'clone', '-b', branch, repo_url, target_path],
             check=True
         )
-        print(f"  ✓ Repository cloned")
+        print(f"  ✓ Repository cloned (branch: {branch})")
     else:
-        # Pull latest changes
-        print(f"  🔄 Pulling latest changes...")
+        # Fetch and checkout branch
+        print(f"  🔄 Fetching latest changes...")
         ContainerManager.exec_command(
             container_name,
-            ['git', '-C', target_path, 'pull'],
+            ['git', '-C', target_path, 'fetch', 'origin'],
             check=True
         )
-        print(f"  ✓ Repository updated")
+
+        # Checkout the specified branch
+        ContainerManager.exec_command(
+            container_name,
+            ['git', '-C', target_path, 'checkout', branch],
+            check=True
+        )
+
+        # Pull latest changes
+        ContainerManager.exec_command(
+            container_name,
+            ['git', '-C', target_path, 'pull', 'origin', branch],
+            check=True
+        )
+        print(f"  ✓ Repository updated (branch: {branch})")
 
     # Get current commit hash for tracking
     result = ContainerManager.exec_command(
@@ -263,15 +279,15 @@ def ensure_latest_scripts(
     )
     commit_hash = result.stdout.strip()[:8]  # Short hash
 
-    # Get branch name
+    # Verify we're on the correct branch
     result = ContainerManager.exec_command(
         container_name,
         ['git', '-C', target_path, 'rev-parse', '--abbrev-ref', 'HEAD'],
         check=True
     )
-    branch = result.stdout.strip()
+    current_branch = result.stdout.strip()
 
-    print(f"  ✓ Using commit {commit_hash} on branch {branch}")
+    print(f"  ✓ Using commit {commit_hash} on branch {current_branch}")
 
     return commit_hash
 
@@ -368,7 +384,7 @@ class EnhancedBenchProfiler:
                 )
 
             # Use scripts from cloned repo
-            profiler_path = '/workspace/llm-sizer/scripts/profile-vllm-bench-enhanced.py'
+            profiler_path = '/app/llm-sizer/scripts/profile-vllm-bench-enhanced.py'
         else:
             # LEGACY: Copy profiler script to container
             if not ContainerManager.copy_to_container(

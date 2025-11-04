@@ -50,14 +50,15 @@ def get_models_json_path() -> Path:
         return models_file
 
     # Try common container paths
-    for base in ['/workspace/llm-sizer', '/app', '/code']:
+    for base in ['/app/llm-sizer', '/workspace/llm-sizer', '/app', '/code']:
         models_file = Path(base) / 'src' / 'data' / 'models.json'
         if models_file.exists():
             return models_file
 
     raise FileNotFoundError(
         "Could not find src/data/models.json. "
-        "Ensure llm-sizer repository is properly cloned/mounted."
+        "Ensure llm-sizer repository is properly cloned/mounted. "
+        f"Searched: {models_file.parent}"
     )
 
 
