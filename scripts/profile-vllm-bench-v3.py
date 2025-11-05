@@ -946,6 +946,9 @@ class VLLMBenchProfilerV3:
         Enhanced memory breakdown using vLLM's internal metrics (v3.0)
 
         v3.0: Prioritizes vLLM's reported values as source of truth
+
+        IMPORTANT: Distinguishes between KV cache ALLOCATED (pre-allocated pool)
+        and KV cache USED (actual workload requirements)
         """
 
         # Bytes per parameter based on dtype
@@ -968,8 +971,8 @@ class VLLMBenchProfilerV3:
         net_memory_gb = peak_memory_gb - baseline_memory_gb
 
         # v3.0: Use vLLM's reported values when available (HIGH CONFIDENCE)
-        if vllm_metrics.get('model_weights_gb'):
-            model_weights_gb = vllm_metrics['model_weights_gb']
+        if vllm_metrics.get('model_weights_gb') or vllm_metrics.get('model_loading_gb'):
+            model_weights_gb = vllm_metrics.get('model_weights_gb') or vllm_metrics.get('model_loading_gb')
             weights_confidence = 'high_from_vllm_logs'
         elif model_params:
             model_weights_gb = (model_params * weight_bytes) / (tensor_parallel_size * 1e9)
@@ -978,20 +981,26 @@ class VLLMBenchProfilerV3:
             model_weights_gb = net_memory_gb * 0.65
             weights_confidence = 'low_estimated'
 
-        # v3.0: Use vLLM's KV cache when available (SOURCE OF TRUTH!)
+        # v3.0: KV Cache ALLOCATED (pre-allocated pool from vLLM)
+        kv_cache_allocated_gb = vllm_metrics.get('available_kv_cache_gb', 0)
+
+        # v3.0: KV Cache USED (calculated based on actual workload)
         if vllm_metrics.get('total_gpu_kv_cache_gb'):
-            kv_cache_gb = vllm_metrics['total_gpu_kv_cache_gb']
+            kv_cache_used_gb = vllm_metrics['total_gpu_kv_cache_gb']
             kv_confidence = 'high_from_vllm_logs'
         elif num_layers and (hidden_size or (num_heads and head_dim)):
             seq_len = input_len + output_len
             kv_dim = hidden_size if hidden_size else (num_heads * head_dim)
             kv_bytes = bytes_per_param.get(kv_cache_dtype.lower(), 2)
             kv_elements = 2 * num_layers * kv_dim * seq_len * batch_size
-            kv_cache_gb = (kv_elements * kv_bytes) / (tensor_parallel_size * 1e9)
+            kv_cache_used_gb = (kv_elements * kv_bytes) / (tensor_parallel_size * 1e9)
             kv_confidence = 'high_calculated'
         else:
-            kv_cache_gb = net_memory_gb * 0.20
+            kv_cache_used_gb = net_memory_gb * 0.20
             kv_confidence = 'low_estimated'
+
+        # Graph capture memory (from vLLM logs if available)
+        graph_capture_gb = vllm_metrics.get('graph_capture_gb', 0)
 
         # v3.0: Use vLLM's activations when available
         if vllm_metrics.get('activations_gb'):
@@ -1001,23 +1010,26 @@ class VLLMBenchProfilerV3:
             activations_gb = net_memory_gb * 0.12
             activation_confidence = 'low_estimated'
 
-        # Framework overhead (residual)
+        # Framework overhead (residual after accounting for all known components)
+        # Note: KV cache allocated is the actual memory consumed, not KV cache used
         framework_overhead_gb = max(0, net_memory_gb - (
-            model_weights_gb + kv_cache_gb + activations_gb
+            model_weights_gb + kv_cache_allocated_gb + graph_capture_gb + activations_gb
         ))
 
         # Adjust if negative
         if framework_overhead_gb < 0:
-            adjustment_factor = net_memory_gb / (model_weights_gb + kv_cache_gb + activations_gb)
+            # Use kv_cache_used instead of allocated for adjustment
+            adjustment_factor = net_memory_gb / (model_weights_gb + kv_cache_used_gb + activations_gb)
             model_weights_gb *= adjustment_factor
-            kv_cache_gb *= adjustment_factor
+            kv_cache_used_gb *= adjustment_factor
             activations_gb *= adjustment_factor
             framework_overhead_gb = net_memory_gb * 0.03
+            kv_cache_allocated_gb = 0  # Reset if adjustment needed
 
         overhead_pct = (framework_overhead_gb / peak_memory_gb * 100) if peak_memory_gb > 0 else 0
 
         # Determine overall confidence
-        if vllm_metrics.get('total_gpu_kv_cache_gb') and vllm_metrics.get('model_weights_gb'):
+        if kv_cache_allocated_gb > 0 and vllm_metrics.get('model_weights_gb'):
             overall_confidence = 'high_from_vllm_logs'
         elif model_params and num_layers and hidden_size:
             overall_confidence = 'high_calculated'
@@ -1029,7 +1041,9 @@ class VLLMBenchProfilerV3:
             'baseline_gb': round(baseline_memory_gb, 2),
             'net_increase_gb': round(net_memory_gb, 2),
             'model_weights_gb': round(model_weights_gb, 2),
-            'kv_cache_gb': round(kv_cache_gb, 2),
+            'kv_cache_allocated_gb': round(kv_cache_allocated_gb, 2),  # NEW: Pre-allocated pool
+            'kv_cache_used_gb': round(kv_cache_used_gb, 2),            # NEW: Actual usage
+            'graph_capture_gb': round(graph_capture_gb, 2),            # NEW: CUDA graphs
             'activations_gb': round(activations_gb, 2),
             'framework_overhead_gb': round(framework_overhead_gb, 2),
             'overhead_percentage': round(overhead_pct, 1),
@@ -1047,16 +1061,20 @@ class VLLMBenchProfilerV3:
                 'kv_cache': kv_cache_dtype
             },
             'vllm_reported_values_used': {
-                'weights': vllm_metrics.get('model_weights_gb') is not None,
-                'kv_cache': vllm_metrics.get('total_gpu_kv_cache_gb') is not None,
+                'weights': vllm_metrics.get('model_weights_gb') is not None or vllm_metrics.get('model_loading_gb') is not None,
+                'kv_cache_allocated': kv_cache_allocated_gb > 0,
+                'kv_cache_used': vllm_metrics.get('total_gpu_kv_cache_gb') is not None,
+                'graph_capture': graph_capture_gb > 0,
                 'activations': vllm_metrics.get('activations_gb') is not None
             },
             'notes': [
                 'Memory breakdown v3.0 with vLLM internal metrics',
+                'KV cache allocated = pre-allocated pool (from gpu_memory_utilization)',
+                'KV cache used = actual workload requirements (much smaller)',
                 'vLLM-reported values used when available (highest confidence)',
                 'Baseline memory excluded from component calculations',
                 f'Overall estimation confidence: {overall_confidence}',
-                'Overhead includes CUDA context + vLLM engine + PagedAttention + CUDA graphs'
+                'Overhead includes CUDA context + vLLM engine + PagedAttention structures'
             ]
         }
 
@@ -1231,7 +1249,19 @@ class VLLMBenchProfilerV3:
         mb = report['memory_breakdown']
         print(f"  Total Measured: {mb['total_measured_gb']:.2f} GB")
         print(f"  ├─ Model Weights: {mb['model_weights_gb']:.2f} GB ({mb['model_weights_gb']/mb['total_measured_gb']*100:.1f}%)")
-        print(f"  ├─ KV Cache: {mb['kv_cache_gb']:.2f} GB ({mb['kv_cache_gb']/mb['total_measured_gb']*100:.1f}%)")
+
+        # Show both allocated and used KV cache if available
+        if mb.get('kv_cache_allocated_gb', 0) > 0:
+            print(f"  ├─ KV Cache (allocated): {mb['kv_cache_allocated_gb']:.2f} GB ({mb['kv_cache_allocated_gb']/mb['total_measured_gb']*100:.1f}%)")
+            print(f"  │  └─ KV Cache (used): {mb.get('kv_cache_used_gb', 0):.2f} GB (actual workload)")
+        else:
+            # Fallback to old format
+            kv_gb = mb.get('kv_cache_gb', mb.get('kv_cache_used_gb', 0))
+            print(f"  ├─ KV Cache: {kv_gb:.2f} GB ({kv_gb/mb['total_measured_gb']*100:.1f}%)")
+
+        if mb.get('graph_capture_gb', 0) > 0:
+            print(f"  ├─ CUDA Graphs: {mb['graph_capture_gb']:.2f} GB ({mb['graph_capture_gb']/mb['total_measured_gb']*100:.1f}%)")
+
         print(f"  ├─ Activations: {mb['activations_gb']:.2f} GB ({mb['activations_gb']/mb['total_measured_gb']*100:.1f}%)")
         print(f"  └─ Framework Overhead: {mb['framework_overhead_gb']:.2f} GB ({mb['overhead_percentage']:.1f}%)")
 
@@ -1240,10 +1270,18 @@ class VLLMBenchProfilerV3:
         vllm_used = mb.get('vllm_reported_values_used', {})
         print(f"\n  Estimation Confidence: {conf['overall'].upper()}")
         weights_source = " (vLLM reported)" if vllm_used.get('weights') else ""
-        kv_source = " (vLLM reported)" if vllm_used.get('kv_cache') else ""
+        kv_alloc_source = " (vLLM reported)" if vllm_used.get('kv_cache_allocated') else ""
+        kv_used_source = " (vLLM reported)" if vllm_used.get('kv_cache_used') else ""
+        graph_source = " (vLLM reported)" if vllm_used.get('graph_capture') else ""
         act_source = " (vLLM reported)" if vllm_used.get('activations') else ""
         print(f"    Weights: {conf['weights']}{weights_source}")
-        print(f"    KV Cache: {conf['kv_cache']}{kv_source}")
+        if mb.get('kv_cache_allocated_gb', 0) > 0:
+            print(f"    KV Cache Allocated: high_from_vllm_logs{kv_alloc_source}")
+            print(f"    KV Cache Used: {conf['kv_cache']}{kv_used_source}")
+        else:
+            print(f"    KV Cache: {conf['kv_cache']}{kv_used_source}")
+        if mb.get('graph_capture_gb', 0) > 0:
+            print(f"    CUDA Graphs: high_from_vllm_logs{graph_source}")
         print(f"    Activations: {conf['activations']}{act_source}")
 
         # GPU info
