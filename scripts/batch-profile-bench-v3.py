@@ -50,9 +50,10 @@ import time
 import yaml
 import threading
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple
-from dataclasses import dataclass, asdict
+from typing import List, Dict, Optional
+from dataclasses import dataclass
 from datetime import datetime
+import re as regex_module
 
 
 @dataclass
@@ -308,6 +309,132 @@ class V3BenchProfiler:
         self.script_dir = script_dir
         self.results: List[ProfileResult] = []
         self.use_git_pull = use_git_pull
+        self.synced_containers: Dict[str, str] = {}  # container_name -> profiler_path
+
+    def ensure_container_synced(self, container_name: str) -> str:
+        """
+        Ensure container has latest scripts (sync once per container)
+
+        Returns:
+            Path to the profiler script in the container
+        """
+        if container_name in self.synced_containers:
+            return self.synced_containers[container_name]
+
+        if self.use_git_pull:
+            print(f"\n📦 Syncing llm-sizer repository in container {container_name}...")
+            try:
+                ensure_latest_scripts(container_name)
+                profiler_path = '/app/llm-sizer/scripts/profile-vllm-bench-v3.py'
+                self.synced_containers[container_name] = profiler_path
+                print(f"  ✓ Repository synced successfully\n")
+                return profiler_path
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError(f"Failed to sync repository: {e}")
+        else:
+            raise RuntimeError("Legacy docker cp mode not supported for v3.0 profiler")
+
+    def _run_profiler_with_output(
+        self,
+        container_name: str,
+        cmd: List[str],
+        timeout: Optional[float] = None
+    ) -> subprocess.CompletedProcess:
+        """
+        Run profiler command and display real-time output from vLLM
+
+        Displays key status messages while showing progress ticker
+        """
+        import select
+
+        # Start the process
+        docker_cmd = ['docker', 'exec', container_name] + cmd
+        process = subprocess.Popen(
+            docker_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1
+        )
+
+        output_lines = []
+        start_time = time.time()
+
+        # Patterns to detect important vLLM status messages
+        def format_status(msg, elapsed=None):
+            """Format status message with optional elapsed time"""
+            if elapsed:
+                return f"    {msg} ({elapsed:.0f}s)"
+            return f"    {msg}"
+
+        important_patterns = [
+            (r'Loading model', lambda m, t: format_status('📥 Loading model...', time.time() - start_time)),
+            (r'Model loaded', lambda m, t: format_status('✓ Model loaded', time.time() - start_time)),
+            (r'Warming up', lambda m, t: format_status('🔥 Warming up...', time.time() - start_time)),
+            (r'Running benchmark', lambda m, t: format_status('⚡ Running benchmark...', time.time() - start_time)),
+            (r'Benchmark finished', lambda m, t: format_status('✓ Benchmark finished', time.time() - start_time)),
+            (r'# GPU blocks: (\d+)', lambda m, t: format_status(f'🔍 GPU blocks: {m.group(1)}')),
+            (r'Block size: (\d+)', lambda m, t: format_status(f'🔍 Block size: {m.group(1)} tokens')),
+            (r'Using (\S+.*?) backend', lambda m, t: format_status(f'🔍 Attention: {m.group(1)}')),
+            (r'max_model_len=(\d+)', lambda m, t: format_status(f'🔍 Max model len: {m.group(1)}')),
+        ]
+
+        try:
+            while True:
+                # Check if process has finished
+                retcode = process.poll()
+                if retcode is not None:
+                    # Process finished, read any remaining output
+                    remaining = process.stdout.read()
+                    if remaining:
+                        output_lines.append(remaining)
+                    break
+
+                # Use select to check if there's data available (with timeout)
+                # This doesn't work on Windows, but we're running in Docker/Linux
+                if hasattr(select, 'select'):
+                    ready, _, _ = select.select([process.stdout], [], [], 0.5)
+                    if ready:
+                        line = process.stdout.readline()
+                        if line:
+                            output_lines.append(line)
+
+                            # Check for important messages to display
+                            for pattern, display_func in important_patterns:
+                                match = regex_module.search(pattern, line, regex_module.IGNORECASE)
+                                if match:
+                                    # Clear line and display status
+                                    elapsed = time.time() - start_time
+                                    msg = display_func(match, elapsed)
+                                    print(f"\r{' ' * 80}\r{msg}", flush=True)
+                                    break
+                else:
+                    # Fallback for systems without select (shouldn't happen in Docker)
+                    line = process.stdout.readline()
+                    if line:
+                        output_lines.append(line)
+                    elif retcode is not None:
+                        break
+                    time.sleep(0.1)
+
+                # Check timeout
+                if timeout and (time.time() - start_time) > timeout:
+                    process.kill()
+                    raise subprocess.TimeoutExpired(cmd, timeout)
+
+        except KeyboardInterrupt:
+            process.kill()
+            raise
+
+        # Combine all output
+        full_output = ''.join(output_lines)
+
+        return subprocess.CompletedProcess(
+            args=cmd,
+            returncode=retcode,
+            stdout=full_output,
+            stderr=''  # We merged stderr into stdout
+        )
 
     def profile_model(
         self,
@@ -350,27 +477,15 @@ class V3BenchProfiler:
             header += f" | {kv_str}"
 
         print(f"\n{header}")
-        print(f"    {input_len}→{output_len} tokens, BS={batch_size} | ", end='', flush=True)
+        print(f"    {input_len}→{output_len} tokens, BS={batch_size}")
 
         start_time = time.time()
 
-        # Ensure scripts are available in container
-        if self.use_git_pull:
-            # Use git clone/pull for latest code
-            try:
-                commit_hash = ensure_latest_scripts(config.container_name)
-            except subprocess.CalledProcessError as e:
-                error_msg = f"Failed to sync repository: {e}"
-                print(f"    ❌ {error_msg}")
-                return self._create_error_result(
-                    config, input_len, output_len, batch_size,
-                    error_msg, time.time() - start_time
-                )
-
-            # Use v3.0 profiler from cloned repo
-            profiler_path = '/app/llm-sizer/scripts/profile-vllm-bench-v3.py'
-        else:
-            error_msg = "Legacy docker cp mode not supported for v3.0 profiler (use --no-git-pull=false)"
+        # Get profiler path (container already synced in profile_all_configs)
+        try:
+            profiler_path = self.ensure_container_synced(config.container_name)
+        except RuntimeError as e:
+            error_msg = str(e)
             print(f"    ❌ {error_msg}")
             return self._create_error_result(
                 config, input_len, output_len, batch_size,
@@ -405,20 +520,14 @@ class V3BenchProfiler:
         if config.enforce_eager:
             cmd.append('--enforce-eager')
 
-        # Start progress ticker
-        ticker = ProgressTicker(prefix="    ")
-        ticker.start()
-
-        # Execute profiler inside container
-        result = ContainerManager.exec_command(
+        # Execute profiler inside container with real-time output
+        result = self._run_profiler_with_output(
             config.container_name,
-            cmd,
-            check=False
+            cmd
         )
 
-        # Stop ticker and get elapsed time
-        elapsed = ticker.stop()
-        print()  # New line after ticker
+        # Calculate elapsed time
+        elapsed = time.time() - start_time
 
         if result.returncode != 0:
             error_msg = result.stderr or result.stdout or "Unknown error"
@@ -1016,6 +1125,16 @@ def main():
 
     # Initialize v3.0 profiler (use git pull for latest code)
     profiler = V3BenchProfiler(results_dir, script_dir, use_git_pull=True)
+
+    # Pre-sync all unique containers to avoid repeated syncs
+    unique_containers = set(config.container_name for config in configs)
+    print(f"\n📦 Preparing {len(unique_containers)} container(s)...")
+    for container in unique_containers:
+        try:
+            profiler.ensure_container_synced(container)
+        except RuntimeError as e:
+            print(f"❌ Failed to sync {container}: {e}")
+            sys.exit(1)
 
     # Process each model
     for i, config in enumerate(configs, 1):
