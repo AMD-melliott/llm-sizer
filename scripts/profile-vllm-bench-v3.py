@@ -1002,19 +1002,24 @@ class VLLMBenchProfilerV3:
         # Graph capture memory (from vLLM logs if available)
         graph_capture_gb = vllm_metrics.get('graph_capture_gb', 0)
 
+        # Calculate residual after known components
+        known_components_gb = model_weights_gb + kv_cache_allocated_gb + graph_capture_gb
+        residual_gb = max(0, net_memory_gb - known_components_gb)
+
         # v3.0: Use vLLM's activations when available
         if vllm_metrics.get('activations_gb'):
             activations_gb = vllm_metrics['activations_gb']
             activation_confidence = 'high_from_vllm_logs'
+        elif residual_gb > 0:
+            # Estimate activations as ~70% of residual (rest is framework overhead)
+            activations_gb = residual_gb * 0.7
+            activation_confidence = 'estimated_from_residual'
         else:
-            activations_gb = net_memory_gb * 0.12
+            activations_gb = 0.0
             activation_confidence = 'low_estimated'
 
-        # Framework overhead (residual after accounting for all known components)
-        # Note: KV cache allocated is the actual memory consumed, not KV cache used
-        framework_overhead_gb = max(0, net_memory_gb - (
-            model_weights_gb + kv_cache_allocated_gb + graph_capture_gb + activations_gb
-        ))
+        # Framework overhead (remainder after activations)
+        framework_overhead_gb = max(0, residual_gb - activations_gb)
 
         # Adjust if negative
         if framework_overhead_gb < 0:
