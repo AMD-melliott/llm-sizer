@@ -14,7 +14,7 @@ export const ImageSelector: React.FC = () => {
   
   return (
     <div className="space-y-2">
-      <label htmlFor="image-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label htmlFor="image-select" className="block text-sm font-medium text-gray-700">
         Container Image
       </label>
       
@@ -22,7 +22,7 @@ export const ImageSelector: React.FC = () => {
         id="image-select"
         value={selectedImageId}
         onChange={(e) => setSelectedImageId(e.target.value)}
-        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         {availableImages.map((image) => (
           <option key={image.fullImage} value={image.fullImage}>
@@ -37,7 +37,7 @@ export const ImageSelector: React.FC = () => {
             href={`https://hub.docker.com/r/${selectedImage.repository}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            className="inline-flex items-center text-sm text-blue-600 hover:underline"
           >
             <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />

@@ -39,12 +39,12 @@ export const VolumeConfiguration: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Container Toolkit Toggle */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
         <div className="flex-1">
-          <label htmlFor="container-toolkit" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="container-toolkit" className="text-sm font-medium text-gray-700">
             AMD Container Toolkit
           </label>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-gray-500 mt-1">
             Simplified GPU access management (recommended)
           </p>
         </div>
@@ -60,7 +60,7 @@ export const VolumeConfiguration: React.FC = () => {
       {/* Model Path */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label htmlFor="model-path" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="model-path" className="block text-sm font-medium text-gray-700">
             Model Storage Path
           </label>
           <div className="flex items-center">
@@ -71,7 +71,7 @@ export const VolumeConfiguration: React.FC = () => {
               onChange={(e) => setMountModelPath(e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label htmlFor="mount-model-path" className="ml-2 text-xs text-gray-600 dark:text-gray-400">
+            <label htmlFor="mount-model-path" className="ml-2 text-xs text-gray-600">
               Mount
             </label>
           </div>
@@ -83,20 +83,20 @@ export const VolumeConfiguration: React.FC = () => {
           onChange={(e) => setModelPath(e.target.value)}
           disabled={!mountModelPath}
           placeholder="./models"
-          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
         />
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-gray-500">
           Host directory for model files (mapped to /models in container)
         </p>
       </div>
       
       {/* HuggingFace Cache */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
         <div className="flex-1">
-          <label htmlFor="mount-hf-cache" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="mount-hf-cache" className="text-sm font-medium text-gray-700">
             Mount HuggingFace Cache
           </label>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-gray-500 mt-1">
             Share HF cache between host and container
           </p>
         </div>
@@ -111,12 +111,12 @@ export const VolumeConfiguration: React.FC = () => {
       
       {/* Host Network Mode */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
           <div className="flex-1">
-            <label htmlFor="use-host-network" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="use-host-network" className="text-sm font-medium text-gray-700">
               Use Host Network
             </label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Share the host's network stack (bypasses Docker networking)
             </p>
           </div>
@@ -131,11 +131,11 @@ export const VolumeConfiguration: React.FC = () => {
         
         {/* Security Warning */}
         {useHostNetwork && (
-          <div className="mt-2 flex items-start space-x-2 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded">
+          <div className="mt-2 flex items-start space-x-2 p-2 bg-orange-50 border border-orange-200 rounded">
             <svg className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
-            <div className="text-xs text-orange-700 dark:text-orange-300">
+            <div className="text-xs text-orange-700">
               <p className="font-medium">Security Notice:</p>
               <p>Host network mode bypasses Docker's network isolation. The container shares the host's network stack directly. Only use this if you understand the security implications.</p>
             </div>
@@ -145,12 +145,12 @@ export const VolumeConfiguration: React.FC = () => {
       
       {/* Auto-Remove Container */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
           <div className="flex-1">
-            <label htmlFor="auto-remove" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="auto-remove" className="text-sm font-medium text-gray-700">
               Auto-Remove Container (--rm)
             </label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Automatically remove container when it exits (ephemeral mode)
             </p>
           </div>
@@ -165,11 +165,11 @@ export const VolumeConfiguration: React.FC = () => {
         
         {/* Info notice when auto-remove is enabled */}
         {autoRemoveContainer && (
-          <div className="mt-2 flex items-start space-x-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+          <div className="mt-2 flex items-start space-x-2 p-2 bg-blue-50 border border-blue-200 rounded">
             <svg className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
-            <div className="text-xs text-blue-700 dark:text-blue-300">
+            <div className="text-xs text-blue-700">
               <p className="font-medium">Ephemeral Container Mode:</p>
               <p>Container will be removed when stopped. No restart policy will be applied. Mounted volumes will persist, but container state will be lost. Use for testing or temporary deployments.</p>
             </div>
@@ -180,12 +180,12 @@ export const VolumeConfiguration: React.FC = () => {
       {/* Custom Volumes */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="block text-sm font-medium text-gray-700">
             Additional Volumes
           </label>
           <button
             onClick={() => setShowAddVolume(!showAddVolume)}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-sm text-blue-600 hover:underline"
           >
             {showAddVolume ? 'Cancel' : '+ Add Volume'}
           </button>
@@ -193,9 +193,9 @@ export const VolumeConfiguration: React.FC = () => {
         
         {/* Add Volume Form */}
         {showAddVolume && (
-          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md space-y-2">
+          <div className="p-3 bg-gray-50 rounded-md space-y-2">
             <div>
-              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+              <label className="block text-xs text-gray-600 mb-1">
                 Host Path
               </label>
               <input
@@ -203,11 +203,11 @@ export const VolumeConfiguration: React.FC = () => {
                 value={newVolume.hostPath}
                 onChange={(e) => setNewVolume({ ...newVolume, hostPath: e.target.value })}
                 placeholder="/path/on/host"
-                className="w-full px-2 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                className="w-full px-2 py-1 text-sm bg-white border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+              <label className="block text-xs text-gray-600 mb-1">
                 Container Path
               </label>
               <input
@@ -215,7 +215,7 @@ export const VolumeConfiguration: React.FC = () => {
                 value={newVolume.containerPath}
                 onChange={(e) => setNewVolume({ ...newVolume, containerPath: e.target.value })}
                 placeholder="/path/in/container"
-                className="w-full px-2 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                className="w-full px-2 py-1 text-sm bg-white border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div className="flex items-center">
@@ -226,7 +226,7 @@ export const VolumeConfiguration: React.FC = () => {
                 onChange={(e) => setNewVolume({ ...newVolume, readOnly: e.target.checked })}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="read-only" className="ml-2 text-xs text-gray-600 dark:text-gray-400">
+              <label htmlFor="read-only" className="ml-2 text-xs text-gray-600">
                 Read-only
               </label>
             </div>
@@ -246,21 +246,21 @@ export const VolumeConfiguration: React.FC = () => {
             {customVolumes.map((volume, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md"
+                className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                  <p className="text-sm text-gray-700 truncate">
                     {volume.hostPath} → {volume.containerPath}
                   </p>
                   {volume.readOnly && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-gray-500">
                       (read-only)
                     </span>
                   )}
                 </div>
                 <button
                   onClick={() => removeCustomVolume(idx)}
-                  className="ml-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                  className="ml-2 text-red-600 hover:text-red-800"
                   title="Remove volume"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

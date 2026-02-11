@@ -10,7 +10,7 @@ export const EngineSelector: React.FC = () => {
   
   return (
     <div className="space-y-2">
-      <label htmlFor="engine-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label htmlFor="engine-select" className="block text-sm font-medium text-gray-700">
         Inference Engine
       </label>
       
@@ -18,7 +18,7 @@ export const EngineSelector: React.FC = () => {
         id="engine-select"
         value={selectedEngineId}
         onChange={(e) => setSelectedEngineId(e.target.value)}
-        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         {engines.map((engine) => (
           <option key={engine.id} value={engine.id}>
@@ -33,7 +33,7 @@ export const EngineSelector: React.FC = () => {
             href={selectedEngine.documentation}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-block"
+            className="text-sm text-blue-600 hover:underline inline-block"
           >
             View Documentation →
           </a>

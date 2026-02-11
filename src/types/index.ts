@@ -345,7 +345,7 @@ export interface ContainerImage {
   tag: string;
   fullImage: string;
   entrypoint?: string; // Command to run after the container image (e.g., "python3 -m vllm.entrypoints.openai.api_server")
-  stability: 'stable' | 'nightly' | 'experimental';
+  stability: 'stable' | 'nightly' | 'experimental' | 'legacy';
   rocmVersion: string;
   pythonVersion: string;
   description: string;
