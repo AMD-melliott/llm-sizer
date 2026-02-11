@@ -18,7 +18,6 @@ const QUANTIZATION_BITS: Record<InferenceQuantization, number> = {
 const KV_CACHE_BITS: Record<KVCacheQuantization, number> = {
   'fp16_bf16': 16,
   'fp8_bf16': 8,
-  'int8': 8,
 };
 
 export function calculateMemoryRequirements(

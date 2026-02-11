@@ -22,7 +22,6 @@ const QuantizationOptions: React.FC = () => {
   const kvCacheOptions: { value: KVCacheQuantization; label: string; description: string }[] = [
     { value: 'fp16_bf16', label: 'FP16/BF16', description: '16-bit KV cache' },
     { value: 'fp8_bf16', label: 'FP8/BF16', description: '8-bit KV cache' },
-    { value: 'int8', label: 'INT8', description: '8-bit integer KV cache' },
   ];
 
   return (
@@ -81,7 +80,7 @@ const QuantizationOptions: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {kvCacheOptions.map((option) => (
             <button
               key={option.value}

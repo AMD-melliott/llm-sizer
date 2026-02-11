@@ -28,7 +28,7 @@ const InferenceParameters: React.FC = () => {
   const isMultimodal = currentModel?.modality === 'multimodal';
 
   // Log scale values for sliders
-  const batchSizeSteps = [1, 2, 4, 8, 16, 32, 64, 128];
+  const batchSizeSteps = [1, 2, 4, 8, 16, 32, 64, 128, 256];
   const sequenceLengthSteps = [512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072];
   const concurrentUserSteps = [1, 2, 4, 8, 16, 32, 64, 128];
 
@@ -71,7 +71,7 @@ const InferenceParameters: React.FC = () => {
           <span>1</span>
           <span>8</span>
           <span>32</span>
-          <span>128</span>
+          <span>256</span>
         </div>
       </div>
 

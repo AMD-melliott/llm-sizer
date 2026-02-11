@@ -142,7 +142,7 @@ export interface RerankingModel {
 
 // Quantization Types
 export type InferenceQuantization = 'fp16' | 'fp8' | 'int8' | 'int4';
-export type KVCacheQuantization = 'fp16_bf16' | 'fp8_bf16' | 'int8';
+export type KVCacheQuantization = 'fp16_bf16' | 'fp8_bf16';
 
 // Memory Breakdown
 export interface MemoryBreakdown {

@@ -169,7 +169,7 @@ describe('Multimodal (Vision-Language) Memory Calculation Tests', () => {
 
     test('should handle INT8 quantization for batch processing', () => {
       const result = calculateMemoryRequirements(
-        llava15_7b, gpu_h100, 'int8', 'int8',
+        llava15_7b, gpu_h100, 'int8', 'fp8_bf16',
         8, // batchSize - batch processing
         1024, // sequenceLength
         1, // concurrentUsers
@@ -208,7 +208,7 @@ describe('Multimodal (Vision-Language) Memory Calculation Tests', () => {
 
     test('should handle stress test with maximum resolution', () => {
       const result = calculateMemoryRequirements(
-        llava15_7b, gpu_mi300x, 'int4', 'int8',
+        llava15_7b, gpu_mi300x, 'int4', 'fp8_bf16',
         1, // batchSize
         1024, // sequenceLength
         1, // concurrentUsers

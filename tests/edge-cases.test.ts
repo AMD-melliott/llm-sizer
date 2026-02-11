@@ -170,7 +170,7 @@ describe('Edge Case and Validation Tests', () => {
 
     test('should still exceed with INT4 quantization on consumer GPU', () => {
       const result = calculateMemoryRequirements(
-        largeModel, consumer_rtx4090, 'int4', 'int8',
+        largeModel, consumer_rtx4090, 'int4', 'fp8_bf16',
         1, 2048, 1, 1
       );
 
@@ -269,7 +269,7 @@ describe('Edge Case and Validation Tests', () => {
 
     test('should handle ultra-large model with quantization', () => {
       const result = calculateMemoryRequirements(
-        ultraLargeModel, datacenter_mi300x, 'int8', 'int8',
+        ultraLargeModel, datacenter_mi300x, 'int8', 'fp8_bf16',
         1, 2048, 1, 8
       );
 
@@ -305,8 +305,8 @@ describe('Edge Case and Validation Tests', () => {
       const quantizations = [
         { inference: 'fp16' as const, kv: 'fp16_bf16' as const },
         { inference: 'fp8' as const, kv: 'fp8_bf16' as const },
-        { inference: 'int8' as const, kv: 'int8' as const },
-        { inference: 'int4' as const, kv: 'int8' as const },
+        { inference: 'int8' as const, kv: 'fp8_bf16' as const },
+        { inference: 'int4' as const, kv: 'fp8_bf16' as const },
       ];
 
       const results = quantizations.map(q => calculateMemoryRequirements(
