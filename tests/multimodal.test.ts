@@ -323,8 +323,7 @@ describe('Multimodal (Vision-Language) Memory Calculation Tests', () => {
       const overheadPercent = (overhead / textResult.usedVRAM) * 100;
 
       expect(overhead).toBeGreaterThan(0);
-      // With updated framework overhead (8% vs 5%), the relative overhead is ~5-6%
-      // This is realistic for vision encoder + projector weights
+      // Multimodal overhead includes vision encoder weights, projector, and image KV cache
       expect(overheadPercent).toBeGreaterThan(5); // At least 5% overhead
       expect(overheadPercent).toBeLessThan(50); // But less than 50%
 

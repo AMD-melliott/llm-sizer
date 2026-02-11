@@ -81,6 +81,8 @@ export interface Model {
   hidden_size: number;
   num_layers: number;
   num_heads: number;
+  num_kv_heads?: number;        // For GQA models; defaults to num_heads (MHA)
+  intermediate_size?: number;   // FFN intermediate dim; defaults to hidden_size * 4
   default_context_length: number;
   architecture: 'transformer' | 'moe' | 'other';
   

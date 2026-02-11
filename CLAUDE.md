@@ -93,17 +93,25 @@ llm-sizer/
 // Base weights calculation
 baseWeights = (modelParams * bitsPerParam) / 8 / 1e9  // GB
 
-// KV cache per token
-kvCachePerToken = 2 * numLayers * (hiddenSize + (hiddenSize / numHeads)) * kvBitsPerParam / 8
+// KV cache per token (GQA-aware, matches vLLM's kv_cache_interface.py)
+// num_kv_heads defaults to num_heads for MHA models
+headSize = hiddenSize / numHeads
+kvCachePerToken = 2 * numLayers * numKVHeads * headSize * kvBytesPerElement
 
 // Total KV cache
 totalKVCache = kvCachePerToken * batchSize * sequenceLength * concurrentUsers / 1e9  // GB
 
-// Add framework overhead (5-10% typical)
-frameworkOverhead = (baseWeights + totalKVCache) * 0.08
+// Activation memory (peak ~one layer, layers processed sequentially)
+// With FlashAttention, attention scores aren't materialized
+intermediateSize = model.intermediate_size ?? hiddenSize * 4
+activations = (batchSize * sequenceLength * intermediateSize * 2) / numGPUs / 1e9
 
-// Multi-GPU overhead if numGPUs > 1
-multiGPUOverhead = numGPUs > 1 ? totalMemory * 0.02 * (numGPUs - 1) : 0
+// Framework overhead (baseline + proportional, calibrated from vLLM profiling)
+frameworkOverhead = 1.5 + (baseWeights + totalKVCache + activations) * 0.05
+                  + (numGPUs > 1 ? 0.5 * (numGPUs - 1) : 0)  // NCCL buffers
+
+// Multi-GPU overhead (TP communication buffers, scales with weights only)
+multiGPUOverhead = numGPUs > 1 ? baseWeights * 0.01 * (numGPUs - 1) : 0
 ```
 
 ### State Management Pattern
@@ -160,6 +168,8 @@ multiGPUOverhead = numGPUs > 1 ? totalMemory * 0.02 * (numGPUs - 1) : 0
       "hidden_size": 8192,
       "num_layers": 80,
       "num_heads": 64,
+      "num_kv_heads": 8,
+      "intermediate_size": 28672,
       "default_context_length": 32768
     }
   ]

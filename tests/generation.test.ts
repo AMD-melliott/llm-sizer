@@ -9,6 +9,7 @@ describe('Generation Model (LLM) Memory Calculation Tests', () => {
     hidden_size: 8192,
     num_layers: 80,
     num_heads: 64,
+    num_kv_heads: 8,
     default_context_length: 8192,
     architecture: 'transformer' as const,
     modality: "text"
@@ -21,6 +22,7 @@ describe('Generation Model (LLM) Memory Calculation Tests', () => {
     hidden_size: 4096,
     num_layers: 32,
     num_heads: 32,
+    num_kv_heads: 8,
     default_context_length: 8192,
     architecture: 'transformer' as const,
     modality: "text"
@@ -103,7 +105,8 @@ describe('Generation Model (LLM) Memory Calculation Tests', () => {
       }
 
       // KV cache should scale with batch size and users
-      expect(result.memoryBreakdown.kvCache).toBeGreaterThan(10);
+      // With GQA (num_kv_heads=8), KV cache is reduced vs MHA
+      expect(result.memoryBreakdown.kvCache).toBeGreaterThan(5);
       expect(result.memoryBreakdown.activations).toBeGreaterThan(0);
     });
 

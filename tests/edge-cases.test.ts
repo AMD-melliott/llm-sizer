@@ -380,11 +380,12 @@ describe('Edge Case and Validation Tests', () => {
       // With batch_size=8, seq=4096, users=4, KV cache can be larger than weights
       // This is expected per the documentation for high concurrency scenarios
 
-      // Framework overhead should be ~8% of base memory per documentation
+      // Framework overhead uses baseline + proportional model:
+      // frameworkOverhead = 1.5 GB (fixed) + 5% of model memory + NCCL overhead
+      // For large models, ratio approaches 0.05; for small models, fixed cost dominates
       const baseMemory = result.memoryBreakdown.baseWeights + result.memoryBreakdown.kvCache + result.memoryBreakdown.activations;
-      const overheadRatio = result.memoryBreakdown.frameworkOverhead / baseMemory;
-      expect(overheadRatio).toBeGreaterThan(0.07);
-      expect(overheadRatio).toBeLessThan(0.09);
+      const expectedOverhead = 1.5 + baseMemory * 0.05;
+      expect(result.memoryBreakdown.frameworkOverhead).toBeCloseTo(expectedOverhead, 0);
     });
   });
 

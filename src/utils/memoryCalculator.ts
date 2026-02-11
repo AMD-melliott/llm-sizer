@@ -38,17 +38,27 @@ export function calculateMemoryRequirements(
   const baseWeights = (model.parameters_billions * 1e9 * bitsPerParam) / 8 / 1e9;
 
   // Calculate KV cache requirements
-  // KV cache per token = 2 (K+V) * num_layers * hidden_size * kv_bits / 8
+  // KV cache per token = 2 (K+V) * num_layers * num_kv_heads * head_size * kv_bytes
+  // For GQA models, num_kv_heads < num_heads, reducing KV cache proportionally.
+  // For MHA models (num_kv_heads == num_heads), this equals the hidden_size formula.
+  // Matches vLLM's formula: 2 * block_size * num_kv_heads * head_size * dtype_size
   const kvBitsPerParam = KV_CACHE_BITS[kvCacheQuantization];
-  const kvCachePerToken = 2 * model.num_layers * model.hidden_size * kvBitsPerParam / 8;
+  const numKVHeads = model.num_kv_heads ?? model.num_heads;
+  const headSize = model.hidden_size / model.num_heads;
+  const kvBytesPerElement = kvBitsPerParam / 8;
+  const kvCachePerToken = 2 * model.num_layers * numKVHeads * headSize * kvBytesPerElement;
 
   // Total KV cache for all users and sequences
   const totalKVCache = (kvCachePerToken * batchSize * sequenceLength * concurrentUsers) / 1e9;
 
-  // Activation memory
-  // Formula: (batch_size * sequence_length * hidden_size * num_layers * 4) / num_gpus
-  // Activation memory is distributed across GPUs in tensor parallelism
-  const activations = (batchSize * sequenceLength * model.hidden_size * model.num_layers * 4) / numGPUs / 1e9;
+  // Activation memory (peak, ~one layer's intermediates)
+  // Layers are processed sequentially so activations are reused between layers.
+  // With FlashAttention (used by vLLM), attention scores aren't fully materialized.
+  // The dominant term is the FFN intermediate buffer (intermediate_size, typically 4x hidden_size).
+  // Factor of 2 accounts for input + intermediate tensors coexisting during FFN computation.
+  // Distributed across GPUs in tensor parallelism.
+  const intermediateSize = model.intermediate_size ?? model.hidden_size * 4;
+  const activations = (batchSize * sequenceLength * intermediateSize * 2) / numGPUs / 1e9;
 
   // Multimodal memory components (only for multimodal models)
   // NOTE: These calculations provide reasonable estimates for vision-language models
@@ -89,29 +99,31 @@ export function calculateMemoryRequirements(
 
     // Additional KV cache for image tokens in language model
     // Image tokens are processed through language model's attention layers
+    // Uses same GQA-aware formula as text KV cache
     const imageTokenCount = model.multimodal_config.image_token_count || 576;
-    const imageKVCachePerToken = 2 * model.num_layers * model.hidden_size * kvBitsPerParam / 8;
+    const imageKVCachePerToken = 2 * model.num_layers * numKVHeads * headSize * kvBytesPerElement;
     imageTokensKV = (imageKVCachePerToken * imageTokenCount * numImages * batchSize * concurrentUsers) / 1e9;
   }
 
   const totalMultimodalMemory = visionWeights + visionActivations + projectorWeights + imagePreprocessing + imageTokensKV;
 
-  // Framework overhead (e.g., CUDA kernels, libraries)
-  // Typically 5-10% of the base memory requirements. We use 8% for accuracy based on empirical measurements.
-  const frameworkOverhead = (baseWeights + totalKVCache + activations) * 0.08;
+  // Framework overhead (CUDA context, PyTorch runtime, inference engine, memory pools)
+  // Uses a baseline + proportional model instead of a flat percentage:
+  // - Fixed: ~1.5 GB for CUDA context + PyTorch runtime + engine initialization
+  // - Proportional: ~5% of model memory for internal buffers and compilation artifacts
+  // - Multi-GPU: ~0.5 GB per additional GPU for NCCL communication buffers
+  // This matches vLLM's profiled non_torch_memory behavior where small models see
+  // high relative overhead (fixed costs dominate) while large models see lower relative overhead.
+  const fixedOverhead = 1.5;
+  const proportionalOverhead = (baseWeights + totalKVCache + activations) * 0.05;
+  const ncclOverhead = numGPUs > 1 ? 0.5 * (numGPUs - 1) : 0;
+  const frameworkOverhead = fixedOverhead + proportionalOverhead + ncclOverhead;
 
-  // Multi-GPU overhead (communication buffers for tensor parallelism)
-  // IMPORTANT: This scales with the number of GPUs to reflect real-world behavior:
-  // - Formula: base_memory × 0.02 × (numGPUs - 1)
-  // - Rationale: Each additional GPU adds ~2% overhead for inter-GPU communication
-  // - Examples:
-  //   * 2 GPUs: 2% overhead (1 additional GPU)
-  //   * 4 GPUs: 6% overhead (3 additional GPUs)
-  //   * 8 GPUs: 14% overhead (7 additional GPUs)
-  // - This matches empirical measurements from production tensor parallelism deployments
-  // - The overhead is for communication buffers, gradient synchronization, and NCCL/RCCM operations
-  const baseMemory = baseWeights + totalKVCache + activations + totalMultimodalMemory + frameworkOverhead;
-  const multiGPUOverhead = numGPUs > 1 ? baseMemory * 0.02 * (numGPUs - 1) : 0;
+  // Multi-GPU overhead (tensor parallelism communication buffers)
+  // NCCL fixed costs are already included in frameworkOverhead above.
+  // This remaining term covers all-reduce buffers and activation synchronization,
+  // which scale with model weights (not KV cache or activations).
+  const multiGPUOverhead = numGPUs > 1 ? baseWeights * 0.01 * (numGPUs - 1) : 0;
 
   // Calculate total memory usage
   const usedVRAM = baseWeights + totalKVCache + activations + totalMultimodalMemory + frameworkOverhead + multiGPUOverhead;

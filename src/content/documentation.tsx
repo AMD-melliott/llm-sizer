@@ -115,6 +115,46 @@ export const glossaryTerms: GlossaryTerm[] = [
     definition: 'A technique for splitting model layers across multiple GPUs sequentially, with different GPUs processing different stages of the forward/backward pass.',
     category: 'hardware'
   },
+  {
+    term: 'GQA (Grouped Query Attention)',
+    definition: 'An attention variant where multiple query heads share a smaller number of key-value heads. This reduces KV cache memory proportionally (e.g., 64 query heads with 8 KV heads = 8x KV cache reduction). Used by most modern LLMs including Llama 3, Mistral, and Gemma.',
+    category: 'model'
+  },
+  {
+    term: 'MHA (Multi-Head Attention)',
+    definition: 'The standard attention mechanism where each query head has its own key-value head (num_kv_heads = num_heads). All KV heads are independent, resulting in higher KV cache memory compared to GQA.',
+    category: 'model'
+  },
+  {
+    term: 'Head Size',
+    definition: 'The dimension of each attention head, calculated as hidden_size / num_heads. Common values are 64, 128, or 256. Used in the KV cache formula: KV per token per layer = 2 × num_kv_heads × head_size × dtype_bytes.',
+    category: 'model'
+  },
+  {
+    term: 'Intermediate Size',
+    definition: 'The hidden dimension of the feed-forward network (FFN) layers within each transformer block. Typically 4x the hidden_size. Determines peak activation memory since FFN intermediates are the largest buffers during a forward pass.',
+    category: 'model'
+  },
+  {
+    term: 'FP8 (Float8)',
+    definition: 'An 8-bit floating point format that halves memory compared to FP16. Supported as FP8 E4M3 (4-bit exponent, 3-bit mantissa, better precision) and FP8 E5M2 (5-bit exponent, 2-bit mantissa, wider range). Can be used for both model weights and KV cache independently.',
+    category: 'quantization'
+  },
+  {
+    term: 'FlashAttention',
+    definition: 'An optimized attention algorithm that avoids materializing the full attention score matrix in GPU memory. This significantly reduces activation memory, making the FFN intermediate buffer the dominant activation cost instead of the quadratic attention matrix.',
+    category: 'performance'
+  },
+  {
+    term: 'NCCL',
+    definition: 'NVIDIA Collective Communications Library. Handles GPU-to-GPU communication in multi-GPU setups. Requires dedicated memory buffers (~0.5 GB per additional GPU) for all-reduce and other collective operations.',
+    category: 'hardware'
+  },
+  {
+    term: 'num_kv_heads',
+    definition: 'The number of key-value attention heads in a model. For MHA models this equals num_heads. For GQA models this is smaller (e.g., 8 KV heads with 64 query heads). Directly determines KV cache size per token.',
+    category: 'model'
+  },
 ];
 
 // Documentation Sections
@@ -209,17 +249,18 @@ export const documentationSections: DocSection[] = [
               autoregressive generation. This is essential for efficient inference but requires
               significant memory, especially for long sequences.
             </p>
-            
+
             <FormulaBlock
-              title="KV Cache Memory Formula"
-              formula="memory_kv = 2 × num_layers × seq_len × batch_size × hidden_size × kv_bits / 8 / 10^9 GB"
-              explanation="Factor of 2 accounts for both keys and values. KV cache scales linearly with sequence length and batch size."
+              title="KV Cache Memory Formula (GQA-aware)"
+              formula="memory_kv = 2 × num_layers × num_kv_heads × head_size × kv_bytes × batch_size × seq_len / 10^9 GB"
+              explanation="Factor of 2 accounts for both keys and values. For GQA models, num_kv_heads is less than num_heads, significantly reducing KV cache. For MHA models (num_kv_heads = num_heads), num_kv_heads × head_size = hidden_size. This matches vLLM's internal KV cache allocation formula."
               variables={[
                 { symbol: 'num_layers', description: 'Number of transformer layers in the model' },
-                { symbol: 'seq_len', description: 'Maximum sequence length (context window)' },
+                { symbol: 'num_kv_heads', description: 'Number of key-value heads (may be less than query heads in GQA models)' },
+                { symbol: 'head_size', description: 'Dimension per head (hidden_size / num_heads)' },
+                { symbol: 'kv_bytes', description: 'Bytes per element: FP16=2, FP8=1, INT8=1' },
                 { symbol: 'batch_size', description: 'Number of sequences processed in parallel' },
-                { symbol: 'hidden_size', description: 'Model hidden dimension' },
-                { symbol: 'kv_bits', description: 'Precision for KV cache (often FP16 = 16 bits)' },
+                { symbol: 'seq_len', description: 'Maximum sequence length (context window)' },
               ]}
             />
 
@@ -228,8 +269,9 @@ export const documentationSections: DocSection[] = [
               <ul className="space-y-1 text-sm">
                 <li>• KV cache memory scales <strong>linearly</strong> with sequence length</li>
                 <li>• Doubling batch size doubles KV cache memory</li>
-                <li>• KV cache can be quantized independently from model weights</li>
+                <li>• KV cache can be quantized independently from model weights (e.g., FP8 KV with FP16 weights)</li>
                 <li>• For long contexts (32K+ tokens), KV cache often exceeds model weights memory</li>
+                <li>• <strong>GQA models</strong> (Llama 3, Mistral, Gemma, etc.) use fewer KV heads than query heads, reducing KV cache by up to 8x compared to MHA models</li>
               </ul>
             </div>
           </div>
@@ -241,24 +283,28 @@ export const documentationSections: DocSection[] = [
         content: (
           <div className="space-y-4">
             <p>
-              Activation memory stores intermediate values computed during the forward pass through
-              the network. This includes outputs from each layer that are needed for subsequent computations.
+              Activation memory stores intermediate values computed during the forward pass.
+              Transformer layers are processed sequentially, so only one layer's activations
+              are held at a time -- the peak is determined by the FFN intermediate buffer,
+              not the sum across all layers.
             </p>
-            
+
             <FormulaBlock
               title="Activation Memory Formula"
-              formula="memory_activation = batch_size × seq_len × hidden_size × 4 / 10^9 GB"
-              explanation="The factor of 4 is an approximation accounting for multiple activation tensors per layer. Activations are typically stored in FP32."
+              formula="memory_activation = batch_size × seq_len × intermediate_size × 2 / num_gpus / 10^9 GB"
+              explanation="The intermediate_size is the FFN hidden dimension (typically 4x hidden_size). The factor of 2 accounts for the input tensor and intermediate buffer coexisting during FFN computation. With FlashAttention (used by vLLM and other modern engines), attention scores are not fully materialized."
               variables={[
                 { symbol: 'batch_size', description: 'Number of sequences processed in parallel' },
                 { symbol: 'seq_len', description: 'Sequence length being processed' },
-                { symbol: 'hidden_size', description: 'Model hidden dimension' },
+                { symbol: 'intermediate_size', description: 'FFN intermediate dimension (defaults to hidden_size × 4)' },
+                { symbol: 'num_gpus', description: 'Number of GPUs (activations are distributed in tensor parallelism)' },
               ]}
             />
 
             <p className="text-sm text-gray-700">
-              Activation memory is generally smaller than KV cache memory but scales similarly with
-              batch size and sequence length.
+              Activation memory is generally much smaller than model weights or KV cache, since only
+              one layer's intermediates are live at any time. It scales with batch size and sequence
+              length but is independent of the number of layers.
             </p>
           </div>
         ),
@@ -269,19 +315,27 @@ export const documentationSections: DocSection[] = [
         content: (
           <div className="space-y-4">
             <p>
-              Deep learning frameworks (PyTorch, TensorFlow, etc.) require additional memory for
-              CUDA kernels, temporary buffers, and internal data structures.
+              Inference frameworks (vLLM, TGI, etc.) require additional memory for the CUDA context,
+              PyTorch runtime, engine initialization, memory pools, and internal buffers. This overhead
+              has both a fixed and proportional component.
             </p>
-            
+
             <FormulaBlock
               title="Framework Overhead Formula"
-              formula="memory_overhead = (memory_weights + memory_kv + memory_activation) × 0.08"
-              explanation="Typically 5-10% of the base memory requirements. We use 8% for accuracy based on empirical measurements."
+              formula="memory_overhead = 1.5 GB + (memory_weights + memory_kv + memory_activation) × 0.05 + nccl_overhead"
+              explanation="The 1.5 GB fixed baseline covers the CUDA context, PyTorch runtime, and engine initialization. The 5% proportional term covers internal buffers and compilation artifacts. For multi-GPU setups, NCCL communication buffers add ~0.5 GB per additional GPU. This model is calibrated from vLLM profiling data, where small models see high relative overhead (fixed costs dominate) and large models see lower relative overhead."
+              variables={[
+                { symbol: '1.5 GB', description: 'Fixed baseline: CUDA context + PyTorch runtime + engine' },
+                { symbol: '0.05', description: 'Proportional factor for internal buffers (~5% of model memory)' },
+                { symbol: 'nccl_overhead', description: '0.5 GB × (num_gpus - 1) for NCCL communication buffers' },
+              ]}
             />
 
             <p className="text-sm text-gray-700">
-              This overhead is relatively small but important to account for in production deployments
-              to avoid out-of-memory errors.
+              This overhead is important to account for in production deployments. For small models
+              (1-3B parameters), the fixed 1.5 GB baseline can represent 10-50% of total memory usage.
+              For large models (70B+), the proportional term is more significant but the overall
+              ratio is lower (~6-7%).
             </p>
           </div>
         ),
@@ -292,16 +346,18 @@ export const documentationSections: DocSection[] = [
         content: (
           <div className="space-y-4">
             <p>
-              When using multiple GPUs, additional memory is required for communication buffers,
-              gradient synchronization, and maintaining consistency across devices.
+              When using multiple GPUs with tensor parallelism, additional memory is required for
+              all-reduce communication buffers and activation synchronization. The fixed NCCL
+              buffer cost is included in the framework overhead above; this term covers the
+              remaining proportional overhead that scales with model weights.
             </p>
-            
+
             <FormulaBlock
               title="Multi-GPU Overhead Formula"
-              formula="memory_multi_gpu = base_memory × 0.02 × (num_gpus - 1)"
-              explanation="Approximately 2% overhead per additional GPU for communication buffers and synchronization when using tensor parallelism."
+              formula="memory_multi_gpu = memory_weights × 0.01 × (num_gpus - 1)"
+              explanation="Approximately 1% of model weights per additional GPU for tensor parallelism communication buffers. This scales with weights only, not KV cache or activations, since those don't require cross-GPU synchronization beyond what NCCL provides."
               variables={[
-                { symbol: 'base_memory', description: 'Sum of weights, KV cache, activation, and framework overhead' },
+                { symbol: 'memory_weights', description: 'Model weights memory (in GB)' },
                 { symbol: 'num_gpus', description: 'Total number of GPUs' },
               ]}
             />
@@ -604,14 +660,15 @@ export const documentationSections: DocSection[] = [
 
         <ExampleCalculation
           title="Example 1: Small Model (7B) on Consumer GPU"
-          description="Llama-2-7B with FP16 quantization, single user, moderate sequence length"
+          description="Llama-2-7B with FP16 quantization, single user, moderate sequence length. This model uses MHA (num_kv_heads = num_heads = 32)."
           parameters={[
-            { label: 'Model', value: '7B parameters' },
+            { label: 'Model', value: '7B parameters (MHA)' },
             { label: 'Quantization', value: 'FP16 (16 bits)' },
             { label: 'Batch Size', value: '1' },
             { label: 'Sequence Length', value: '2048 tokens' },
             { label: 'Hidden Size', value: '4096' },
             { label: 'Num Layers', value: '32' },
+            { label: 'Heads / KV Heads', value: '32 / 32 (MHA)' },
             { label: 'GPUs', value: '1' },
           ]}
           steps={[
@@ -622,38 +679,39 @@ export const documentationSections: DocSection[] = [
             },
             {
               label: 'KV Cache',
-              calculation: '2 × 32 × 2048 × 1 × 4096 × 16 / 8 / 10^9',
+              calculation: '2 × 32 × 32 × 128 × 2 × 1 × 2048 / 10^9',
               result: '1.07 GB'
             },
             {
               label: 'Activations',
-              calculation: '1 × 2048 × 4096 × 4 / 10^9',
-              result: '0.03 GB'
+              calculation: '1 × 2048 × 16384 × 2 / 10^9',
+              result: '0.07 GB'
             },
             {
-              label: 'Framework Overhead (8%)',
-              calculation: '(14.00 + 1.07 + 0.03) × 0.08',
-              result: '1.21 GB'
+              label: 'Framework Overhead',
+              calculation: '1.5 + (14.00 + 1.07 + 0.07) × 0.05',
+              result: '2.26 GB'
             },
           ]}
-          totalMemory="16.31 GB"
+          totalMemory="17.40 GB"
           notes={[
             'Fits comfortably on RTX 4090 (24GB) or RTX 3090 (24GB)',
-            'Can handle up to 4K context with careful optimization',
+            'Framework overhead includes 1.5 GB fixed baseline for CUDA/engine',
             'Batch size can be increased to 4-8 for higher throughput',
           ]}
         />
 
         <ExampleCalculation
-          title="Example 2: Medium Model (70B) on Enterprise GPU"
-          description="Llama-2-70B with INT8 quantization, higher batch size"
+          title="Example 2: Large Model (70B) with GQA on Enterprise GPU"
+          description="Llama-2-70B with INT8 quantization and Grouped Query Attention (GQA). GQA reduces KV cache by 8x compared to standard MHA."
           parameters={[
-            { label: 'Model', value: '70B parameters' },
-            { label: 'Quantization', value: 'INT8 (8 bits)' },
+            { label: 'Model', value: '70B parameters (GQA)' },
+            { label: 'Quantization', value: 'INT8 (8 bits) weights, FP16 KV cache' },
             { label: 'Batch Size', value: '4' },
             { label: 'Sequence Length', value: '4096 tokens' },
             { label: 'Hidden Size', value: '8192' },
             { label: 'Num Layers', value: '80' },
+            { label: 'Heads / KV Heads', value: '64 / 8 (GQA, 8x reduction)' },
             { label: 'GPUs', value: '1' },
           ]}
           steps={[
@@ -663,40 +721,41 @@ export const documentationSections: DocSection[] = [
               result: '70.00 GB'
             },
             {
-              label: 'KV Cache',
-              calculation: '2 × 80 × 4096 × 4 × 8192 × 16 / 8 / 10^9',
-              result: '34.36 GB'
+              label: 'KV Cache (GQA: 8 KV heads × 128 head_size)',
+              calculation: '2 × 80 × 8 × 128 × 2 × 4 × 4096 / 10^9',
+              result: '5.37 GB'
             },
             {
               label: 'Activations',
-              calculation: '4 × 4096 × 8192 × 4 / 10^9',
-              result: '0.54 GB'
+              calculation: '4 × 4096 × 32768 × 2 / 10^9',
+              result: '1.07 GB'
             },
             {
-              label: 'Framework Overhead (8%)',
-              calculation: '(70.00 + 34.36 + 0.54) × 0.08',
-              result: '8.39 GB'
+              label: 'Framework Overhead',
+              calculation: '1.5 + (70.00 + 5.37 + 1.07) × 0.05',
+              result: '5.32 GB'
             },
           ]}
-          totalMemory="113.29 GB"
+          totalMemory="81.76 GB"
           notes={[
-            'Requires A100 80GB or H100 80GB',
-            'INT8 quantization makes this possible on single GPU',
-            'KV cache is ~50% of total memory due to high batch size and long context',
-            'Can serve 4 concurrent users with 4K context each',
+            'GQA reduces KV cache from ~43 GB (MHA) to ~5.4 GB -- a major savings',
+            'Fits on a single A100 80GB or H100 80GB, though tightly',
+            'INT8 weight quantization halves the 140 GB FP16 weight footprint',
+            'Without GQA this configuration would require ~120+ GB',
           ]}
         />
 
         <ExampleCalculation
-          title="Example 3: Large Model (175B) on Multi-GPU Setup"
-          description="GPT-3 scale model with FP16, distributed across multiple GPUs"
+          title="Example 3: Very Large Model (175B) on Multi-GPU Setup"
+          description="GPT-3 scale model with FP16 (MHA), distributed across 8 GPUs with tensor parallelism"
           parameters={[
-            { label: 'Model', value: '175B parameters' },
+            { label: 'Model', value: '175B parameters (MHA)' },
             { label: 'Quantization', value: 'FP16 (16 bits)' },
             { label: 'Batch Size', value: '8' },
             { label: 'Sequence Length', value: '2048 tokens' },
             { label: 'Hidden Size', value: '12288' },
             { label: 'Num Layers', value: '96' },
+            { label: 'Heads / KV Heads', value: '96 / 96 (MHA)' },
             { label: 'GPUs', value: '8' },
           ]}
           steps={[
@@ -706,33 +765,33 @@ export const documentationSections: DocSection[] = [
               result: '350.00 GB'
             },
             {
-              label: 'KV Cache',
-              calculation: '2 × 96 × 2048 × 8 × 12288 × 16 / 8 / 10^9',
-              result: '38.65 GB'
+              label: 'KV Cache (MHA)',
+              calculation: '2 × 96 × 96 × 128 × 2 × 8 × 2048 / 10^9',
+              result: '77.31 GB'
             },
             {
-              label: 'Activations',
-              calculation: '8 × 2048 × 12288 × 4 / 10^9',
-              result: '0.80 GB'
+              label: 'Activations (÷8 GPUs)',
+              calculation: '8 × 2048 × 49152 × 2 / 8 / 10^9',
+              result: '0.20 GB'
             },
             {
-              label: 'Framework Overhead (8%)',
-              calculation: '(350.00 + 38.65 + 0.80) × 0.08',
-              result: '31.16 GB'
+              label: 'Framework Overhead (incl. NCCL)',
+              calculation: '1.5 + (350 + 77.31 + 0.20) × 0.05 + 0.5 × 7',
+              result: '26.38 GB'
             },
             {
-              label: 'Multi-GPU Overhead (2% per extra GPU)',
-              calculation: '(350.00 + 38.65 + 0.80 + 31.16) × 0.02 × (8 - 1)',
-              result: '58.89 GB'
+              label: 'Multi-GPU Overhead (1% of weights per extra GPU)',
+              calculation: '350 × 0.01 × (8 - 1)',
+              result: '24.50 GB'
             },
           ]}
-          totalMemory="479.50 GB (59.94 GB per GPU)"
+          totalMemory="478.39 GB (59.80 GB per GPU)"
           notes={[
-            'Requires 8× H100 80GB GPUs',
+            'Requires 8x H100 80GB GPUs with high-speed interconnect (NVLink)',
             'Tensor parallelism distributes weights across GPUs',
-            'Each GPU needs ~60GB, fitting on an H100 80GB',
-            'Can support 8 concurrent users with 2K context',
-            'Multi-GPU overhead is significant in large clusters',
+            'Each GPU needs ~60 GB, fitting on an H100 80GB',
+            'Framework overhead includes 3.5 GB for NCCL buffers (0.5 GB x 7 extra GPUs)',
+            'Activations divided by 8 GPUs in tensor parallelism',
           ]}
         />
       </div>

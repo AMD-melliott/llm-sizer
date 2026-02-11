@@ -92,10 +92,10 @@ The production build will be in the `dist` directory.
 
 #### Memory Components
 - **Base Model Weights**: `(parameters × bits_per_param) / 8 / 1e9 GB`
-- **KV Cache**: `2 × layers × hidden_size × kv_bits × batch × seq_len × users / 8 / 1e9 GB`
-- **Activations**: Dynamic based on batch size and model dimensions
-- **Framework Overhead**: ~8% of base memory usage
-- **Multi-GPU Overhead**: 2% per additional GPU
+- **KV Cache** (GQA-aware): `2 × layers × num_kv_heads × head_size × kv_bytes × batch × seq_len × users / 1e9 GB`
+- **Activations**: `batch × seq_len × intermediate_size × 2 / num_gpus / 1e9 GB` (peak one-layer intermediates)
+- **Framework Overhead**: 1.5 GB baseline + 5% of model memory + 0.5 GB per extra GPU (NCCL)
+- **Multi-GPU Overhead**: 1% of weights per additional GPU
 
 #### Multimodal Extensions
 - **Vision Encoder Weights**: Based on vision model parameters and quantization

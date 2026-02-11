@@ -226,9 +226,9 @@ RECOMMENDATIONS
     → Check if framework uses activation checkpointing
     
   ⚠ Framework Overhead 17.3% higher than calculated
-    → Current: 8% overhead calculation
+    → Current: 1.5 GB baseline + 5% proportional overhead
     → Measured: 20.70 GB (14.3% of model size)
-    → Recommendation: Increase overhead to 10-12%
+    → Recommendation: Check NCCL buffer allocation and CUDA graph memory
 
 ═══════════════════════════════════════════════════════════════════════════════
 ```
@@ -373,31 +373,30 @@ console.log(`Error: ${report.summary.total_percent_diff}%`);
 
 ### Common Discrepancy Patterns
 
-#### 1. Framework Overhead Too Low
+#### 1. Framework Overhead Mismatch
 
-**Symptom**: Actual framework overhead much higher than calculated
+**Symptom**: Actual framework overhead differs from calculated
 
 ```
-Framework Overhead: 20.7 GB actual vs 9.5 GB calculated (+118%)
+Framework Overhead: 20.7 GB actual vs 9.5 GB calculated
 ```
 
-**Solution**: Adjust overhead percentage in calculator
+**Current formula**: The calculator now uses a baseline + proportional model:
 
 ```typescript
-// Current: 8%
-const overhead = (weights + kv_cache + activations) * 0.08;
-
-// Increase to match measurements
-const overhead = (weights + kv_cache + activations) * 0.12;  // 12%
+const fixedOverhead = 1.5;  // GB - CUDA context + PyTorch + engine
+const proportionalOverhead = (weights + kv_cache + activations) * 0.05;
+const ncclOverhead = numGPUs > 1 ? 0.5 * (numGPUs - 1) : 0;
+const frameworkOverhead = fixedOverhead + proportionalOverhead + ncclOverhead;
 ```
 
-**Root causes**:
-- vLLM internal buffers and allocators
+**If overhead is still higher than calculated**, check for:
+- CUDA graph capture memory (can add several GB)
+- vLLM memory pool pre-allocation
 - GPU memory fragmentation
-- Scheduler overhead
-- Cache allocations
+- Additional NCCL buffers for large tensor parallel configurations
 
-#### 2. KV Cache Compression
+#### 2. KV Cache Lower Than Expected
 
 **Symptom**: Actual KV cache lower than calculated
 
@@ -405,58 +404,52 @@ const overhead = (weights + kv_cache + activations) * 0.12;  // 12%
 KV Cache: 4.2 GB actual vs 8.5 GB calculated (-50%)
 ```
 
-**Explanation**: Modern engines use:
-- PagedAttention (vLLM)
-- KV cache compression
-- Smart memory reuse
-
-**Solution**: Add compression factor
+**Most likely cause**: The model uses **GQA** (Grouped Query Attention) where `num_kv_heads < num_heads`. The calculator now uses the GQA-aware formula:
 
 ```typescript
-const kvCompressionFactor = 0.6;  // 40% compression
-const kvCache = (calculated_kv_size * kvCompressionFactor);
+const numKVHeads = model.num_kv_heads ?? model.num_heads;
+const headSize = model.hidden_size / model.num_heads;
+const kvCachePerToken = 2 * model.num_layers * numKVHeads * headSize * kvBytesPerElement;
 ```
 
-#### 3. Activation Checkpointing
+If the model's `num_kv_heads` is missing from models.json, the calculator falls back to MHA (num_kv_heads = num_heads) which overestimates. Ensure `num_kv_heads` is set correctly.
 
-**Symptom**: Activations much lower than calculated
+**Other causes**: PagedAttention may not allocate blocks for unused sequence positions.
 
-```
-Activations: 2.1 GB actual vs 8.3 GB calculated (-75%)
-```
+#### 3. Activation Memory Discrepancy
 
-**Explanation**: Frameworks may use:
-- Gradient checkpointing
-- Activation recomputation
-- Selective layer caching
+**Symptom**: Activations differ from calculated value
 
-**Solution**: Add checkpointing factor
+**Current formula**: The calculator models peak activation as one layer's FFN intermediates (layers are processed sequentially, not simultaneously):
 
 ```typescript
-const activationFactor = 0.25;  // 75% reduction
-const activations = (calculated_activations * activationFactor);
+const intermediateSize = model.intermediate_size ?? model.hidden_size * 4;
+const activations = (batchSize * sequenceLength * intermediateSize * 2) / numGPUs / 1e9;
 ```
+
+If actual activations are still lower, the engine may use:
+- FlashAttention (avoids materializing attention scores)
+- Fused kernels (combine operations, reducing peak memory)
+- Activation recomputation (trade compute for memory)
 
 #### 4. Multi-GPU Overhead
 
 **Symptom**: Multi-GPU overhead higher than expected
 
 ```
-Multi-GPU Overhead: Tensor-parallel 4x GPU shows 15% overhead vs 8% expected
+Multi-GPU Overhead: Tensor-parallel 4x GPU shows higher overhead than calculated
 ```
 
-**Solution**: Adjust per-GPU overhead
+**Current formula**: Multi-GPU overhead is split across two components:
+1. NCCL fixed buffers in framework overhead: `0.5 GB × (numGPUs - 1)`
+2. TP communication buffers: `weights × 0.01 × (numGPUs - 1)`
 
 ```typescript
-// Current: 2% per additional GPU
-const multiGpuOverhead = numGpus > 1 
-  ? baseMemory * 0.02 * (numGpus - 1) 
-  : 0;
+// NCCL (in framework overhead)
+const ncclOverhead = numGPUs > 1 ? 0.5 * (numGPUs - 1) : 0;
 
-// Increase if needed
-const multiGpuOverhead = numGpus > 1 
-  ? baseMemory * 0.035 * (numGpus - 1)  // 3.5% per GPU
-  : 0;
+// TP communication (separate)
+const multiGPUOverhead = numGPUs > 1 ? baseWeights * 0.01 * (numGPUs - 1) : 0;
 ```
 
 #### 5. Quantization Effects
