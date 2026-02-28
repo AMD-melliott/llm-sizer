@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import { registerCalculateCommand } from './commands/calculate.js';
+import { registerModelsCommand } from './commands/models.js';
 
 const program = new Command();
 
@@ -11,5 +12,6 @@ program
   .version('1.0.0');
 
 registerCalculateCommand(program);
+registerModelsCommand(program);
 
 program.parse();
