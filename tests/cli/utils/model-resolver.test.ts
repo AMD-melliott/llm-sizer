@@ -2,6 +2,7 @@ import {
   resolveModel,
   resolveGPU,
   resolveModelByType,
+  resolveHFModelId,
 } from '../../../src/cli/utils/model-resolver';
 
 describe('Model Resolver', () => {
@@ -50,5 +51,16 @@ describe('Model Resolver', () => {
   test('resolveModelByType returns null for type mismatch', () => {
     const model = resolveModelByType('llama-3-70b', 'embedding');
     expect(model).toBeNull();
+  });
+
+  test('resolveHFModelId returns hf_model_id for known model', () => {
+    const hfId = resolveHFModelId('llama-3-70b');
+    expect(hfId).not.toBeNull();
+    expect(hfId).toContain('Llama');
+  });
+
+  test('resolveHFModelId returns null for unknown model', () => {
+    const hfId = resolveHFModelId('nonexistent');
+    expect(hfId).toBeNull();
   });
 });
