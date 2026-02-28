@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { registerCalculateCommand } from './commands/calculate.js';
 import { registerModelsCommand } from './commands/models.js';
+import { registerGPUsCommand } from './commands/gpus.js';
 
 const program = new Command();
 
@@ -13,5 +14,6 @@ program
 
 registerCalculateCommand(program);
 registerModelsCommand(program);
+registerGPUsCommand(program);
 
 program.parse();
