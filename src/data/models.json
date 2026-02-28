@@ -1125,6 +1125,17 @@
       "num_heads": 32,
       "default_context_length": 4096,
       "architecture": "transformer"
+    },
+    {
+      "id": "llama-3-70b",
+      "name": "Llama 3 70B",
+      "hf_model_id": "meta-llama/Meta-Llama-3-70B-Instruct",
+      "parameters_billions": 70,
+      "hidden_size": 8192,
+      "num_layers": 80,
+      "num_heads": 64,
+      "default_context_length": 8192,
+      "architecture": "transformer"
     }
   ]
 }
