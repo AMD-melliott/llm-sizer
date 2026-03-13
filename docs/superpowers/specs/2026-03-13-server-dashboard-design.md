@@ -97,6 +97,51 @@ interface GpuProcess {
   vramUsedMb: number
   processName: string
 }
+
+interface GpuTopology {
+  partitionMode: 'SPX' | 'DPX' | 'CPX' | 'unknown'
+  physicalGpus: Array<{
+    physicalId: number
+    name: string
+    partitions: Array<{
+      logicalId: number
+      vramTotalMb: number
+    }>
+  }>
+}
+
+interface DashboardSnapshot {
+  timestamp: number
+  pollIntervalMs: number
+  summary: {
+    instanceCount: number
+    totalVramMb: number
+    usedVramMb: number
+    totalActiveRequests: number
+  }
+  instances: VllmInstance[]
+  gpus: GpuDevice[]
+  gpuMetrics: GpuMetrics[]
+}
+
+interface VllmInstance {
+  containerId: string
+  containerName: string
+  status: 'running' | 'starting' | 'stopped' | 'error'
+  modelName: string
+  gpuIds: string[]
+  partitionInfo?: string
+  quantization?: string
+  tensorParallelSize: number
+  port?: number
+  vramUsedMb: number
+  vramTotalMb: number
+  kvCachePercent?: number
+  runningRequests?: number
+  waitingRequests?: number
+  launchArgs: string[]
+  envVars: Record<string, string>
+}
 ```
 
 **AmdSmiProvider** implements this interface:
@@ -163,7 +208,7 @@ Connection: `ws://localhost:<port>/api/logs/<containerId>?tail=200`
 5. Client disconnect → server detaches from Docker log stream
 6. Container stops → server sends `{ "type": "closed", "reason": "container_stopped" }` and closes
 
-**Multiple viewers:** Each WebSocket gets its own connection, but the server can share a single Docker log stream internally.
+**Multiple viewers:** Each WebSocket gets its own independent Docker log stream attachment. No multiplexing — simple and sufficient for a small team tool.
 
 **Backpressure:** Server buffers up to 1000 undelivered lines, then drops oldest and sends `{ "type": "dropped", "count": N }`.
 
@@ -174,7 +219,7 @@ Connection: `ws://localhost:<port>/api/logs/<containerId>?tail=200`
 - On load: fetches `GET /api/instances` and `GET /api/gpus`
 - Then polls `GET /api/status` every 5s (lightweight — just timestamp + summary)
 - If snapshot timestamp changed, fetches full data
-- Poll interval auto-detected from backend response
+- `/api/status` response includes `pollIntervalMs` — frontend uses this to set its polling interval
 
 ### Layout: Summary Bar + Instance Grid
 
