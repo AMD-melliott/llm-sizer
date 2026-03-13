@@ -171,13 +171,18 @@ For each discovered vLLM container with an exposed HTTP port, queries:
 
 Handles containers that aren't ready yet (starting up, loading model) gracefully — marks them as "Starting" rather than erroring.
 
+**Port discovery:** Uses the container's first exposed port, or falls back to well-known vLLM default (8000) if no ports are mapped. If a container has no reachable port, vLLM metrics are omitted and the instance is still shown with Docker-only data.
+
 ### MetricsCollector
 
 Orchestrates polling across all three services:
 - Runs on a configurable interval (default 5s)
+- Performs an initial synchronous collection on startup before the server begins accepting requests — ensures the first `GET /api/instances` returns data, not empty state
 - Each tick concurrently fetches Docker state, GPU metrics, and vLLM metrics
 - Merges results into a single `DashboardSnapshot` held in memory
 - Multiple browser clients share one polling cycle — no N x M amplification
+
+**Graceful degradation:** If `amd-smi` is not found or fails, the dashboard still works — GPU metrics fields are omitted from the snapshot, Docker + vLLM data is served normally. A `warnings` array in the `/api/status` response surfaces any degraded subsystems.
 
 ### Optional Prometheus Integration
 
@@ -193,6 +198,12 @@ If a Prometheus endpoint is configured (via CLI flag), the GpuMetricsService als
 | `GET` | `/api/gpus` | GPU state with partition info + VRAM breakdown |
 | `GET` | `/api/gpus/:id/metrics` | Time-series metrics for a GPU (requires Prometheus) |
 | `WS` | `/api/logs/:containerId` | WebSocket stream of container logs |
+
+**Response mapping to `DashboardSnapshot`:**
+- `GET /api/status` → returns `{ timestamp, pollIntervalMs, summary, warnings }` (lightweight check)
+- `GET /api/instances` → returns `snapshot.instances` array
+- `GET /api/instances/:id` → returns single `VllmInstance` from `snapshot.instances`
+- `GET /api/gpus` → returns `{ devices: snapshot.gpus, metrics: snapshot.gpuMetrics }`
 
 ## Log Streaming
 
