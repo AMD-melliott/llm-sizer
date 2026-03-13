@@ -143,7 +143,7 @@ npx tsx src/cli/index.ts gpus show mi300x
 ### Compare GPUs side by side
 
 ```bash
-npx tsx src/cli/index.ts gpus compare mi300x a100-80gb h100-80
+npx tsx src/cli/index.ts gpus compare mi300x a100-80gb h100-sxm
 ```
 
 Expected: Side-by-side table with VRAM, bandwidth, compute, TDP, etc.
