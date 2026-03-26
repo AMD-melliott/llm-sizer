@@ -42,58 +42,81 @@ export class AmdSmiProvider implements GpuMetricsProvider {
   }
 
   async getDevices(): Promise<GpuDevice[]> {
-    const raw = await this.runAmdSmi(['metric', '--json']);
-    const gpus = JSON.parse(raw);
-    return gpus.map((g: any) => ({
+    const [metricRaw, staticRaw] = await Promise.all([
+      this.runAmdSmi(['metric', '--json']),
+      this.runAmdSmi(['static', '--json']),
+    ]);
+    const metricData: any[] = JSON.parse(metricRaw).gpu_data ?? [];
+    const staticData: any[] = JSON.parse(staticRaw).gpu_data ?? [];
+    const nameMap = new Map<number, string>(
+      staticData.map((g: any) => [g.gpu, g.asic?.market_name ?? `GPU ${g.gpu}`])
+    );
+    return metricData.map((g: any) => ({
       id: `gpu-${g.gpu}`,
       physicalId: g.gpu,
-      name: g.name,
-      vramTotalMb: g.vram_total,
+      name: nameMap.get(g.gpu) ?? `GPU ${g.gpu}`,
+      vramTotalMb: g.mem_usage?.total_vram?.value ?? 0,
     }));
   }
 
   async getMetrics(): Promise<GpuMetrics[]> {
     const raw = await this.runAmdSmi(['metric', '--json']);
-    const gpus = JSON.parse(raw);
+    const gpus: any[] = JSON.parse(raw).gpu_data ?? [];
     return gpus.map((g: any) => ({
       deviceId: `gpu-${g.gpu}`,
-      vramUsedMb: g.vram_used,
-      vramTotalMb: g.vram_total,
-      utilizationPercent: g.gpu_use_percent,
-      temperatureC: g.temperature,
-      powerW: g.power,
+      vramUsedMb: g.mem_usage?.used_vram?.value ?? 0,
+      vramTotalMb: g.mem_usage?.total_vram?.value ?? 0,
+      utilizationPercent: g.usage?.gfx_activity?.value ?? 0,
+      temperatureC: g.temperature?.edge?.value ?? 0,
+      powerW: g.power?.socket_power?.value ?? 0,
     }));
   }
 
   async getProcesses(): Promise<GpuProcess[]> {
     const raw = await this.runAmdSmi(['process', '--json']);
-    const procs = JSON.parse(raw);
-    return procs.map((p: any) => ({
-      deviceId: `gpu-${p.gpu}`,
-      pid: p.pid,
-      vramUsedMb: p.vram_usage,
-      processName: p.process_name,
-    }));
+    const gpus: any[] = JSON.parse(raw) ?? [];
+    const results: GpuProcess[] = [];
+    for (const gpu of gpus) {
+      for (const entry of gpu.process_list ?? []) {
+        const info = entry.process_info ?? entry;
+        const vramBytes = info.memory_usage?.vram_mem?.value ?? info.mem_usage?.value ?? 0;
+        const vramUnit = info.memory_usage?.vram_mem?.unit ?? info.mem_usage?.unit ?? 'B';
+        results.push({
+          deviceId: `gpu-${gpu.gpu}`,
+          pid: info.pid,
+          vramUsedMb: vramUnit === 'MB' ? vramBytes : Math.round(vramBytes / (1024 * 1024)),
+          processName: info.name ?? 'unknown',
+        });
+      }
+    }
+    return results;
   }
 
   async getTopology(): Promise<GpuTopology> {
     const raw = await this.runAmdSmi(['topology', '--json']);
-    const topo = JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    const gpus: any[] = parsed.gpu_data ?? parsed.gpus ?? [];
     return {
-      partitionMode: topo.partition_mode ?? 'unknown',
-      physicalGpus: (topo.gpus ?? []).map((g: any) => ({
+      partitionMode: parsed.partition_mode ?? 'unknown',
+      physicalGpus: gpus.map((g: any) => ({
         physicalId: g.gpu,
-        name: g.name,
+        name: g.asic?.market_name ?? `GPU ${g.gpu}`,
         partitions: (g.partitions ?? []).map((p: any) => ({
           logicalId: p.logical_id,
-          vramTotalMb: p.vram_total,
+          vramTotalMb: p.vram_total?.value ?? p.vram_total ?? 0,
         })),
       })),
     };
   }
 
   private async runAmdSmi(args: string[]): Promise<string> {
-    const { stdout } = await execFile('amd-smi', args, { timeout: 10000, killSignal: 'SIGKILL' });
-    return stdout;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+      const { stdout } = await execFile('amd-smi', args, { signal: controller.signal });
+      return stdout;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 }

@@ -61,11 +61,15 @@ export class MetricsCollector {
     let gpuMetrics: any[] = [];
     let gpuProcesses: any[] = [];
     if (this.gpuAvailable) {
-      [gpuDevices, gpuMetrics, gpuProcesses] = await Promise.all([
-        this.gpuProvider.getDevices(),
-        this.gpuProvider.getMetrics(),
-        this.gpuProvider.getProcesses(),
-      ]);
+      try {
+        [gpuDevices, gpuMetrics, gpuProcesses] = await Promise.all([
+          this.gpuProvider.getDevices(),
+          this.gpuProvider.getMetrics(),
+          this.gpuProvider.getProcesses(),
+        ]);
+      } catch (err) {
+        warnings.push(`GPU metrics collection failed: ${err instanceof Error ? err.message : String(err)}`);
+      }
     }
 
     const instances: VllmInstance[] = [];
