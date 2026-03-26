@@ -97,11 +97,25 @@ export class MetricsCollector {
         const matchedProcesses = gpuProcesses.filter((p: any) => allPids.has(p.pid));
         instance.vramUsedMb = matchedProcesses.reduce((sum: number, p: any) => sum + p.vramUsedMb, 0);
 
-        for (const gpuId of container.gpuIds) {
-          const device = gpuDevices.find((d: any) => d.id === `gpu-${gpuId}` || String(d.physicalId) === gpuId);
-          if (device) {
-            instance.vramTotalMb += device.vramTotalMb;
-          }
+        const usesAllGpus = container.gpuIds.includes('all');
+        const assignedDevices: any[] = usesAllGpus
+          ? gpuDevices
+          : container.gpuIds
+              .map((gpuId: string) =>
+                gpuDevices.find((d: any) => d.id === `gpu-${gpuId}` || String(d.physicalId) === gpuId)
+              )
+              .filter(Boolean);
+
+        instance.vramTotalMb = assignedDevices.reduce((sum: number, d: any) => sum + d.vramTotalMb, 0);
+
+        // GIM/SR-IOV process attribution may return 0 for some containers even
+        // though the GPU metric shows non-zero usage on the assigned GPUs.
+        // Fall back to summing assigned-GPU used_vram from the metric snapshot.
+        if (instance.vramUsedMb === 0 && assignedDevices.length > 0) {
+          const assignedIds = new Set(assignedDevices.map((d: any) => d.id));
+          instance.vramUsedMb = gpuMetrics
+            .filter((m: any) => assignedIds.has(m.deviceId))
+            .reduce((sum: number, m: any) => sum + m.vramUsedMb, 0);
         }
       }
 

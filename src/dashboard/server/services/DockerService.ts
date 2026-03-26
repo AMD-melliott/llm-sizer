@@ -117,12 +117,17 @@ export class DockerService {
   }
 
   private extractGpuIds(env: Record<string, string>): string[] {
-    const deviceVar =
-      env['AMD_VISIBLE_DEVICES'] ??
-      env['ROCR_VISIBLE_DEVICES'] ??
-      env['CUDA_VISIBLE_DEVICES'];
-    if (!deviceVar) return [];
-    return deviceVar.split(',').map((s) => s.trim());
+    // HIP_VISIBLE_DEVICES contains the actual physical GPU indices assigned to
+    // the container. AMD_VISIBLE_DEVICES / ROCR_VISIBLE_DEVICES are often set
+    // to "all" as a broad grant and should only be used as a fallback.
+    const hip = env['HIP_VISIBLE_DEVICES'];
+    if (hip && hip !== 'all') {
+      return hip.split(',').map((s) => s.trim());
+    }
+
+    const amd = env['AMD_VISIBLE_DEVICES'] ?? env['ROCR_VISIBLE_DEVICES'] ?? env['CUDA_VISIBLE_DEVICES'];
+    if (!amd) return [];
+    return amd.split(',').map((s) => s.trim());
   }
 
   private extractTensorParallel(cmd: string[]): number {

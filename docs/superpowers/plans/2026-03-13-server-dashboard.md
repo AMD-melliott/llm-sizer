@@ -3084,7 +3084,7 @@ if (this.gpuAvailable) {
 }
 ```
 
-### Validated Behaviour
+### Validated Behaviour (empty-state path)
 
 | Scenario | Result |
 |---|---|
@@ -3096,9 +3096,107 @@ if (this.gpuAvailable) {
 | UI renders | Dark theme, summary bar, empty-state message — no console errors |
 | Driver wedged (D-state) | `/dev/kfd` probe returns false instantly; amd-smi never spawned |
 
+---
+
+## Live vLLM Workload Validation
+
+> Validated 2026-03-26. Containers: `vllm-embed` (BAAI/bge-large-en-v1.5, GPU 4, port 8001) and `vllm-minimax` (MiniMaxAI/MiniMax-M2.5, TP=4, GPUs 0-3, port 8000). Image: `vllm/vllm-openai-rocm:v0.16.0`.
+
+### Bug 5: Network namespace isolation blocked amd-smi and Prometheus polling
+
+**Root cause:** The dashboard was launched from a session that had been placed in an isolated network namespace with only a loopback interface (Nomad/systemd session scope `net:[4026543487]`). This blocked two things:
+1. `amd-smi` could still run (it uses device files, not networking), but the Fastify server reported `"GPU metrics unavailable: amd-smi not found or failed"` — actually amd-smi IS present, but a broken prior session's context confused detection.
+2. `VllmMetricsService.fetchMetrics('localhost', port)` could not reach the vLLM containers' published ports because `localhost` resolved within the isolated namespace, not the host.
+
+**System fix:** Start the dashboard from a shell in the host network namespace (not from within a Nomad-managed session). Verified: `readlink /proc/<pid>/ns/net` must match `readlink /proc/self/ns/net` for a normal shell.
+
+**Workaround note:** If the dashboard must run as a systemd service, it should use `NetworkNamespacePath=` to join the host network namespace, or bind `0.0.0.0` with explicit host IP for Prometheus polling.
+
+### Bug 6: GPU ID extraction preferred `AMD_VISIBLE_DEVICES=all` over `HIP_VISIBLE_DEVICES`
+
+**Root cause:** `DockerService.extractGpuIds()` checked `AMD_VISIBLE_DEVICES` first. Both containers had `AMD_VISIBLE_DEVICES=all` as a broad environment grant, while the actual GPU assignment was in `HIP_VISIBLE_DEVICES` (e.g., `HIP_VISIBLE_DEVICES=4` for embed, `HIP_VISIBLE_DEVICES=0,1,2,3` for minimax). This caused both containers to report `gpuIds: ["all"]` and get `vramTotalMb: 0`.
+
+**Fix:** Check `HIP_VISIBLE_DEVICES` first; only fall back to `AMD_VISIBLE_DEVICES` / `ROCR_VISIBLE_DEVICES` if HIP is absent or set to `"all"`:
+```typescript
+const hip = env['HIP_VISIBLE_DEVICES'];
+if (hip && hip !== 'all') {
+  return hip.split(',').map((s) => s.trim());
+}
+const amd = env['AMD_VISIBLE_DEVICES'] ?? env['ROCR_VISIBLE_DEVICES'] ?? env['CUDA_VISIBLE_DEVICES'];
+```
+
+### Bug 7: `vramTotalMb` stayed 0 when `gpuIds` contained `"all"`
+
+**Root cause:** `MetricsCollector` iterated over `gpuIds` to look up devices by ID, but `"all"` never matched any device ID (`gpu-0`, `gpu-1`, etc.), so `vramTotalMb` accumulated nothing.
+
+**Fix:** Added an `usesAllGpus` check; when `"all"` is present, sum all device `vramTotalMb` values. Also refactored the assigned-devices lookup to be reusable:
+```typescript
+const usesAllGpus = container.gpuIds.includes('all');
+const assignedDevices = usesAllGpus ? gpuDevices : ...filter by id...;
+instance.vramTotalMb = assignedDevices.reduce((sum, d) => sum + d.vramTotalMb, 0);
+```
+
+### Bug 8: GIM driver broadcasts process VRAM across all 8 physical GPUs
+
+**Root cause:** Under the SR-IOV/GIM driver, `amd-smi process --json` lists each process on every physical GPU with the same VRAM value. `getProcesses()` accumulated all entries, so a tensor-parallel worker using ~180 GB on 4 GPUs was counted 8 times (1,440 GB total instead of 180 GB).
+
+**Fix:** De-duplicate by PID — keep only the first entry per PID across all GPUs:
+```typescript
+const seenPids = new Map<number, GpuProcess>();
+for (const gpu of gpus) {
+  for (const entry of gpu.process_list ?? []) {
+    const pid = info.pid;
+    if (!pid || seenPids.has(pid)) continue;
+    seenPids.set(pid, { deviceId: `gpu-${gpu.gpu}`, pid, vramUsedMb, processName });
+  }
+}
+return Array.from(seenPids.values());
+```
+
+### Bug 9: Temperature always 0 on MI300X SR-IOV
+
+**Root cause:** `getMetrics()` read `g.temperature?.edge?.value`, but on MI300X with the GIM driver `edge` returns `"N/A"` (not a number). The `hotspot` sensor is the reliable reading.
+
+**Fix:** Fall through to hotspot: `g.temperature?.hotspot?.value ?? g.temperature?.edge?.value ?? 0`.
+
+### Bug 10: `vllm-embed` showed `vramUsedMb: 0` despite GPU 4 using 2.4 GB
+
+**Root cause:** GIM driver doesn't report meaningful VRAM values for embedding container PIDs in `amd-smi process` (all show `0 B`). Process-level attribution fails silently.
+
+**Fix:** Added a fallback in `MetricsCollector`: if process matching yields 0 and the container has assigned GPUs, fall back to summing `vramUsedMb` from the `gpuMetrics` snapshot for those GPUs:
+```typescript
+if (instance.vramUsedMb === 0 && assignedDevices.length > 0) {
+  const assignedIds = new Set(assignedDevices.map(d => d.id));
+  instance.vramUsedMb = gpuMetrics
+    .filter(m => assignedIds.has(m.deviceId))
+    .reduce((sum, m) => sum + m.vramUsedMb, 0);
+}
+```
+
+### Validated Behaviour (live vLLM path)
+
+| Scenario | Result |
+|---|---|
+| `/api/status` with 2 containers | `instanceCount: 2`, `totalVramMb: 1,572,736`, `usedVramMb: 724,839`, `warnings: []` |
+| `/api/instances` — vllm-embed | `gpuIds: ["4"]`, `vramUsedMb: 2,441`, `vramTotalMb: 196,592` (1.2%) |
+| `/api/instances` — vllm-minimax | `gpuIds: ["0","1","2","3"]`, `tp: 4`, `vramUsedMb: 180,110`, `vramTotalMb: 786,368` (22.9%) |
+| `/api/gpus` | Per-GPU metrics with real temperatures (39–46°C), power (143–180W), utilization |
+| Prometheus metrics | `runningRequests: 0`, `waitingRequests: 0`, `kvCachePercent: 0` (idle state) |
+| InstanceGrid rendering | Two cards side-by-side: model name, GPU info, VRAM progress bar, status badge, TP size |
+| VRAM bar — vllm-embed | 1% fill (2 GB / 192 GB) — correct |
+| VRAM bar — vllm-minimax | 23% fill (176 GB / 768 GB) — correct |
+| Launch args expansion | Expands/collapses correctly, shows full command and all env vars |
+| Log viewer | WebSocket connects (101), streams live container logs in real-time |
+| Both log viewers open | Each card has independent WebSocket connection, both stream concurrently |
+| Summary bar | "2 Instances", "1536 GB" total, "708 GB" used, "0" active requests |
+| Browser console errors | None (only Cursor browser automation framework warnings) |
+| API polling | `/api/status`, `/api/gpus`, `/api/instances` polled every 5s, all 200 OK |
+
 ### Known Limitations / Future Work
 
 - **amd-smi schema is version-specific.** The field paths were confirmed against v26.2.1. Future amd-smi releases may restructure output — consider a schema version check or integration test against a fixture.
 - **`getDevices()` makes two parallel amd-smi calls** (metric + static) while `getMetrics()` makes a third. Three concurrent `amd-smi` invocations per poll cycle; could be collapsed into two with a local cache keyed on poll timestamp.
-- **GIM / SR-IOV driver path not tested end-to-end.** When GPUs are exposed via SR-IOV partitions (GIM driver), `amd-smi` behaves differently. The `getTopology()` method exists for partition discovery but was not exercised in this validation run.
-- **No vLLM instance path not tested.** Instance cards, VRAM attribution, and log streaming require a running vLLM container. Validate separately once a workload is active.
+- **GIM process VRAM attribution is best-effort.** For containers where `amd-smi process` reports 0 for all PIDs, the fallback uses per-GPU `used_vram` which may overcount if multiple containers share the same GPU (e.g., embedding + inference on GPU 4). The deduplication by PID is correct for the TP worker case.
+- **`vramUsedMb` on embed includes GPU 4 system overhead** (~285 MB baseline from other processes). This is a minor overcount inherent to using the GPU metric fallback.
+- **Network namespace requirement.** The dashboard must run in a network namespace with access to Docker port bindings and amd-smi device files. Starting from a Nomad-managed session without host network may silently degrade to no-GPU / no-metrics mode. Consider adding a startup check that warns if `/proc/self/ns/net` does not match the host network namespace.
+- **Prometheus metrics are 0 while idle.** With no active inference load, `runningRequests`, `waitingRequests`, and `kvCachePercent` are all 0. These metrics were confirmed reachable (the `/metrics` endpoint returns 200) but under-load validation requires an active inference workload.

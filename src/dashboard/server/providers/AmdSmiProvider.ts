@@ -67,7 +67,8 @@ export class AmdSmiProvider implements GpuMetricsProvider {
       vramUsedMb: g.mem_usage?.used_vram?.value ?? 0,
       vramTotalMb: g.mem_usage?.total_vram?.value ?? 0,
       utilizationPercent: g.usage?.gfx_activity?.value ?? 0,
-      temperatureC: g.temperature?.edge?.value ?? 0,
+      // 'edge' is N/A on MI300X SR-IOV; 'hotspot' is the reliable sensor
+      temperatureC: g.temperature?.hotspot?.value ?? g.temperature?.edge?.value ?? 0,
       powerW: g.power?.socket_power?.value ?? 0,
     }));
   }
@@ -75,21 +76,31 @@ export class AmdSmiProvider implements GpuMetricsProvider {
   async getProcesses(): Promise<GpuProcess[]> {
     const raw = await this.runAmdSmi(['process', '--json']);
     const gpus: any[] = JSON.parse(raw) ?? [];
-    const results: GpuProcess[] = [];
+
+    // GIM (SR-IOV) broadcasts each process entry across all physical GPUs with
+    // the same VRAM value. De-duplicate by PID: track only the first GPU a PID
+    // is seen on, so VRAM isn't multiplied by the number of physical GPUs.
+    const seenPids = new Map<number, GpuProcess>();
+
     for (const gpu of gpus) {
       for (const entry of gpu.process_list ?? []) {
         const info = entry.process_info ?? entry;
-        const vramBytes = info.memory_usage?.vram_mem?.value ?? info.mem_usage?.value ?? 0;
-        const vramUnit = info.memory_usage?.vram_mem?.unit ?? info.mem_usage?.unit ?? 'B';
-        results.push({
+        const pid: number = info.pid;
+        if (!pid || seenPids.has(pid)) continue;
+
+        const vramRaw = info.memory_usage?.vram_mem?.value ?? info.mem_usage?.value ?? 0;
+        const vramUnit: string = info.memory_usage?.vram_mem?.unit ?? info.mem_usage?.unit ?? 'B';
+        const vramUsedMb = vramUnit === 'MB' ? vramRaw : Math.round(vramRaw / (1024 * 1024));
+
+        seenPids.set(pid, {
           deviceId: `gpu-${gpu.gpu}`,
-          pid: info.pid,
-          vramUsedMb: vramUnit === 'MB' ? vramBytes : Math.round(vramBytes / (1024 * 1024)),
+          pid,
+          vramUsedMb,
           processName: info.name ?? 'unknown',
         });
       }
     }
-    return results;
+    return Array.from(seenPids.values());
   }
 
   async getTopology(): Promise<GpuTopology> {
