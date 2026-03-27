@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Github, Brain, Cpu, Box, Zap, Layers, BookOpen, Container } from 'lucide-react';
+import { Github, Brain, Cpu, Box, Zap, Layers, BookOpen, Container, Activity } from 'lucide-react';
 import useAppStore from './store/useAppStore';
 import { useMemoryCalculation } from './hooks/useMemoryCalculation';
 import ModelTypeSelector from './components/ModelTypeSelector';
@@ -12,13 +12,14 @@ import RerankingParameters from './components/RerankingParameters';
 import ResultsDisplay from './components/ResultsDisplay';
 import MemoryVisualization from './components/MemoryVisualization';
 import CollapsibleSection from './components/CollapsibleSection';
-import { TabContainer } from './components/Tabs';
+import { TabContainer, DashboardTab } from './components/Tabs';
 import { MultiPageDocLayout } from './components/Documentation';
 import { documentationPages } from './content/documentation-pages';
 import PartitioningTab from './components/Tabs/PartitioningTab';
 import { ContainerConfigTab } from './components/Container';
 
 function App() {
+  const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL as string | undefined;
   const state = useAppStore();
   const setResults = useAppStore((state) => state.setResults);
 
@@ -176,6 +177,9 @@ function App() {
           { id: 'partitioning', label: 'Partitioning', icon: <Layers className="w-5 h-5" /> },
           { id: 'container', label: 'Container Config', icon: <Container className="w-5 h-5" /> },
           { id: 'documentation', label: 'Documentation', icon: <BookOpen className="w-5 h-5" /> },
+          ...(dashboardUrl
+            ? [{ id: 'dashboard' as const, label: 'Server Dashboard', icon: <Activity className="w-5 h-5" /> }]
+            : []),
         ]}
         defaultTab="calculator"
         className="flex-1"
@@ -187,6 +191,9 @@ function App() {
             {activeTab === 'container' && <ContainerConfigTab />}
             {activeTab === 'documentation' && (
               <MultiPageDocLayout pages={documentationPages} />
+            )}
+            {activeTab === 'dashboard' && dashboardUrl && (
+              <DashboardTab apiBase={dashboardUrl} />
             )}
           </div>
         )}
