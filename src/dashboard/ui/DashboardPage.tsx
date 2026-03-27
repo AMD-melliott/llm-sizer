@@ -38,8 +38,9 @@ export function DashboardPage({ apiBase = 'http://localhost:3001' }: DashboardPa
             <SummaryBar
               summary={status?.summary ?? null}
               warnings={status?.warnings ?? []}
+              theme="dark"
             />
-            <InstanceGrid instances={instances} gpuDevices={gpus?.devices ?? []} apiBase={apiBase} />
+            <InstanceGrid instances={instances} gpuDevices={gpus?.devices ?? []} apiBase={apiBase} theme="dark" />
           </>
         )}
       </div>
