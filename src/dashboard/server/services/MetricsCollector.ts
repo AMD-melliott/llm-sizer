@@ -16,7 +16,6 @@ export class MetricsCollector {
   private snapshot: DashboardSnapshot | null = null;
   private intervalHandle: ReturnType<typeof setInterval> | null = null;
   private gpuAvailable: boolean | null = null;
-  private dockerAvailable: boolean | null = null;
 
   constructor(
     dockerService: DockerService,
@@ -51,9 +50,7 @@ export class MetricsCollector {
         this.dockerService.discoverContainers(),
         this.dockerService.getContainerPids(),
       ]);
-      this.dockerAvailable = true;
     } catch {
-      this.dockerAvailable = false;
       warnings.push('Docker unavailable: could not connect to Docker socket');
     }
 

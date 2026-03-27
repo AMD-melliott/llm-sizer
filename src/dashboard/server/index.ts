@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import fastifyCors from '@fastify/cors';
 import fastifyWebsocket from '@fastify/websocket';
 import fastifyStatic from '@fastify/static';
 import { resolve } from 'path';
@@ -26,6 +27,9 @@ async function startServer(options: ServerOptions = {}) {
 
   const fastify = Fastify({ logger: true });
 
+  // Allow cross-origin requests from any origin so the main Vite app
+  // (served from a different host/port) can reach the dashboard API.
+  await fastify.register(fastifyCors, { origin: true });
   await fastify.register(fastifyWebsocket);
   await fastify.register(fastifyStatic, {
     root: resolve(import.meta.dirname, '../../..', 'dist/dashboard'),
