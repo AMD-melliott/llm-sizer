@@ -49,7 +49,14 @@ export class AmdSmiProvider implements GpuMetricsProvider {
     const metricData: any[] = JSON.parse(metricRaw).gpu_data ?? [];
     const staticData: any[] = JSON.parse(staticRaw).gpu_data ?? [];
     const nameMap = new Map<number, string>(
-      staticData.map((g: any) => [g.gpu, g.asic?.market_name ?? `GPU ${g.gpu}`])
+      staticData.map((g: any) => {
+        const marketName = g.asic?.market_name;
+        const name =
+          marketName && marketName !== 'N/A'
+            ? marketName
+            : (g.board?.product_name ?? `GPU ${g.gpu}`);
+        return [g.gpu, name];
+      })
     );
     return metricData.map((g: any) => ({
       id: `gpu-${g.gpu}`,
