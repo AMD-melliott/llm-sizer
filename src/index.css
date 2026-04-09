@@ -1,55 +1,152 @@
 @import 'tailwindcss';
 
+/* ============================================
+   Tailwind v4: Dark mode via class strategy
+   ============================================ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================
+   Design Tokens
+   ============================================ */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
+  /* Surface colors */
+  --surface: #ffffff;
+  --surface-alt: #f8fafc;        /* slate-50 */
+  --surface-raised: #ffffff;
+  --surface-inset: #f1f5f9;      /* slate-100 */
+  --surface-overlay: rgba(0, 0, 0, 0.5);
+
+  /* Text colors */
+  --text-primary: #0f172a;       /* slate-900 */
+  --text-secondary: #475569;     /* slate-600 */
+  --text-muted: #94a3b8;         /* slate-400 */
+  --text-inverse: #ffffff;
+
+  /* Border colors */
+  --border: #e2e8f0;             /* slate-200 */
+  --border-strong: #cbd5e1;      /* slate-300 */
+  --border-subtle: #f1f5f9;      /* slate-100 */
+
+  /* Accent */
+  --accent: #2563eb;             /* blue-600 */
+  --accent-hover: #1d4ed8;       /* blue-700 */
+  --accent-light: #eff6ff;       /* blue-50 */
+  --accent-muted: #dbeafe;       /* blue-100 */
+  --accent-text: #1e40af;        /* blue-800 */
+
+  /* Status */
+  --success: #10b981;            /* emerald-500 */
+  --success-light: #ecfdf5;      /* emerald-50 */
+  --success-text: #065f46;       /* emerald-800 */
+  --warning: #f59e0b;            /* amber-500 */
+  --warning-light: #fffbeb;      /* amber-50 */
+  --warning-text: #92400e;       /* amber-800 */
+  --danger: #ef4444;             /* red-500 */
+  --danger-light: #fef2f2;       /* red-50 */
+  --danger-text: #991b1b;        /* red-800 */
+
+  /* Misc */
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --ring-color: rgba(59, 130, 246, 0.4);
+  --gauge-track: #e2e8f0;
 }
 
+.dark {
+  --surface: #0c1222;
+  --surface-alt: #111a2e;
+  --surface-raised: #162032;
+  --surface-inset: #0a0f1a;
+  --surface-overlay: rgba(0, 0, 0, 0.7);
+
+  --text-primary: #e2e8f0;       /* slate-200 */
+  --text-secondary: #94a3b8;     /* slate-400 */
+  --text-muted: #64748b;         /* slate-500 */
+  --text-inverse: #0f172a;
+
+  --border: #1e293b;             /* slate-800 */
+  --border-strong: #334155;      /* slate-700 */
+  --border-subtle: #1e293b;
+
+  --accent: #3b82f6;             /* blue-500 */
+  --accent-hover: #60a5fa;       /* blue-400 */
+  --accent-light: rgba(59, 130, 246, 0.12);
+  --accent-muted: rgba(59, 130, 246, 0.2);
+  --accent-text: #93c5fd;        /* blue-300 */
+
+  --success: #34d399;            /* emerald-400 */
+  --success-light: rgba(52, 211, 153, 0.12);
+  --success-text: #6ee7b7;       /* emerald-300 */
+  --warning: #fbbf24;            /* amber-400 */
+  --warning-light: rgba(251, 191, 36, 0.12);
+  --warning-text: #fcd34d;       /* amber-300 */
+  --danger: #f87171;             /* red-400 */
+  --danger-light: rgba(248, 113, 113, 0.12);
+  --danger-text: #fca5a5;        /* red-300 */
+
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --ring-color: rgba(59, 130, 246, 0.5);
+  --gauge-track: #1e293b;
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--surface-alt);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Custom slider styles */
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+/* ============================================
+   Custom Slider Styles
+   ============================================ */
 input[type="range"] {
   width: 100%;
-  height: 0.5rem;
-  background-color: #e5e7eb;
+  height: 0.375rem;
+  background-color: var(--gauge-track);
   border-radius: 0.5rem;
   appearance: none;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   appearance: none;
-  width: 1rem;
-  height: 1rem;
-  background-color: #2563eb;
+  width: 1.125rem;
+  height: 1.125rem;
+  background-color: var(--accent);
   border-radius: 50%;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: background-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 3px var(--shadow-color);
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-  background-color: #1d4ed8;
+  background-color: var(--accent-hover);
+  box-shadow: 0 2px 6px var(--shadow-color);
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 1rem;
-  height: 1rem;
-  background-color: #2563eb;
+  width: 1.125rem;
+  height: 1.125rem;
+  background-color: var(--accent);
   border-radius: 50%;
   cursor: pointer;
   border: 0;
-  transition: background-color 0.15s;
+  transition: background-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 3px var(--shadow-color);
 }
 
 input[type="range"]::-moz-range-thumb:hover {
-  background-color: #1d4ed8;
+  background-color: var(--accent-hover);
 }
 
 input[type="range"]:focus {
@@ -57,37 +154,73 @@ input[type="range"]:focus {
 }
 
 input[type="range"]:focus::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.5);
+  box-shadow: 0 0 0 3px var(--ring-color);
 }
 
 input[type="range"]:focus::-moz-range-thumb {
-  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.5);
+  box-shadow: 0 0 0 3px var(--ring-color);
 }
 
-/* Custom scrollbar */
+/* ============================================
+   Form Element Styles
+   ============================================ */
+select,
+input[type="number"],
+input[type="text"] {
+  border: 1px solid var(--border-strong);
+  background-color: var(--surface-alt);
+  color: var(--text-primary);
+}
+
+select:focus,
+input[type="number"]:focus,
+input[type="text"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--ring-color);
+}
+
+.dark select,
+.dark input[type="number"],
+.dark input[type="text"] {
+  background-color: var(--surface-raised);
+  border-color: var(--border-strong);
+}
+
+.dark select:focus,
+.dark input[type="number"]:focus,
+.dark input[type="text"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--ring-color);
+}
+
+/* ============================================
+   Custom Scrollbar
+   ============================================ */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: #f3f4f6;
+  background-color: var(--surface-alt);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #9ca3af;
+  background-color: var(--text-muted);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #6b7280;
+  background-color: var(--text-secondary);
 }
 
-/* Animation utilities */
+/* ============================================
+   Animation Utilities
+   ============================================ */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -95,17 +228,81 @@ input[type="range"]:focus::-moz-range-thumb {
   }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+  }
+}
+
+@keyframes countUp {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Prose styles for documentation */
+.animate-fadeInUp {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* Collapsible section animation */
+.collapsible-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease-out, opacity 0.2s ease-out;
+  opacity: 0;
+}
+
+.collapsible-content.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.collapsible-content > div {
+  overflow: hidden;
+}
+
+/* Tab indicator animation */
+.tab-indicator {
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Tab content transition */
+.tab-content-enter {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Value change animation */
+.value-update {
+  animation: countUp 0.3s ease-out;
+}
+
+/* ============================================
+   Prose Styles for Documentation
+   ============================================ */
 .prose {
-  color: #374151;
+  color: var(--text-secondary);
   max-width: 65ch;
 }
 
-/* Allow max-w-none to override prose max-width */
 .prose.max-w-none {
   max-width: none;
 }
@@ -136,26 +333,28 @@ input[type="range"]:focus::-moz-range-thumb {
 }
 
 .prose strong {
-  color: #111827;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .prose code {
-  color: #111827;
+  color: var(--text-primary);
   font-weight: 600;
   font-size: 0.875em;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .prose pre {
-  color: #e5e7eb;
-  background-color: #1f2937;
+  color: #e2e8f0;
+  background-color: #0f172a;
   overflow-x: auto;
   font-size: 0.875em;
   line-height: 1.7142857;
   margin-top: 1.7142857em;
   margin-bottom: 1.7142857em;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   padding: 0.8571429em 1.1428571em;
+  border: 1px solid var(--border);
 }
 
 .prose table {
@@ -170,11 +369,12 @@ input[type="range"]:focus::-moz-range-thumb {
 
 .prose thead {
   border-bottom-width: 1px;
-  border-bottom-color: #d1d5db;
+  border-bottom-color: var(--border-strong);
 }
 
 .prose thead th {
   font-weight: 600;
+  color: var(--text-primary);
   vertical-align: bottom;
   padding-right: 0.5714286em;
   padding-bottom: 0.5714286em;
@@ -183,7 +383,7 @@ input[type="range"]:focus::-moz-range-thumb {
 
 .prose tbody tr {
   border-bottom-width: 1px;
-  border-bottom-color: #e5e7eb;
+  border-bottom-color: var(--border);
 }
 
 .prose tbody td {
@@ -192,20 +392,20 @@ input[type="range"]:focus::-moz-range-thumb {
 }
 
 .prose-blue a {
-  color: #2563eb;
+  color: var(--accent);
   text-decoration: none;
   font-weight: 500;
 }
 
 .prose-blue a:hover {
-  color: #1d4ed8;
+  color: var(--accent-hover);
 }
 
 .prose h1,
 .prose h2,
 .prose h3,
 .prose h4 {
-  color: #111827;
+  color: var(--text-primary);
   font-weight: 700;
   line-height: 1.25;
 }
@@ -239,7 +439,7 @@ input[type="range"]:focus::-moz-range-thumb {
 }
 
 .prose dt {
-  color: #111827;
+  color: var(--text-primary);
   font-weight: 600;
   margin-top: 1.25em;
 }
