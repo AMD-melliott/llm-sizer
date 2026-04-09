@@ -19,7 +19,6 @@ const InferenceParameters: React.FC = () => {
     setImageResolution,
   } = useAppStore();
 
-  // Get current model to check if it's multimodal
   const currentModel = useMemo(() => {
     const models = modelsData.models as Model[];
     return models.find(m => m.id === selectedModel);
@@ -27,7 +26,6 @@ const InferenceParameters: React.FC = () => {
 
   const isMultimodal = currentModel?.modality === 'multimodal';
 
-  // Log scale values for sliders
   const batchSizeSteps = [1, 2, 4, 8, 16, 32, 64, 128, 256];
   const sequenceLengthSteps = [512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072];
   const concurrentUserSteps = [1, 2, 4, 8, 16, 32, 64, 128];
@@ -52,12 +50,12 @@ const InferenceParameters: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <Layers className="w-4 h-4 text-gray-600" />
-            <label className="text-sm font-medium text-gray-700">
+            <Layers className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+            <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
               Batch Size
             </label>
           </div>
-          <span className="text-lg font-semibold text-blue-600">{batchSize}</span>
+          <span className="text-lg font-semibold font-mono tabular-nums" style={{ color: 'var(--accent)' }}>{batchSize}</span>
         </div>
         <input
           type="range"
@@ -67,7 +65,7 @@ const InferenceParameters: React.FC = () => {
           onChange={(e) => setBatchSize(batchSizeSteps[parseInt(e.target.value)])}
           className="w-full"
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
           <span>1</span>
           <span>8</span>
           <span>32</span>
@@ -78,12 +76,12 @@ const InferenceParameters: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <FileText className="w-4 h-4 text-gray-600" />
-            <label className="text-sm font-medium text-gray-700">
+            <FileText className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+            <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
               Sequence Length (tokens)
             </label>
           </div>
-          <span className="text-lg font-semibold text-blue-600">{sequenceLength.toLocaleString()}</span>
+          <span className="text-lg font-semibold font-mono tabular-nums" style={{ color: 'var(--accent)' }}>{sequenceLength.toLocaleString()}</span>
         </div>
         <input
           type="range"
@@ -93,7 +91,7 @@ const InferenceParameters: React.FC = () => {
           onChange={(e) => setSequenceLength(sequenceLengthSteps[parseInt(e.target.value)])}
           className="w-full"
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
           <span>512</span>
           <span>4K</span>
           <span>32K</span>
@@ -104,12 +102,12 @@ const InferenceParameters: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <Users className="w-4 h-4 text-gray-600" />
-            <label className="text-sm font-medium text-gray-700">
+            <Users className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+            <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
               Concurrent Users
             </label>
           </div>
-          <span className="text-lg font-semibold text-blue-600">{concurrentUsers}</span>
+          <span className="text-lg font-semibold font-mono tabular-nums" style={{ color: 'var(--accent)' }}>{concurrentUsers}</span>
         </div>
         <input
           type="range"
@@ -119,7 +117,7 @@ const InferenceParameters: React.FC = () => {
           onChange={(e) => setConcurrentUsers(concurrentUserSteps[parseInt(e.target.value)])}
           className="w-full"
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
           <span>1</span>
           <span>8</span>
           <span>32</span>
@@ -130,15 +128,15 @@ const InferenceParameters: React.FC = () => {
       {/* Multimodal Parameters */}
       {isMultimodal && (
         <>
-          <div className="border-t pt-4">
+          <div style={{ borderTop: '1px solid var(--border)' }} className="pt-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                <Image className="w-4 h-4 text-gray-600" />
-                <label className="text-sm font-medium text-gray-700">
+                <Image className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
                   Images per Prompt
                 </label>
               </div>
-              <span className="text-lg font-semibold text-purple-600">{numImages}</span>
+              <span className="text-lg font-semibold font-mono tabular-nums" style={{ color: 'var(--accent)' }}>{numImages}</span>
             </div>
             <input
               type="range"
@@ -148,7 +146,7 @@ const InferenceParameters: React.FC = () => {
               onChange={(e) => setNumImages(parseInt(e.target.value))}
               className="w-full"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
               <span>1</span>
               <span>5</span>
               <span>10</span>
@@ -157,39 +155,40 @@ const InferenceParameters: React.FC = () => {
 
           <div>
             <div className="flex items-center space-x-2 mb-3">
-              <Image className="w-4 h-4 text-gray-600" />
-              <label className="text-sm font-medium text-gray-700">
+              <Image className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+              <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
                 Image Resolution
               </label>
             </div>
             <select
               value={imageResolution}
               onChange={(e) => setImageResolution(parseInt(e.target.value))}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+              className="w-full rounded-lg shadow-sm focus:outline-none focus:ring-2"
+              style={{ borderColor: 'var(--border-strong)', color: 'var(--text-primary)', backgroundColor: 'var(--surface)' }}
             >
-              <option value={224}>224 × 224</option>
-              <option value={336}>336 × 336</option>
-              <option value={448}>448 × 448</option>
-              <option value={512}>512 × 512</option>
-              <option value={1024}>1024 × 1024</option>
+              <option value={224}>224 x 224</option>
+              <option value={336}>336 x 336</option>
+              <option value={448}>448 x 448</option>
+              <option value={512}>512 x 512</option>
+              <option value={1024}>1024 x 1024</option>
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
               Higher resolutions increase memory usage but improve visual understanding
             </p>
           </div>
         </>
       )}
 
-      <div className="bg-gray-50 rounded-lg p-3">
-        <h4 className="text-xs font-medium text-gray-700 mb-2">Parameter Impact:</h4>
-        <ul className="text-xs text-gray-600 space-y-1">
-          <li>• <strong>Batch Size:</strong> Processes multiple requests simultaneously</li>
-          <li>• <strong>Sequence Length:</strong> Maximum context window for generation</li>
-          <li>• <strong>Concurrent Users:</strong> Number of parallel user sessions</li>
+      <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--surface-inset)' }}>
+        <h4 className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Parameter Impact:</h4>
+        <ul className="text-xs space-y-1" style={{ color: 'var(--text-muted)' }}>
+          <li><strong style={{ color: 'var(--text-secondary)' }}>Batch Size:</strong> Processes multiple requests simultaneously</li>
+          <li><strong style={{ color: 'var(--text-secondary)' }}>Sequence Length:</strong> Maximum context window for generation</li>
+          <li><strong style={{ color: 'var(--text-secondary)' }}>Concurrent Users:</strong> Number of parallel user sessions</li>
           {isMultimodal && (
             <>
-              <li>• <strong>Images per Prompt:</strong> Number of images processed in each request</li>
-              <li>• <strong>Image Resolution:</strong> Higher resolutions = more image tokens & memory</li>
+              <li><strong style={{ color: 'var(--text-secondary)' }}>Images per Prompt:</strong> Number of images processed in each request</li>
+              <li><strong style={{ color: 'var(--text-secondary)' }}>Image Resolution:</strong> Higher resolutions = more image tokens & memory</li>
             </>
           )}
         </ul>

@@ -20,14 +20,14 @@ export const VolumeConfiguration: React.FC = () => {
     addCustomVolume,
     removeCustomVolume,
   } = useContainerStore();
-  
+
   const [showAddVolume, setShowAddVolume] = useState(false);
   const [newVolume, setNewVolume] = useState<VolumeMount>({
     hostPath: '',
     containerPath: '',
     readOnly: false,
   });
-  
+
   const handleAddVolume = () => {
     if (newVolume.hostPath && newVolume.containerPath) {
       addCustomVolume(newVolume);
@@ -35,16 +35,16 @@ export const VolumeConfiguration: React.FC = () => {
       setShowAddVolume(false);
     }
   };
-  
+
   return (
     <div className="space-y-4">
       {/* Container Toolkit Toggle */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+      <div className="flex items-center justify-between p-3 rounded-md" style={{ backgroundColor: 'var(--surface-inset)' }}>
         <div className="flex-1">
-          <label htmlFor="container-toolkit" className="text-sm font-medium text-gray-700">
+          <label htmlFor="container-toolkit" className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
             AMD Container Toolkit
           </label>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
             Simplified GPU access management (recommended)
           </p>
         </div>
@@ -53,14 +53,15 @@ export const VolumeConfiguration: React.FC = () => {
           type="checkbox"
           checked={useContainerToolkit}
           onChange={(e) => setUseContainerToolkit(e.target.checked)}
-          className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          className="h-5 w-5 rounded"
+          style={{ accentColor: 'var(--accent)' }}
         />
       </div>
-      
+
       {/* Model Path */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label htmlFor="model-path" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="model-path" className="block text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
             Model Storage Path
           </label>
           <div className="flex items-center">
@@ -69,9 +70,10 @@ export const VolumeConfiguration: React.FC = () => {
               type="checkbox"
               checked={mountModelPath}
               onChange={(e) => setMountModelPath(e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 rounded"
+              style={{ accentColor: 'var(--accent)' }}
             />
-            <label htmlFor="mount-model-path" className="ml-2 text-xs text-gray-600">
+            <label htmlFor="mount-model-path" className="ml-2 text-xs" style={{ color: 'var(--text-muted)' }}>
               Mount
             </label>
           </div>
@@ -83,20 +85,29 @@ export const VolumeConfiguration: React.FC = () => {
           onChange={(e) => setModelPath(e.target.value)}
           disabled={!mountModelPath}
           placeholder="./models"
-          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+          style={{
+            backgroundColor: mountModelPath ? 'var(--surface)' : 'var(--surface-inset)',
+            border: '1px solid var(--border-strong)',
+            color: 'var(--text-primary)',
+            boxShadow: '0 1px 3px var(--shadow-color)',
+            cursor: mountModelPath ? 'text' : 'not-allowed'
+          }}
+          onFocus={(e) => mountModelPath && (e.currentTarget.style.borderColor = 'var(--accent)')}
+          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-strong)'}
         />
-        <p className="text-xs text-gray-500">
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
           Host directory for model files (mapped to /models in container)
         </p>
       </div>
-      
+
       {/* HuggingFace Cache */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+      <div className="flex items-center justify-between p-3 rounded-md" style={{ backgroundColor: 'var(--surface-inset)' }}>
         <div className="flex-1">
-          <label htmlFor="mount-hf-cache" className="text-sm font-medium text-gray-700">
+          <label htmlFor="mount-hf-cache" className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
             Mount HuggingFace Cache
           </label>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
             Share HF cache between host and container
           </p>
         </div>
@@ -105,18 +116,19 @@ export const VolumeConfiguration: React.FC = () => {
           type="checkbox"
           checked={mountHFCache}
           onChange={(e) => setMountHFCache(e.target.checked)}
-          className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          className="h-5 w-5 rounded"
+          style={{ accentColor: 'var(--accent)' }}
         />
       </div>
-      
+
       {/* Host Network Mode */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+        <div className="flex items-center justify-between p-3 rounded-md" style={{ backgroundColor: 'var(--surface-inset)' }}>
           <div className="flex-1">
-            <label htmlFor="use-host-network" className="text-sm font-medium text-gray-700">
+            <label htmlFor="use-host-network" className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
               Use Host Network
             </label>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
               Share the host's network stack (bypasses Docker networking)
             </p>
           </div>
@@ -125,32 +137,33 @@ export const VolumeConfiguration: React.FC = () => {
             type="checkbox"
             checked={useHostNetwork}
             onChange={(e) => setUseHostNetwork(e.target.checked)}
-            className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-5 w-5 rounded"
+            style={{ accentColor: 'var(--accent)' }}
           />
         </div>
-        
+
         {/* Security Warning */}
         {useHostNetwork && (
-          <div className="mt-2 flex items-start space-x-2 p-2 bg-orange-50 border border-orange-200 rounded">
-            <svg className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mt-2 flex items-start space-x-2 p-2 rounded" style={{ backgroundColor: 'var(--warning-light)', border: '1px solid var(--warning-text)' }}>
+            <svg className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--warning-text)' }} fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
-            <div className="text-xs text-orange-700">
+            <div className="text-xs" style={{ color: 'var(--warning-text)' }}>
               <p className="font-medium">Security Notice:</p>
               <p>Host network mode bypasses Docker's network isolation. The container shares the host's network stack directly. Only use this if you understand the security implications.</p>
             </div>
           </div>
         )}
       </div>
-      
+
       {/* Auto-Remove Container */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+        <div className="flex items-center justify-between p-3 rounded-md" style={{ backgroundColor: 'var(--surface-inset)' }}>
           <div className="flex-1">
-            <label htmlFor="auto-remove" className="text-sm font-medium text-gray-700">
+            <label htmlFor="auto-remove" className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
               Auto-Remove Container (--rm)
             </label>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
               Automatically remove container when it exits (ephemeral mode)
             </p>
           </div>
@@ -159,43 +172,45 @@ export const VolumeConfiguration: React.FC = () => {
             type="checkbox"
             checked={autoRemoveContainer}
             onChange={(e) => setAutoRemoveContainer(e.target.checked)}
-            className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-5 w-5 rounded"
+            style={{ accentColor: 'var(--accent)' }}
           />
         </div>
-        
+
         {/* Info notice when auto-remove is enabled */}
         {autoRemoveContainer && (
-          <div className="mt-2 flex items-start space-x-2 p-2 bg-blue-50 border border-blue-200 rounded">
-            <svg className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mt-2 flex items-start space-x-2 p-2 rounded" style={{ backgroundColor: 'var(--accent-light)', border: '1px solid var(--accent)' }}>
+            <svg className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--accent)' }} fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
-            <div className="text-xs text-blue-700">
+            <div className="text-xs" style={{ color: 'var(--accent-text)' }}>
               <p className="font-medium">Ephemeral Container Mode:</p>
               <p>Container will be removed when stopped. No restart policy will be applied. Mounted volumes will persist, but container state will be lost. Use for testing or temporary deployments.</p>
             </div>
           </div>
         )}
       </div>
-      
+
       {/* Custom Volumes */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
             Additional Volumes
           </label>
           <button
             onClick={() => setShowAddVolume(!showAddVolume)}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm hover:underline"
+            style={{ color: 'var(--accent)' }}
           >
             {showAddVolume ? 'Cancel' : '+ Add Volume'}
           </button>
         </div>
-        
+
         {/* Add Volume Form */}
         {showAddVolume && (
-          <div className="p-3 bg-gray-50 rounded-md space-y-2">
+          <div className="p-3 rounded-md space-y-2" style={{ backgroundColor: 'var(--surface-inset)' }}>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">
+              <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
                 Host Path
               </label>
               <input
@@ -203,11 +218,18 @@ export const VolumeConfiguration: React.FC = () => {
                 value={newVolume.hostPath}
                 onChange={(e) => setNewVolume({ ...newVolume, hostPath: e.target.value })}
                 placeholder="/path/on/host"
-                className="w-full px-2 py-1 text-sm bg-white border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-1 text-sm rounded focus:outline-none focus:ring-2"
+                style={{
+                  backgroundColor: 'var(--surface)',
+                  border: '1px solid var(--border-strong)',
+                  color: 'var(--text-primary)'
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+                onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-strong)'}
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">
+              <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
                 Container Path
               </label>
               <input
@@ -215,7 +237,14 @@ export const VolumeConfiguration: React.FC = () => {
                 value={newVolume.containerPath}
                 onChange={(e) => setNewVolume({ ...newVolume, containerPath: e.target.value })}
                 placeholder="/path/in/container"
-                className="w-full px-2 py-1 text-sm bg-white border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-1 text-sm rounded focus:outline-none focus:ring-2"
+                style={{
+                  backgroundColor: 'var(--surface)',
+                  border: '1px solid var(--border-strong)',
+                  color: 'var(--text-primary)'
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+                onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-strong)'}
               />
             </div>
             <div className="flex items-center">
@@ -224,43 +253,58 @@ export const VolumeConfiguration: React.FC = () => {
                 type="checkbox"
                 checked={newVolume.readOnly}
                 onChange={(e) => setNewVolume({ ...newVolume, readOnly: e.target.checked })}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 rounded"
+                style={{ accentColor: 'var(--accent)' }}
               />
-              <label htmlFor="read-only" className="ml-2 text-xs text-gray-600">
+              <label htmlFor="read-only" className="ml-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                 Read-only
               </label>
             </div>
             <button
               onClick={handleAddVolume}
               disabled={!newVolume.hostPath || !newVolume.containerPath}
-              className="w-full px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 text-white text-sm rounded-md transition-colors"
+              style={{
+                backgroundColor: (!newVolume.hostPath || !newVolume.containerPath) ? 'var(--text-muted)' : 'var(--accent)',
+                cursor: (!newVolume.hostPath || !newVolume.containerPath) ? 'not-allowed' : 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                if (newVolume.hostPath && newVolume.containerPath) {
+                  e.currentTarget.style.opacity = '0.9';
+                }
+              }}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
             >
               Add Volume
             </button>
           </div>
         )}
-        
+
         {/* Custom Volumes List */}
         {customVolumes.length > 0 && (
           <div className="space-y-2">
             {customVolumes.map((volume, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md"
+                className="flex items-center justify-between p-2 rounded-md"
+                style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)' }}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700 truncate">
+                  <p className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
                     {volume.hostPath} → {volume.containerPath}
                   </p>
                   {volume.readOnly && (
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                       (read-only)
                     </span>
                   )}
                 </div>
                 <button
                   onClick={() => removeCustomVolume(idx)}
-                  className="ml-2 text-red-600 hover:text-red-800"
+                  className="ml-2"
+                  style={{ color: 'var(--danger-text)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                   title="Remove volume"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
