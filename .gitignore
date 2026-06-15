@@ -16,6 +16,9 @@ docs/architecture/
 # Memory profiling results (keep directory structure)
 results/
 
+# Harbor publish cache (FULL_IMAGE stamp source)
+.cache/
+
 # SLAI app-platform deployment: never commit plaintext secrets or TLS keys.
 *.raw.yaml
 deploy/slai-app-prod/**/csr/tls.key

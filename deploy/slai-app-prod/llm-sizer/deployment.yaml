@@ -28,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: app
-          image: mkmhub.amd.com/hw-slaiapp-dev/llm-sizer:PLACEHOLDER
+          image: mkmhub.amd.com/hw-slaiapp-dev/llm-sizer:b45ddb5ce9ae2c57de284546373ff8d68479f826
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false
