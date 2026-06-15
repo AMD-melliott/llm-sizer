@@ -1,0 +1,52 @@
+services:
+  # ─── Main Vite UI (llm-sizer calculator app) ───────────────────────────────
+  llm-sizer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: llm-sizer
+      args:
+        VITE_DASHBOARD_URL: ${VITE_DASHBOARD_URL:-}
+    image: llm-sizer:latest
+    container_name: llm-sizer
+    ports:
+      - "${LLM_SIZER_PORT:-4173}:4173"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  # ─── Dashboard backend (Fastify + amd-smi + Docker socket) ─────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dashboard
+    image: llm-sizer-dashboard:latest
+    container_name: llm-sizer-dashboard
+    ports:
+      - "${DASHBOARD_PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=production
+      - POLL_INTERVAL=${POLL_INTERVAL:-5000}
+    volumes:
+      # Docker socket access — required for container discovery
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # /proc is read for PID→child mapping (GPU VRAM attribution)
+      - /proc:/proc:ro
+    devices:
+      # AMD GPU Compute Interface (required for amd-smi)
+      - /dev/kfd:/dev/kfd
+      # DRI render nodes — all GPUs; restrict to specific renderD1xx if needed
+      - /dev/dri:/dev/dri
+    group_add:
+      # Required for access to /dev/kfd and /dev/dri on most distros
+      - video
+      # Docker group so the socket volume is accessible (host GID must match)
+      - ${DOCKER_GID:-docker}
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    ipc: host
+    restart: unless-stopped
+    command: ["node", "dist/dashboard.js", "--port", "3001"]

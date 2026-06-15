@@ -61,6 +61,25 @@ npm run dev
 
 The application will be available at `http://localhost:5173`
 
+### Server Dashboard Tab (optional)
+
+The **Server Dashboard** tab shows live vLLM container status, GPU/VRAM metrics, and log streaming. It requires the dashboard backend to be running separately.
+
+To enable the tab, set `VITE_DASHBOARD_URL` in a `.env.local` file (gitignored by default) before starting the dev server:
+
+```bash
+# .env.local
+VITE_DASHBOARD_URL=http://<host>:3001
+```
+
+Then start the dashboard backend in a separate terminal:
+
+```bash
+npm run dashboard -- --port 3001
+```
+
+The tab will appear in the navigation automatically when the env var is set. When `VITE_DASHBOARD_URL` is unset, the tab is hidden and the backend is never contacted.
+
 ### Building for Production
 
 ```bash

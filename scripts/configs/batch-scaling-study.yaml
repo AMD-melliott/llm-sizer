@@ -36,7 +36,7 @@ models:
   input_lengths:
   - 1024
 - hf_model_id: deepseek-ai/DeepSeek-R1-0528
-  tensor_parallel_size: 2
+  tensor_parallel_size: 8
   batch_sizes:
   - 1
   - 2
