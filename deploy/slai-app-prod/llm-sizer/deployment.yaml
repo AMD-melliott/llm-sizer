@@ -47,13 +47,16 @@ spec:
               path: /healthz
               port: 8080
             initialDelaySeconds: 10
+          # Static SPA served by nginx-unprivileged — right-sized small to
+          # conserve the shared slai-app-prod namespace quota (CPU limits were
+          # near cap as of 2026-06-22). nginx idles well under 100m / 128Mi.
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: 25m
+              memory: 64Mi
             limits:
-              cpu: 250m
-              memory: 512Mi
+              cpu: 100m
+              memory: 128Mi
           volumeMounts:
             - name: tmp
               mountPath: /tmp
