@@ -49,14 +49,15 @@ spec:
             initialDelaySeconds: 10
           # Static SPA served by nginx-unprivileged — right-sized small to
           # conserve the shared slai-app-prod namespace quota (CPU limits were
-          # near cap as of 2026-06-22). nginx idles well under 100m / 128Mi.
+          # near cap as of 2026-06-22). CPU held tight; memory limit kept at
+          # 256Mi since the namespace isn't memory-constrained.
           resources:
             requests:
               cpu: 25m
               memory: 64Mi
             limits:
               cpu: 100m
-              memory: 128Mi
+              memory: 256Mi
           volumeMounts:
             - name: tmp
               mountPath: /tmp
