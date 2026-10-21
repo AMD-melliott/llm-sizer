@@ -1,0 +1,18 @@
+# Factory deploys this repo's app to the SLAI app platform through the private
+# slai-app-platform adapter. Host-only settings (credentials, CA bundle) live in the
+# Factory host's config, never here.
+[repo]
+slug = "AMD-melliott/llm-sizer"
+main = "main"
+
+[apply]
+enabled = true
+# Adoption baseline: the ui-updates head that was deployed by hand in June 2026 and
+# merged to main in PR #1. Changes after it must arrive through approved
+# agent/<ticket> PRs.
+baseline = "34ca7dbfb118d4cbfdae803a39967aa6936602ee"
+
+[apply.targets.llm-sizer]
+dir = "deploy/slai-app-prod/llm-sizer"
+adapter = "slai-app-platform"
+supersession = "latest"

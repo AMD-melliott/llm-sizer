@@ -21,7 +21,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: hosted-slai-llm-sizer
+                name: llm-sizer
                 port:
                   name: http
   tls:
