@@ -28,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: app
-          image: mkmhub.amd.com/hw-slaiapp-dev/llm-sizer@sha256:b33c41470dd0205adb3f887424c63b114a13e4bdf08a84b039dfef2b0f05e2f3
+          image: mkmhub.amd.com/hw-slaiapp-dev/llm-sizer@sha256:d7abf395a5d6c385fff3f59365f557bbc817b0492e2cebacfae16da8da688235
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false
