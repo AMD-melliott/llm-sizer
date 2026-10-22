@@ -13,7 +13,8 @@ COPY . .
 RUN npm run build
 
 # ─── Stage 2: Serve via hardened non-root nginx ──────────────────────────────
-FROM docker.io/nginxinc/nginx-unprivileged:1.27-alpine AS runtime
+# 1.30.6 (stable) carries the fixes for the October 2026 nginx advisories; pinned by digest.
+FROM docker.io/nginxinc/nginx-unprivileged:1.30.6-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03 AS runtime
 
 # Unprivileged image already runs as a non-root user; the platform deployment
 # further pins runAsUser 65534 with a read-only rootfs and in-memory mounts for

@@ -1,6 +1,6 @@
 # llm-sizer — static SPA (nginx) served under /llm-sizer/. Namespace matches the
-# handoff path. image: stamped to the Harbor tag from publish-image-harbor.sh
-# (re-stamp from .cache/harbor-last-image.env on each rebuild).
+# handoff path. image: the digest-pinned Harbor image; each deploy stamps the
+# freshly built digest from scripts/publish-image-harbor.sh.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -28,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: app
-          image: mkmhub.amd.com/hw-slaiapp-dev/llm-sizer:b45ddb5ce9ae2c57de284546373ff8d68479f826
+          image: mkmhub.amd.com/hw-slaiapp-dev/llm-sizer@sha256:b33c41470dd0205adb3f887424c63b114a13e4bdf08a84b039dfef2b0f05e2f3
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false

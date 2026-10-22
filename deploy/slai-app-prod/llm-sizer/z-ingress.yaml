@@ -1,6 +1,4 @@
-# Path-under-apex: https://slai-app.amd.com/llm-sizer/  (shared apex TLS, no CSR).
-# Ship tls-secret.enc.yaml alongside this file (copy of the platform apex cert,
-# deploy/platform-tls/prod/tls-secret.enc.yaml) so secret slai-app-amd-com-tls applies.
+# Grandfathered apex route; TLS is provided by the platform.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -21,10 +19,10 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: hosted-slai-llm-sizer
+                name: llm-sizer
                 port:
                   name: http
   tls:
     - hosts:
         - slai-app.amd.com
-      secretName: slai-app-amd-com-tls
+      secretName: slai-app-wildcard-tls
