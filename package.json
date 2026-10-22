@@ -16,19 +16,13 @@
     "batch-import": "tsx scripts/batch-import.ts",
     "validate-calculator": "tsx scripts/validate-calculator.ts",
     "batch-validate": "tsx scripts/batch-validate.ts",
-    "test": "jest",
-    "dashboard": "tsx src/dashboard/server/index.ts",
-    "build:dashboard": "tsup --entry.dashboard src/dashboard/server/index.ts --format esm --target node20 --platform node --tsconfig tsconfig.dashboard.json",
-    "build:dashboard-ui": "vite build --config vite.dashboard.config.ts"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@fastify/cors": "^11.2.0",
-    "@fastify/static": "^9.0.0",
-    "@fastify/websocket": "^11.2.0",
     "@tailwindcss/forms": "^0.5.10",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
@@ -36,8 +30,6 @@
     "chalk": "^5.3.0",
     "clsx": "^2.1.1",
     "commander": "^12.0.0",
-    "dockerode": "^4.0.9",
-    "fastify": "^5.8.2",
     "lucide-react": "^0.546.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -51,7 +43,6 @@
   "devDependencies": {
     "@huggingface/hub": "^0.15.0",
     "@tailwindcss/postcss": "^4.1.14",
-    "@types/dockerode": "^4.0.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.8.1",
     "ajv": "^8.12.0",

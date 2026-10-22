@@ -141,7 +141,7 @@ describe('Partition Calculator', () => {
         cpxMode,
         mockGPU,
         'int4', // Smaller quantization
-        'int8',
+        'fp8_bf16',
         1,
         2048, // Smaller sequence
         1,

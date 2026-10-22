@@ -34,7 +34,8 @@ export function generateDockerRunCommand(
     // Derive GPU architecture from ID (e.g., "MI300X" -> "MI300X", "A100" -> "Ampere")
     const gpuId = config.gpus[0]?.id || '';
     let gpuArch = 'N/A';
-    if (gpuId.includes('MI300')) gpuArch = 'CDNA3 (gfx942)';
+    if (gpuId.includes('MI350') || gpuId.includes('MI355')) gpuArch = 'CDNA4 (gfx950)';
+    else if (gpuId.includes('MI300') || gpuId.includes('MI325')) gpuArch = 'CDNA3 (gfx942)';
     else if (gpuId.includes('MI250')) gpuArch = 'CDNA2 (gfx90a)';
     else if (gpuId.includes('MI210')) gpuArch = 'CDNA2 (gfx90a)';
     else if (gpuId.includes('MI100')) gpuArch = 'CDNA1 (gfx908)';

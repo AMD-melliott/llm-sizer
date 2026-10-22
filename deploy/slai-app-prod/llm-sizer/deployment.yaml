@@ -1,0 +1,80 @@
+# llm-sizer — static SPA (nginx) served under /llm-sizer/. Namespace matches the
+# handoff path. image: stamped to the Harbor tag from publish-image-harbor.sh
+# (re-stamp from .cache/harbor-last-image.env on each rebuild).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hosted-slai-llm-sizer
+  namespace: slai-app-prod
+  labels:
+    app.kubernetes.io/name: llm-sizer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: llm-sizer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: llm-sizer
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: mkmhub.amd.com/hw-slaiapp-dev/llm-sizer:b45ddb5ce9ae2c57de284546373ff8d68479f826
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+          # Static SPA served by nginx-unprivileged — right-sized small to
+          # conserve the shared slai-app-prod namespace quota (CPU limits were
+          # near cap as of 2026-06-22). CPU held tight; memory limit kept at
+          # 256Mi since the namespace isn't memory-constrained.
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 256Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /run
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        - name: nginx-cache
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        - name: nginx-run
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi

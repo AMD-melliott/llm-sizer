@@ -3,8 +3,8 @@
     {
       "id": "vllm",
       "name": "vLLM",
-      "version": "0.6.0",
-      "description": "Fast LLM inference with PagedAttention for efficient memory management",
+      "version": "0.15.x",
+      "description": "High-performance LLM inference with PagedAttention, continuous batching, and first-class AMD ROCm support",
       "documentation": "https://docs.vllm.ai/",
       "parameters": [
         {
@@ -66,6 +66,11 @@
               "value": "gptq",
               "label": "GPTQ (4-bit)",
               "description": "GPT Quantization"
+            },
+            {
+              "value": "fp8",
+              "label": "FP8 (8-bit)",
+              "description": "FP8 W8A8 quantization (recommended for AMD GPUs)"
             },
             {
               "value": "squeezellm",

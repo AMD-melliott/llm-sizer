@@ -68,7 +68,7 @@ describe('Generation Model (LLM) Memory Calculation Tests', () => {
 
     test('should reduce memory with INT4 quantization', () => {
       const result = calculateMemoryRequirements(
-        llama370b, gpu, 'int4', 'int8',
+        llama370b, gpu, 'int4', 'fp8_bf16',
         1, // batchSize
         4096, // sequenceLength
         1, // concurrentUsers
@@ -184,12 +184,12 @@ describe('Generation Model (LLM) Memory Calculation Tests', () => {
       );
 
       const int8Result = calculateMemoryRequirements(
-        llama370b, gpu, 'int8', 'int8',
+        llama370b, gpu, 'int8', 'fp8_bf16',
         1, 2048, 1, 1
       );
 
       const int4Result = calculateMemoryRequirements(
-        llama370b, gpu, 'int4', 'int8',
+        llama370b, gpu, 'int4', 'fp8_bf16',
         1, 2048, 1, 1
       );
 

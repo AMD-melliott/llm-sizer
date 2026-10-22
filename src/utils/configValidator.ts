@@ -367,6 +367,13 @@ export function validateSecurity(config: ContainerConfig): ValidationMessage[] {
       suggestion: 'Experimental images are not recommended for production use',
       field: 'image',
     });
+  } else if (config.image.stability === 'legacy') {
+    messages.push({
+      level: 'warning',
+      message: 'Using legacy container image',
+      suggestion: 'This image is from the legacy rocm/vllm repository. Consider switching to the official upstream vllm/vllm-openai-rocm image for new deployments.',
+      field: 'image',
+    });
   }
 
   // Trust remote code warning

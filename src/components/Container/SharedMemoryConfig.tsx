@@ -45,12 +45,13 @@ export const SharedMemoryConfig: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="rounded-lg" style={{ backgroundColor: 'var(--surface-inset)', border: '1px solid var(--border)' }}>
       {/* Header - Clickable to toggle */}
-      <div className="w-full flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg">
-        <div className="flex items-center cursor-pointer flex-1" onClick={() => setIsExpanded(!isExpanded)}>
+      <div className="w-full flex items-center justify-between p-4 rounded-t-lg transition-colors" style={{ cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-alt)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+        <div className="flex items-center flex-1" onClick={() => setIsExpanded(!isExpanded)}>
           <svg
-            className="w-5 h-5 mr-2 text-blue-500"
+            className="w-5 h-5 mr-2"
+            style={{ color: 'var(--accent)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -62,19 +63,21 @@ export const SharedMemoryConfig: React.FC = () => {
               d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
             />
           </svg>
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
             Shared Memory Configuration
           </h4>
         </div>
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-xs hover:underline"
+            style={{ color: 'var(--accent)' }}
           >
             {showDetails ? 'Hide Details' : 'Show Details'}
           </button>
           <svg
-            className={`w-5 h-5 text-gray-500 transition-transform cursor-pointer ${isExpanded ? 'transform rotate-180' : ''}`}
+            className={`w-5 h-5 transition-transform cursor-pointer ${isExpanded ? 'transform rotate-180' : ''}`}
+            style={{ color: 'var(--text-muted)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -92,20 +95,19 @@ export const SharedMemoryConfig: React.FC = () => {
       {/* Current Status */}
       <div className="mb-3">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Current Setting:</span>
+          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Current Setting:</span>
           <span
-            className={`text-sm font-semibold ${
-              isInsufficient
-                ? 'text-orange-600 dark:text-orange-400'
-                : 'text-green-600 dark:text-green-400'
-            }`}
+            className={`text-sm font-semibold font-mono`}
+            style={{
+              color: isInsufficient ? 'var(--warning-text)' : 'var(--success-text)'
+            }}
           >
             {generatedConfig.shmSize} {isCustom && '(custom)'}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Recommended:</span>
-          <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Recommended:</span>
+          <span className="text-sm font-semibold font-mono" style={{ color: 'var(--accent)' }}>
             {calculation.recommended}g
           </span>
         </div>
@@ -113,10 +115,11 @@ export const SharedMemoryConfig: React.FC = () => {
 
       {/* Warning if insufficient */}
       {isInsufficient && (
-        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded p-3 mb-3">
+        <div className="rounded p-3 mb-3" style={{ backgroundColor: 'var(--warning-light)', border: '1px solid var(--warning-text)' }}>
           <div className="flex items-start">
             <svg
-              className="w-5 h-5 text-orange-500 mr-2 flex-shrink-0 mt-0.5"
+              className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5"
+              style={{ color: 'var(--warning-text)' }}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -129,10 +132,10 @@ export const SharedMemoryConfig: React.FC = () => {
               />
             </svg>
             <div>
-              <p className="text-xs font-medium text-orange-900 dark:text-orange-200">
+              <p className="text-xs font-medium" style={{ color: 'var(--warning-text)' }}>
                 Shared memory may be insufficient
               </p>
-              <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+              <p className="text-xs mt-1" style={{ color: 'var(--warning-text)' }}>
                 This may cause IPC issues or OOM during multi-GPU operations.
               </p>
             </div>
@@ -142,20 +145,20 @@ export const SharedMemoryConfig: React.FC = () => {
 
       {/* Detailed Breakdown */}
       {showDetails && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded p-3 mb-3 space-y-2">
-          <div className="text-xs text-gray-700 dark:text-gray-300">
-            <div className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
+        <div className="rounded p-3 mb-3 space-y-2" style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <div className="font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
               Calculation Breakdown:
             </div>
 
             {/* GPU-based */}
             <div className="flex items-start mb-2">
-              <div className="w-1 h-1 rounded-full bg-blue-500 mt-1.5 mr-2 flex-shrink-0" />
+              <div className="w-1 h-1 rounded-full mt-1.5 mr-2 flex-shrink-0" style={{ backgroundColor: 'var(--accent)' }} />
               <div>
-                <div className="font-medium text-gray-800 dark:text-gray-200">
+                <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
                   GPU-based: {calculation.gpuBased}GB
                 </div>
-                <div className="text-gray-600 dark:text-gray-400">
+                <div style={{ color: 'var(--text-muted)' }}>
                   {calculation.reasoning.gpuReasoning}
                 </div>
               </div>
@@ -163,33 +166,33 @@ export const SharedMemoryConfig: React.FC = () => {
 
             {/* Model-based */}
             <div className="flex items-start mb-2">
-              <div className="w-1 h-1 rounded-full bg-purple-500 mt-1.5 mr-2 flex-shrink-0" />
+              <div className="w-1 h-1 rounded-full mt-1.5 mr-2 flex-shrink-0" style={{ backgroundColor: 'var(--accent)' }} />
               <div>
-                <div className="font-medium text-gray-800 dark:text-gray-200">
+                <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
                   Model-based: {calculation.modelBased}GB
                 </div>
-                <div className="text-gray-600 dark:text-gray-400">
+                <div style={{ color: 'var(--text-muted)' }}>
                   {calculation.reasoning.modelReasoning}
                 </div>
               </div>
             </div>
 
             {/* Final recommendation */}
-            <div className="flex items-start pt-2 border-t border-gray-200 dark:border-gray-700">
-              <div className="w-1 h-1 rounded-full bg-green-500 mt-1.5 mr-2 flex-shrink-0" />
+            <div className="flex items-start pt-2" style={{ borderTop: '1px solid var(--border)' }}>
+              <div className="w-1 h-1 rounded-full mt-1.5 mr-2 flex-shrink-0" style={{ backgroundColor: 'var(--success-text)' }} />
               <div>
-                <div className="font-medium text-gray-800 dark:text-gray-200">
+                <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
                   Recommendation: {calculation.recommended}GB
                 </div>
-                <div className="text-gray-600 dark:text-gray-400">
+                <div style={{ color: 'var(--text-muted)' }}>
                   {calculation.reasoning.finalReasoning}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-xs text-gray-600 dark:text-gray-400 italic">
+          <div className="pt-2" style={{ borderTop: '1px solid var(--border)' }}>
+            <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>
               Shared memory is used for inter-process communication between GPUs and temporary
               tensor operations. Insufficient memory can cause performance degradation or failures.
             </p>
@@ -198,8 +201,8 @@ export const SharedMemoryConfig: React.FC = () => {
       )}
 
       {/* Override Controls */}
-      <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+      <div className="pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+        <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
           Override Shared Memory
         </label>
         <div className="flex items-center space-x-2">
@@ -210,27 +213,46 @@ export const SharedMemoryConfig: React.FC = () => {
             value={overrideValue}
             onChange={(e) => setOverrideValue(e.target.value)}
             placeholder={`${calculation.recommended}`}
-            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-3 py-1.5 text-sm rounded focus:ring-2 focus:ring-offset-0 font-mono"
+            style={{
+              border: '1px solid var(--border-strong)',
+              backgroundColor: 'var(--surface)',
+              color: 'var(--text-primary)'
+            }}
+            onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+            onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-strong)'}
           />
-          <span className="text-sm text-gray-600 dark:text-gray-400">GB</span>
+          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>GB</span>
           <button
             onClick={handleOverride}
             disabled={!overrideValue}
-            className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:dark:bg-gray-700 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-1.5 text-xs font-medium text-white rounded transition-colors"
+            style={{
+              backgroundColor: overrideValue ? 'var(--accent)' : 'var(--text-muted)',
+              cursor: overrideValue ? 'pointer' : 'not-allowed'
+            }}
+            onMouseEnter={(e) => overrideValue && (e.currentTarget.style.opacity = '0.9')}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
             Apply
           </button>
           {isCustom && (
             <button
               onClick={handleReset}
-              className="px-3 py-1.5 text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded transition-colors"
+              style={{
+                backgroundColor: 'var(--surface-alt)',
+                color: 'var(--text-secondary)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--border)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-alt)'}
             >
               Reset
             </button>
           )}
         </div>
         {overrideValue && parseInt(overrideValue) < calculation.recommended && (
-          <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
+          <p className="text-xs mt-2" style={{ color: 'var(--warning-text)' }}>
             ⚠️ Warning: This value is below the recommended {calculation.recommended}GB
           </p>
         )}

@@ -142,7 +142,7 @@ export interface RerankingModel {
 
 // Quantization Types
 export type InferenceQuantization = 'fp16' | 'fp8' | 'int8' | 'int4';
-export type KVCacheQuantization = 'fp16_bf16' | 'fp8_bf16' | 'int8';
+export type KVCacheQuantization = 'fp16_bf16' | 'fp8_bf16';
 
 // Memory Breakdown
 export interface MemoryBreakdown {
@@ -345,7 +345,7 @@ export interface ContainerImage {
   tag: string;
   fullImage: string;
   entrypoint?: string; // Command to run after the container image (e.g., "python3 -m vllm.entrypoints.openai.api_server")
-  stability: 'stable' | 'nightly' | 'experimental';
+  stability: 'stable' | 'nightly' | 'experimental' | 'legacy';
   rocmVersion: string;
   pythonVersion: string;
   description: string;

@@ -36,8 +36,8 @@ const ENV_PRESETS = [
   },
   {
     key: 'PYTORCH_ROCM_ARCH',
-    value: 'gfx90a;gfx942',
-    description: 'Target ROCm GPU architectures (semicolon-separated)',
+    value: 'gfx942;gfx950',
+    description: 'Target ROCm GPU architectures: gfx90a (MI210/MI250), gfx942 (MI300X/MI325X), gfx950 (MI350X/MI355X)',
     sensitive: false,
   },
   {
@@ -96,12 +96,13 @@ export const EnvironmentVariablesConfig: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="rounded-lg" style={{ backgroundColor: 'var(--surface-inset)', border: '1px solid var(--border)' }}>
       {/* Header - Clickable to toggle */}
-      <div className="w-full flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg">
+      <div className="w-full flex items-center justify-between p-4 rounded-t-lg transition-colors" onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-alt)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
         <div className="flex items-center cursor-pointer flex-1" onClick={() => setIsExpanded(!isExpanded)}>
           <svg
-            className="w-5 h-5 mr-2 text-green-500"
+            className="w-5 h-5 mr-2"
+            style={{ color: 'var(--accent)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -119,11 +120,11 @@ export const EnvironmentVariablesConfig: React.FC = () => {
               d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
             />
           </svg>
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
             Environment Variables
           </h4>
           {customEnvironment.length > 0 && (
-            <span className="ml-3 px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded">
+            <span className="ml-3 px-2 py-1 text-xs font-medium rounded" style={{ backgroundColor: 'var(--success-light)', color: 'var(--success-text)' }}>
               {customEnvironment.length} Added
             </span>
           )}
@@ -131,18 +132,21 @@ export const EnvironmentVariablesConfig: React.FC = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowPresets(!showPresets)}
-            className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
+            className="text-xs hover:underline"
+            style={{ color: 'var(--accent)' }}
           >
             {showPresets ? 'Hide' : 'Presets'}
           </button>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-xs hover:underline"
+            style={{ color: 'var(--accent)' }}
           >
             {showAddForm ? 'Cancel' : '+ Add Variable'}
           </button>
           <svg
-            className={`w-5 h-5 text-gray-500 transition-transform cursor-pointer ${isExpanded ? 'transform rotate-180' : ''}`}
+            className={`w-5 h-5 transition-transform cursor-pointer ${isExpanded ? 'transform rotate-180' : ''}`}
+            style={{ color: 'var(--text-muted)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -157,15 +161,15 @@ export const EnvironmentVariablesConfig: React.FC = () => {
       {isExpanded && (
         <div className="p-4 pt-0">
 
-      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+      <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
         Additional environment variables to pass to the container. Use ${'{'}VAR{'}'} syntax for
         host environment variable substitution.
       </p>
 
       {/* Presets List */}
       {showPresets && (
-        <div className="mb-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded p-3">
-          <h5 className="text-xs font-semibold text-purple-900 dark:text-purple-200 mb-2">
+        <div className="mb-3 rounded p-3" style={{ backgroundColor: 'var(--accent-light)', border: '1px solid var(--accent)' }}>
+          <h5 className="text-xs font-semibold mb-2" style={{ color: 'var(--accent-text)' }}>
             Common Presets
           </h5>
           <div className="space-y-2">
@@ -174,26 +178,34 @@ export const EnvironmentVariablesConfig: React.FC = () => {
                 key={preset.key}
                 onClick={() => handleAddPreset(preset)}
                 disabled={customEnvironment.some((env) => env.key === preset.key)}
-                className="w-full text-left p-2 bg-white dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded hover:bg-purple-100 dark:hover:bg-purple-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full text-left p-2 rounded transition-colors"
+                style={{
+                  backgroundColor: 'var(--surface)',
+                  border: '1px solid var(--accent)',
+                  cursor: customEnvironment.some((env) => env.key === preset.key) ? 'not-allowed' : 'pointer',
+                  opacity: customEnvironment.some((env) => env.key === preset.key) ? 0.5 : 1
+                }}
+                onMouseEnter={(e) => !customEnvironment.some((env) => env.key === preset.key) && (e.currentTarget.style.backgroundColor = 'var(--accent-light)')}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--surface)'}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center">
-                      <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                      <span className="text-xs font-medium font-mono" style={{ color: 'var(--text-primary)' }}>
                         {preset.key}
                       </span>
                       {preset.sensitive && (
-                        <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-200 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200 rounded">
+                        <span className="ml-2 px-1.5 py-0.5 text-xs rounded" style={{ backgroundColor: 'var(--warning-light)', color: 'var(--warning-text)' }}>
                           sensitive
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                       {preset.description}
                     </p>
                   </div>
                   {customEnvironment.some((env) => env.key === preset.key) && (
-                    <span className="text-xs text-green-600 dark:text-green-400 ml-2">✓ Added</span>
+                    <span className="text-xs ml-2" style={{ color: 'var(--success-text)' }}>✓ Added</span>
                   )}
                 </div>
               </button>
@@ -204,9 +216,9 @@ export const EnvironmentVariablesConfig: React.FC = () => {
 
       {/* Add Form */}
       {showAddForm && (
-        <div className="mb-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3 space-y-2">
+        <div className="mb-3 rounded p-3 space-y-2" style={{ backgroundColor: 'var(--accent-light)', border: '1px solid var(--accent)' }}>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
               Variable Name
             </label>
             <input
@@ -214,11 +226,18 @@ export const EnvironmentVariablesConfig: React.FC = () => {
               value={newEnvVar.key}
               onChange={(e) => setNewEnvVar({ ...newEnvVar, key: e.target.value.toUpperCase() })}
               placeholder="MY_VARIABLE"
-              className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-gray-100"
+              className="w-full px-2 py-1.5 text-sm font-mono rounded focus:ring-2 focus:border-transparent"
+              style={{
+                backgroundColor: 'var(--surface)',
+                border: '1px solid var(--border-strong)',
+                color: 'var(--text-primary)'
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+              onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-strong)'}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
               Value
             </label>
             <input
@@ -226,11 +245,18 @@ export const EnvironmentVariablesConfig: React.FC = () => {
               value={newEnvVar.value}
               onChange={(e) => setNewEnvVar({ ...newEnvVar, value: e.target.value })}
               placeholder="${MY_VARIABLE} or hardcoded value"
-              className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-gray-100"
+              className="w-full px-2 py-1.5 text-sm font-mono rounded focus:ring-2 focus:border-transparent"
+              style={{
+                backgroundColor: 'var(--surface)',
+                border: '1px solid var(--border-strong)',
+                color: 'var(--text-primary)'
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+              onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-strong)'}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
               Description (optional)
             </label>
             <input
@@ -238,7 +264,14 @@ export const EnvironmentVariablesConfig: React.FC = () => {
               value={newEnvVar.description}
               onChange={(e) => setNewEnvVar({ ...newEnvVar, description: e.target.value })}
               placeholder="Brief description"
-              className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-gray-100"
+              className="w-full px-2 py-1.5 text-sm rounded focus:ring-2 focus:border-transparent"
+              style={{
+                backgroundColor: 'var(--surface)',
+                border: '1px solid var(--border-strong)',
+                color: 'var(--text-primary)'
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+              onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-strong)'}
             />
           </div>
           <div className="flex items-center space-x-2">
@@ -247,16 +280,27 @@ export const EnvironmentVariablesConfig: React.FC = () => {
               type="checkbox"
               checked={newEnvVar.sensitive}
               onChange={(e) => setNewEnvVar({ ...newEnvVar, sensitive: e.target.checked })}
-              className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+              className="h-4 w-4 rounded"
+              style={{ accentColor: 'var(--warning-text)' }}
             />
-            <label htmlFor="new-env-sensitive" className="text-xs text-gray-700 dark:text-gray-300">
+            <label htmlFor="new-env-sensitive" className="text-xs" style={{ color: 'var(--text-secondary)' }}>
               Mark as sensitive (will use ${'{'}...{'}'} in output)
             </label>
           </div>
           <button
             onClick={handleAdd}
             disabled={!newEnvVar.key || !newEnvVar.value}
-            className="w-full px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="w-full px-3 py-2 text-white text-sm font-medium rounded transition-colors"
+            style={{
+              backgroundColor: (!newEnvVar.key || !newEnvVar.value) ? 'var(--text-muted)' : 'var(--accent)',
+              cursor: (!newEnvVar.key || !newEnvVar.value) ? 'not-allowed' : 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              if (newEnvVar.key && newEnvVar.value) {
+                e.currentTarget.style.opacity = '0.9';
+              }
+            }}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
             Add Variable
           </button>
@@ -269,29 +313,33 @@ export const EnvironmentVariablesConfig: React.FC = () => {
           {customEnvironment.map((env, idx) => (
             <div
               key={idx}
-              className="flex items-start justify-between p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded"
+              className="flex items-start justify-between p-2 rounded"
+              style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)' }}
             >
               <div className="flex-1 min-w-0 mr-2">
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100">
+                  <span className="text-sm font-mono font-medium" style={{ color: 'var(--text-primary)' }}>
                     {env.key}
                   </span>
                   {env.sensitive && (
-                    <span className="px-1.5 py-0.5 text-xs bg-orange-200 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200 rounded">
+                    <span className="px-1.5 py-0.5 text-xs rounded" style={{ backgroundColor: 'var(--warning-light)', color: 'var(--warning-text)' }}>
                       sensitive
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 font-mono">
+                <div className="text-xs mt-1 font-mono" style={{ color: 'var(--text-muted)' }}>
                   {formatValue(env)}
                 </div>
                 {env.description && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{env.description}</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{env.description}</p>
                 )}
               </div>
               <button
                 onClick={() => removeEnvironmentVariable(idx)}
-                className="flex-shrink-0 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                className="flex-shrink-0"
+                style={{ color: 'var(--danger-text)' }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 title="Remove variable"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -307,7 +355,7 @@ export const EnvironmentVariablesConfig: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-4 text-xs text-gray-500 dark:text-gray-400">
+        <div className="text-center py-4 text-xs" style={{ color: 'var(--text-muted)' }}>
           No custom environment variables added. Default variables (AMD_VISIBLE_DEVICES, HF_TOKEN)
           are automatically included.
         </div>

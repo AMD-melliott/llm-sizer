@@ -15,3 +15,21 @@ docs/architecture/
 
 # Memory profiling results (keep directory structure)
 results/
+
+# Harbor publish cache (FULL_IMAGE stamp source)
+.cache/
+
+# SLAI app-platform deployment: never commit plaintext secrets or TLS keys.
+*.raw.yaml
+deploy/slai-app-prod/**/csr/tls.key
+# Track the encrypted handoff bundle (copied to slai-app-platform by Deploy prod).
+*.enc.yaml
+!deploy/slai-app-prod/**/secrets.enc.yaml
+!deploy/slai-app-prod/**/tls-secret.enc.yaml
+
+# slai-marketplace skill install + per-tool symlinks (local tooling, not app code).
+/skills/
+/.cline/
+/.codex/
+/.cursor/
+/.claude/skills

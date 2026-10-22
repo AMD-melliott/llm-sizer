@@ -1,0 +1,30 @@
+# Path-under-apex: https://slai-app.amd.com/llm-sizer/  (shared apex TLS, no CSR).
+# Ship tls-secret.enc.yaml alongside this file (copy of the platform apex cert,
+# deploy/platform-tls/prod/tls-secret.enc.yaml) so secret slai-app-amd-com-tls applies.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hosted-slai-llm-sizer
+  namespace: slai-app-prod
+  labels:
+    app.kubernetes.io/name: llm-sizer
+    app.kubernetes.io/instance: hosted-slai-llm-sizer
+    app.kubernetes.io/managed-by: slai-app-platform
+    hosted-by: slai-app-platform
+    customer-team: instinct-tme
+spec:
+  rules:
+    - host: slai-app.amd.com
+      http:
+        paths:
+          - path: /llm-sizer
+            pathType: Prefix
+            backend:
+              service:
+                name: hosted-slai-llm-sizer
+                port:
+                  name: http
+  tls:
+    - hosts:
+        - slai-app.amd.com
+      secretName: slai-app-amd-com-tls

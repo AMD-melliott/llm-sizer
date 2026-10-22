@@ -2,19 +2,20 @@
   "images": [
     {
       "engine": "vllm",
-      "repository": "rocm/vllm",
+      "repository": "vllm/vllm-openai-rocm",
       "tag": "latest",
-      "fullImage": "rocm/vllm:latest",
-      "entrypoint": "python3 -m vllm.entrypoints.openai.api_server",
+      "fullImage": "vllm/vllm-openai-rocm:latest",
+      "entrypoint": null,
       "stability": "stable",
-      "rocmVersion": "6.0",
-      "pythonVersion": "3.10",
-      "description": "Production-ready vLLM with ROCm 6.0 support. Recommended for production deployments.",
+      "rocmVersion": "7.0",
+      "pythonVersion": "3.12",
+      "description": "Official upstream ROCm vLLM image. Recommended for production deployments on AMD GPUs.",
       "features": [
-        "Stable and tested",
-        "ROCm 6.0 support",
-        "AMD Instinct MI200/MI300 series optimizations",
-        "Regular security updates"
+        "Official upstream image (since v0.14.0, Jan 2026)",
+        "ROCm 7.0 support",
+        "AMD Instinct MI300/MI325X/MI350X/MI355X optimizations",
+        "Standard vllm serve entrypoint",
+        "Regular releases with upstream vLLM"
       ],
       "requirements": {
         "minDockerVersion": "19.03",
@@ -24,18 +25,18 @@
     },
     {
       "engine": "vllm",
-      "repository": "rocm/vllm",
-      "tag": "v0.6.0",
-      "fullImage": "rocm/vllm:v0.6.0",
-      "entrypoint": "python3 -m vllm.entrypoints.openai.api_server",
+      "repository": "vllm/vllm-openai-rocm",
+      "tag": "v0.15.0",
+      "fullImage": "vllm/vllm-openai-rocm:v0.15.0",
+      "entrypoint": null,
       "stability": "stable",
-      "rocmVersion": "6.0",
-      "pythonVersion": "3.10",
-      "description": "Specific vLLM version 0.6.0 with ROCm 6.0. Use for reproducible deployments.",
+      "rocmVersion": "7.0",
+      "pythonVersion": "3.12",
+      "description": "Version-locked vLLM v0.15.0 with ROCm 7.0. Use for reproducible deployments.",
       "features": [
         "Version-locked for reproducibility",
-        "ROCm 6.0 support",
-        "Tested and validated",
+        "ROCm 7.0 support",
+        "V1 engine (unified scheduler, chunked prefill, prefix caching)",
         "Recommended for production"
       ],
       "requirements": {
@@ -49,22 +50,22 @@
       "repository": "rocm/vllm-dev",
       "tag": "nightly",
       "fullImage": "rocm/vllm-dev:nightly",
-      "entrypoint": "python3 -m vllm.entrypoints.openai.api_server",
+      "entrypoint": null,
       "stability": "nightly",
-      "rocmVersion": "6.1",
-      "pythonVersion": "3.11",
-      "description": "Latest development build with cutting-edge features. May be unstable.",
+      "rocmVersion": "7.0",
+      "pythonVersion": "3.12",
+      "description": "AMD nightly development build with cutting-edge features. Entrypoint is /bin/bash. May be unstable.",
       "features": [
         "Latest features and optimizations",
-        "ROCm 6.1 development version",
+        "ROCm 7.0 development version",
         "Experimental features enabled",
-        "Not recommended for production"
+        "Entrypoint is /bin/bash (not vllm serve)"
       ],
       "warnings": [
         "May contain bugs",
         "API may change without notice",
-        "Limited support",
-        "Use for testing only"
+        "Entrypoint is /bin/bash, not vllm serve",
+        "Not recommended for production"
       ],
       "requirements": {
         "minDockerVersion": "20.10",
@@ -75,18 +76,21 @@
     {
       "engine": "vllm",
       "repository": "rocm/vllm",
-      "tag": "rocm6.1",
-      "fullImage": "rocm/vllm:rocm6.1",
+      "tag": "latest",
+      "fullImage": "rocm/vllm:latest",
       "entrypoint": "python3 -m vllm.entrypoints.openai.api_server",
-      "stability": "stable",
-      "rocmVersion": "6.1",
+      "stability": "legacy",
+      "rocmVersion": "7.0",
       "pythonVersion": "3.10",
-      "description": "vLLM with ROCm 6.1 for latest AMD GPU features and optimizations.",
+      "description": "Legacy AMD Infinity Hub image. Use vllm/vllm-openai-rocm instead for new deployments.",
       "features": [
-        "ROCm 6.1 support",
-        "Improved MI300X performance",
-        "Latest driver compatibility",
-        "Production-ready"
+        "Legacy image (pre-January 2026)",
+        "ROCm 7.0 support",
+        "AMD Instinct MI300 series optimizations"
+      ],
+      "warnings": [
+        "Legacy image - prefer vllm/vllm-openai-rocm for new deployments",
+        "May not receive updates in the future"
       ],
       "requirements": {
         "minDockerVersion": "19.03",
@@ -96,8 +100,10 @@
     }
   ],
   "metadata": {
-    "lastUpdated": "2025-10-29",
-    "documentationUrl": "https://rocm.docs.amd.com/projects/container-toolkit",
-    "containerRegistryUrl": "https://hub.docker.com/u/rocm"
+    "lastUpdated": "2026-02-11",
+    "documentationUrl": "https://docs.vllm.ai/en/stable/getting_started/installation/gpu.html#amd-rocm",
+    "containerRegistryUrl": "https://hub.docker.com/r/vllm/vllm-openai-rocm",
+    "legacyContainerRegistryUrl": "https://hub.docker.com/r/rocm/vllm",
+    "migrationNote": "Official ROCm images moved from rocm/vllm to vllm/vllm-openai-rocm in January 2026 with vLLM v0.14.0. AMD ROCm is now a first-class platform in upstream vLLM."
   }
 }

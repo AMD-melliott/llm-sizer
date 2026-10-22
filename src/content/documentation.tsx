@@ -258,7 +258,7 @@ export const documentationSections: DocSection[] = [
                 { symbol: 'num_layers', description: 'Number of transformer layers in the model' },
                 { symbol: 'num_kv_heads', description: 'Number of key-value heads (may be less than query heads in GQA models)' },
                 { symbol: 'head_size', description: 'Dimension per head (hidden_size / num_heads)' },
-                { symbol: 'kv_bytes', description: 'Bytes per element: FP16=2, FP8=1, INT8=1' },
+                { symbol: 'kv_bytes', description: 'Bytes per element: FP16/BF16=2, FP8=1' },
                 { symbol: 'batch_size', description: 'Number of sequences processed in parallel' },
                 { symbol: 'seq_len', description: 'Maximum sequence length (context window)' },
               ]}
@@ -811,7 +811,7 @@ export const documentationSections: DocSection[] = [
                 <li><strong>FP16</strong>: Best balance for most use cases. Minimal accuracy loss, 50% memory reduction.</li>
                 <li><strong>INT8</strong>: Excellent for production. 75% memory reduction with careful calibration.</li>
                 <li><strong>INT4</strong>: Aggressive compression for resource-constrained scenarios. Test accuracy carefully.</li>
-                <li><strong>KV Cache Quantization</strong>: Can often use INT8 for KV cache even with FP16 weights.</li>
+                <li><strong>KV Cache Quantization</strong>: Can use FP8 for KV cache even with FP16 weights, halving KV cache memory.</li>
               </ul>
             </div>
 

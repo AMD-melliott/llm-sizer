@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Github, Brain, Cpu, Box, Zap, Layers, BookOpen, Container, Activity } from 'lucide-react';
+import { Github, Brain, Cpu, Box, Zap, Layers, BookOpen, Container } from 'lucide-react';
 import useAppStore from './store/useAppStore';
 import { useMemoryCalculation } from './hooks/useMemoryCalculation';
 import ModelTypeSelector from './components/ModelTypeSelector';
@@ -12,14 +12,14 @@ import RerankingParameters from './components/RerankingParameters';
 import ResultsDisplay from './components/ResultsDisplay';
 import MemoryVisualization from './components/MemoryVisualization';
 import CollapsibleSection from './components/CollapsibleSection';
-import { TabContainer, DashboardTab } from './components/Tabs';
+import { TabContainer } from './components/Tabs';
 import { MultiPageDocLayout } from './components/Documentation';
 import { documentationPages } from './content/documentation-pages';
 import PartitioningTab from './components/Tabs/PartitioningTab';
 import { ContainerConfigTab } from './components/Container';
+import ThemeToggle from './components/ThemeToggle';
 
 function App() {
-  const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL as string | undefined;
   const state = useAppStore();
   const setResults = useAppStore((state) => state.setResults);
 
@@ -68,50 +68,50 @@ function App() {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Configuration */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-4">
             {/* 1. Hardware Configuration (GPU) */}
-            <CollapsibleSection 
-              title="Hardware Configuration" 
-              icon={Cpu} 
-              iconColor="text-green-600"
+            <CollapsibleSection
+              title="Hardware Configuration"
+              icon={Cpu}
+              iconColor="text-emerald-500 dark:text-emerald-400"
               defaultOpen={true}
             >
               <GPUSelector gpus={gpus} />
             </CollapsibleSection>
 
             {/* 2. Model Type Selection */}
-            <CollapsibleSection 
-              title="Model Type" 
-              icon={Box} 
-              iconColor="text-indigo-600"
+            <CollapsibleSection
+              title="Model Type"
+              icon={Box}
+              iconColor="text-indigo-500 dark:text-indigo-400"
               defaultOpen={true}
             >
               <ModelTypeSelector />
             </CollapsibleSection>
 
             {/* 3. Model Configuration */}
-            <CollapsibleSection 
-              title="Model Configuration" 
-              icon={Brain} 
-              iconColor="text-blue-600"
+            <CollapsibleSection
+              title="Model Configuration"
+              icon={Brain}
+              iconColor="text-blue-500 dark:text-blue-400"
               defaultOpen={true}
             >
-              <ModelSelector 
-                models={models} 
+              <ModelSelector
+                models={models}
                 embeddingModels={embeddingModels}
                 rerankingModels={rerankingModels}
               />
             </CollapsibleSection>
 
             {/* 4. Inference Parameters - Conditional based on model type */}
-            <CollapsibleSection 
+            <CollapsibleSection
               title={
                 state.modelType === 'generation' ? 'Inference Parameters' :
                 state.modelType === 'embedding' ? 'Embedding Parameters' :
                 'Reranking Parameters'
               }
-              icon={Zap} 
-              iconColor="text-orange-600"
+              icon={Zap}
+              iconColor="text-amber-500 dark:text-amber-400"
               defaultOpen={false}
             >
               {state.modelType === 'generation' && <InferenceParameters />}
@@ -120,10 +120,10 @@ function App() {
             </CollapsibleSection>
 
             {/* 5. Quantization Settings */}
-            <CollapsibleSection 
-              title="Quantization Settings" 
-              icon={Layers} 
-              iconColor="text-purple-600"
+            <CollapsibleSection
+              title="Quantization Settings"
+              icon={Layers}
+              iconColor="text-violet-500 dark:text-violet-400"
               defaultOpen={false}
             >
               <QuantizationOptions />
@@ -131,7 +131,7 @@ function App() {
           </div>
 
           {/* Right Column - Results */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4">
             <ResultsDisplay results={results} isCalculating={isCalculating} />
 
             {results && (
@@ -146,26 +146,38 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--surface-alt)' }}>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header style={{ backgroundColor: 'var(--surface)', borderBottom: '1px solid var(--border)', boxShadow: '0 1px 3px var(--shadow-color)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Brain className="w-8 h-8 text-blue-600" />
+              <div className="p-2 rounded-xl" style={{ backgroundColor: 'var(--accent-light)' }}>
+                <Brain className="w-7 h-7" style={{ color: 'var(--accent)' }} />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">LLM Inference Calculator</h1>
-                <p className="text-sm text-gray-600">Estimate memory requirements and performance for LLM inference</p>
+                <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                  LLM Inference Calculator
+                </h1>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  GPU memory estimation for inference workloads
+                </p>
               </div>
             </div>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              <Github className="w-6 h-6" />
-            </a>
+            <div className="flex items-center space-x-3">
+              <ThemeToggle />
+              <a
+                href="https://github.com/amd/llm-sizer"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: 'var(--text-muted)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+              >
+                <Github className="w-5 h-5" />
+              </a>
+            </div>
           </div>
         </div>
       </header>
@@ -173,42 +185,57 @@ function App() {
       {/* Tab Navigation and Content */}
       <TabContainer
         tabs={[
-          { id: 'calculator', label: 'Calculator', icon: <Cpu className="w-5 h-5" /> },
-          { id: 'partitioning', label: 'Partitioning', icon: <Layers className="w-5 h-5" /> },
-          { id: 'container', label: 'Container Config', icon: <Container className="w-5 h-5" /> },
-          { id: 'documentation', label: 'Documentation', icon: <BookOpen className="w-5 h-5" /> },
-          ...(dashboardUrl
-            ? [{ id: 'dashboard' as const, label: 'Server Dashboard', icon: <Activity className="w-5 h-5" /> }]
-            : []),
+          { id: 'calculator', label: 'Calculator', icon: <Cpu className="w-4 h-4" /> },
+          { id: 'partitioning', label: 'Partitioning', icon: <Layers className="w-4 h-4" /> },
+          { id: 'container', label: 'Container Config', icon: <Container className="w-4 h-4" /> },
+          { id: 'documentation', label: 'Documentation', icon: <BookOpen className="w-4 h-4" /> },
         ]}
         defaultTab="calculator"
         className="flex-1"
       >
         {(activeTab) => (
-          <div className="flex-1">
+          <div className="flex-1 tab-content-enter" key={activeTab}>
             {activeTab === 'calculator' && calculatorContent}
             {activeTab === 'partitioning' && <PartitioningTab />}
             {activeTab === 'container' && <ContainerConfigTab />}
             {activeTab === 'documentation' && (
               <MultiPageDocLayout pages={documentationPages} />
             )}
-            {activeTab === 'dashboard' && dashboardUrl && (
-              <DashboardTab apiBase={dashboardUrl} />
-            )}
           </div>
         )}
       </TabContainer>
 
       {/* Footer */}
-      <footer className="bg-white border-t mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="text-center text-sm text-gray-600">
-            <p>
-              LLM Inference Calculator - Estimate memory requirements for Large Language Models
+      <footer style={{ backgroundColor: 'var(--surface)', borderTop: '1px solid var(--border)' }} className="mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              LLM Inference Calculator &mdash; GPU memory estimation for inference workloads
             </p>
-            <p className="mt-2">
-              Built with React, TypeScript, and Tailwind CSS
-            </p>
+            <div className="flex items-center gap-4">
+              <a
+                href="https://github.com/amd/llm-sizer"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs transition-colors"
+                style={{ color: 'var(--text-muted)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+              >
+                GitHub
+              </a>
+              <a
+                href="https://github.com/amd/llm-sizer/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs transition-colors"
+                style={{ color: 'var(--text-muted)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+              >
+                Report Issue
+              </a>
+            </div>
           </div>
         </div>
       </footer>

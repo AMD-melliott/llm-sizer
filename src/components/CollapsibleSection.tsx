@@ -1,5 +1,5 @@
 import React, { useState, ReactNode } from 'react';
-import { ChevronDown, ChevronRight, LucideIcon } from 'lucide-react';
+import { ChevronDown, LucideIcon } from 'lucide-react';
 
 interface CollapsibleSectionProps {
   title: string;
@@ -12,38 +12,45 @@ interface CollapsibleSectionProps {
 const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   title,
   icon: Icon,
-  iconColor = 'text-blue-600',
+  iconColor = 'text-blue-500',
   children,
   defaultOpen = false,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border">
+    <div
+      className="rounded-xl transition-shadow duration-200"
+      style={{
+        backgroundColor: 'var(--surface)',
+        border: '1px solid var(--border)',
+        boxShadow: '0 1px 3px var(--shadow-color)',
+      }}
+    >
       {/* Header - Clickable to toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 rounded-xl transition-colors"
+        style={{ color: 'var(--text-primary)' }}
       >
-        <div className="flex items-center space-x-2">
-          <Icon className={`w-5 h-5 ${iconColor}`} />
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <div className="flex items-center space-x-2.5">
+          <Icon className={`w-[18px] h-[18px] ${iconColor}`} />
+          <h2 className="text-sm font-semibold">{title}</h2>
         </div>
-        <div className="flex-shrink-0 ml-4">
-          {isOpen ? (
-            <ChevronDown className="w-5 h-5 text-gray-500" />
-          ) : (
-            <ChevronRight className="w-5 h-5 text-gray-500" />
-          )}
-        </div>
+        <ChevronDown
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
+          style={{ color: 'var(--text-muted)' }}
+        />
       </button>
 
-      {/* Content - Collapsible */}
-      {isOpen && (
-        <div className="px-6 pb-6 animate-fadeIn">
-          {children}
+      {/* Content - Animated collapse */}
+      <div className={`collapsible-content ${isOpen ? 'open' : ''}`}>
+        <div>
+          <div className="px-5 pb-5">
+            {children}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -18,8 +18,8 @@ const EmbeddingParameters: React.FC = () => {
   return (
     <div className="space-y-4">
       <div>
-        <label htmlFor="embedding-batch-size" className="block text-sm font-medium text-gray-700 mb-2">
-          Batch Size: {embeddingBatchSize}
+        <label htmlFor="embedding-batch-size" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+          Batch Size: <span className="font-mono tabular-nums">{embeddingBatchSize}</span>
         </label>
         <input
           id="embedding-batch-size"
@@ -28,9 +28,10 @@ const EmbeddingParameters: React.FC = () => {
           max="1024"
           value={embeddingBatchSize}
           onChange={(e) => setEmbeddingBatchSize(Number(e.target.value))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+          style={{ backgroundColor: 'var(--surface-inset)' }}
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
           <span>1</span>
           <span>512</span>
           <span>1024</span>
@@ -38,8 +39,8 @@ const EmbeddingParameters: React.FC = () => {
       </div>
 
       <div>
-        <label htmlFor="documents-per-batch" className="block text-sm font-medium text-gray-700 mb-2">
-          Documents per Batch: {documentsPerBatch}
+        <label htmlFor="documents-per-batch" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+          Documents per Batch: <span className="font-mono tabular-nums">{documentsPerBatch}</span>
         </label>
         <input
           id="documents-per-batch"
@@ -48,9 +49,10 @@ const EmbeddingParameters: React.FC = () => {
           max="256"
           value={documentsPerBatch}
           onChange={(e) => setDocumentsPerBatch(Number(e.target.value))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+          style={{ backgroundColor: 'var(--surface-inset)' }}
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
           <span>1</span>
           <span>128</span>
           <span>256</span>
@@ -58,8 +60,8 @@ const EmbeddingParameters: React.FC = () => {
       </div>
 
       <div>
-        <label htmlFor="avg-document-size" className="block text-sm font-medium text-gray-700 mb-2">
-          Avg Document Size (tokens): {avgDocumentSize}
+        <label htmlFor="avg-document-size" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+          Avg Document Size (tokens): <span className="font-mono tabular-nums">{avgDocumentSize}</span>
         </label>
         <input
           id="avg-document-size"
@@ -69,9 +71,10 @@ const EmbeddingParameters: React.FC = () => {
           step="64"
           value={avgDocumentSize}
           onChange={(e) => setAvgDocumentSize(Number(e.target.value))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+          style={{ backgroundColor: 'var(--surface-inset)' }}
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
           <span>64</span>
           <span>4096</span>
           <span>8192</span>
@@ -79,8 +82,8 @@ const EmbeddingParameters: React.FC = () => {
       </div>
 
       <div>
-        <label htmlFor="chunk-size" className="block text-sm font-medium text-gray-700 mb-2">
-          Chunk Size (tokens): {chunkSize}
+        <label htmlFor="chunk-size" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+          Chunk Size (tokens): <span className="font-mono tabular-nums">{chunkSize}</span>
         </label>
         <input
           id="chunk-size"
@@ -90,9 +93,10 @@ const EmbeddingParameters: React.FC = () => {
           step="64"
           value={chunkSize}
           onChange={(e) => setChunkSize(Number(e.target.value))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+          style={{ backgroundColor: 'var(--surface-inset)' }}
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
           <span>64</span>
           <span>4096</span>
           <span>8192</span>
@@ -100,8 +104,8 @@ const EmbeddingParameters: React.FC = () => {
       </div>
 
       <div>
-        <label htmlFor="chunk-overlap" className="block text-sm font-medium text-gray-700 mb-2">
-          Chunk Overlap (%): {chunkOverlap}
+        <label htmlFor="chunk-overlap" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+          Chunk Overlap (%): <span className="font-mono tabular-nums">{chunkOverlap}</span>
         </label>
         <input
           id="chunk-overlap"
@@ -110,19 +114,20 @@ const EmbeddingParameters: React.FC = () => {
           max="50"
           value={chunkOverlap}
           onChange={(e) => setChunkOverlap(Number(e.target.value))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+          style={{ backgroundColor: 'var(--surface-inset)' }}
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
           <span>0%</span>
           <span>25%</span>
           <span>50%</span>
         </div>
       </div>
 
-      <div className="bg-blue-50 rounded-lg p-3 mt-4">
-        <p className="text-sm text-blue-800">
-          <strong>Batch Processing:</strong> Processing {documentsPerBatch} documents 
-          of ~{avgDocumentSize} tokens each in batches of {embeddingBatchSize}.
+      <div className="rounded-xl p-3 mt-4" style={{ backgroundColor: 'var(--accent-light)' }}>
+        <p className="text-sm" style={{ color: 'var(--accent-text)' }}>
+          <strong>Batch Processing:</strong> Processing <span className="font-mono tabular-nums">{documentsPerBatch}</span> documents
+          of ~<span className="font-mono tabular-nums">{avgDocumentSize}</span> tokens each in batches of <span className="font-mono tabular-nums">{embeddingBatchSize}</span>.
         </p>
       </div>
     </div>

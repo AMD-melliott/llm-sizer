@@ -17,7 +17,7 @@ import { validateContainerConfig, calculateSharedMemory } from '../utils/configV
 
 const initialState: ContainerState = {
   selectedEngineId: 'vllm',
-  selectedImageId: 'rocm/vllm:latest',
+  selectedImageId: 'vllm/vllm-openai-rocm:latest',
   useContainerToolkit: true,
   containerName: 'vllm-inference',
 
@@ -509,6 +509,31 @@ function buildEngineParams(
     });
   }
   
+  // Host and port (needed for upstream images using vllm serve entrypoint)
+  if (!hasCustom('--host')) {
+    params.push({
+      flag: '--host',
+      value: '0.0.0.0',
+    });
+  } else {
+    params.push({
+      flag: '--host',
+      value: getCustom('--host') as string,
+    });
+  }
+
+  if (!hasCustom('--port')) {
+    params.push({
+      flag: '--port',
+      value: containerState.apiPort,
+    });
+  } else {
+    params.push({
+      flag: '--port',
+      value: getCustom('--port') as number,
+    });
+  }
+
   // Trust remote code (can be overridden)
   if (hasCustom('--trust-remote-code')) {
     if (getCustom('--trust-remote-code')) {

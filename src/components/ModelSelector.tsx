@@ -16,7 +16,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ models, embeddingModels =
     setSelectedModel,
   } = useAppStore();
 
-  // Sort models by name
   const sortedModels = useMemo(() => [...models].sort((a, b) => a.name.localeCompare(b.name)), [models]);
   const sortedEmbeddingModels = useMemo(() => [...embeddingModels].sort((a, b) => a.name.localeCompare(b.name)), [embeddingModels]);
   const sortedRerankingModels = useMemo(() => [...rerankingModels].sort((a, b) => a.name.localeCompare(b.name)), [rerankingModels]);
@@ -25,17 +24,35 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ models, embeddingModels =
   const currentEmbeddingModel = sortedEmbeddingModels.find(m => m.id === selectedModel);
   const currentRerankingModel = sortedRerankingModels.find(m => m.id === selectedModel);
 
+  const renderModelDetails = (details: { label: string; value: string | number }[]) => (
+    <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: 'var(--surface-inset)' }}>
+      <div className="flex items-center space-x-2">
+        <Info className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+        <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Model Details</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        {details.map(({ label, value }) => (
+          <div key={label}>
+            <span style={{ color: 'var(--text-muted)' }}>{label}:</span>
+            <span className="ml-2 font-medium font-mono" style={{ color: 'var(--text-primary)' }}>{value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       <div>
-        <label htmlFor="model-select" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="model-select" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
           Model Selection
         </label>
         <select
           id="model-select"
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="w-full rounded-lg shadow-sm focus:outline-none focus:ring-2"
+          style={{ borderColor: 'var(--border-strong)', color: 'var(--text-primary)', backgroundColor: 'var(--surface)' }}
         >
           {modelType === 'embedding' && sortedEmbeddingModels.map(model => (
             <option key={model.id} value={model.id}>
@@ -55,62 +72,20 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ models, embeddingModels =
         </select>
       </div>
 
-      {currentEmbeddingModel && (
-        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-          <div className="flex items-center space-x-2">
-            <Info className="w-4 h-4 text-blue-500" />
-            <span className="text-sm font-medium text-gray-700">Model Details</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <span className="text-gray-500">Dimensions:</span>
-              <span className="ml-2 font-medium">{currentEmbeddingModel.dimensions}d</span>
-            </div>
-            <div>
-              <span className="text-gray-500">Max Tokens:</span>
-              <span className="ml-2 font-medium">{currentEmbeddingModel.max_tokens}</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {currentEmbeddingModel && renderModelDetails([
+        { label: 'Dimensions', value: `${currentEmbeddingModel.dimensions}d` },
+        { label: 'Max Tokens', value: currentEmbeddingModel.max_tokens },
+      ])}
 
-      {currentRerankingModel && (
-        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-          <div className="flex items-center space-x-2">
-            <Info className="w-4 h-4 text-blue-500" />
-            <span className="text-sm font-medium text-gray-700">Model Details</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <span className="text-gray-500">Max Query:</span>
-              <span className="ml-2 font-medium">{currentRerankingModel.max_query_length} tokens</span>
-            </div>
-            <div>
-              <span className="text-gray-500">Max Doc:</span>
-              <span className="ml-2 font-medium">{currentRerankingModel.max_doc_length} tokens</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {currentRerankingModel && renderModelDetails([
+        { label: 'Max Query', value: `${currentRerankingModel.max_query_length} tokens` },
+        { label: 'Max Doc', value: `${currentRerankingModel.max_doc_length} tokens` },
+      ])}
 
-      {currentModel && modelType === 'generation' && (
-        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-          <div className="flex items-center space-x-2">
-            <Info className="w-4 h-4 text-blue-500" />
-            <span className="text-sm font-medium text-gray-700">Model Details</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <span className="text-gray-500">Hidden Size:</span>
-              <span className="ml-2 font-medium">{currentModel.hidden_size}</span>
-            </div>
-            <div>
-              <span className="text-gray-500">Layers:</span>
-              <span className="ml-2 font-medium">{currentModel.num_layers}</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {currentModel && modelType === 'generation' && renderModelDetails([
+        { label: 'Hidden Size', value: currentModel.hidden_size },
+        { label: 'Layers', value: currentModel.num_layers },
+      ])}
     </div>
   );
 };

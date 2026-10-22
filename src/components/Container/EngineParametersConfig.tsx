@@ -74,13 +74,14 @@ export const EngineParametersConfig: React.FC = () => {
               type="checkbox"
               checked={!!value}
               onChange={(e) => handleParamChange(param.flag, e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 rounded"
+              style={{ accentColor: 'var(--accent)' }}
             />
-            <label className="text-sm text-gray-700 dark:text-gray-300">
+            <label className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               {param.description}
             </label>
             {param.security_warning && isCustom && value && (
-              <span className="text-xs text-orange-600 dark:text-orange-400 ml-2">
+              <span className="text-xs ml-2" style={{ color: 'var(--warning-text)' }}>
                 ⚠️ {param.security_warning}
               </span>
             )}
@@ -93,7 +94,14 @@ export const EngineParametersConfig: React.FC = () => {
             <select
               value={String(value)}
               onChange={(e) => handleParamChange(param.flag, e.target.value || null)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm rounded focus:ring-2 focus:border-transparent"
+              style={{
+                border: '1px solid var(--border-strong)',
+                backgroundColor: 'var(--surface)',
+                color: 'var(--text-primary)'
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+              onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-strong)'}
             >
               <option value="">Auto / Default</option>
               {param.options?.map((opt) => (
@@ -103,7 +111,7 @@ export const EngineParametersConfig: React.FC = () => {
               ))}
             </select>
             {param.options && value && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 {param.options.find((o) => o.value === value)?.description}
               </p>
             )}
@@ -127,12 +135,25 @@ export const EngineParametersConfig: React.FC = () => {
                 max={param.validation?.max}
                 step={param.type === 'number' && param.validation?.min === 0 ? 0.1 : 1}
                 placeholder={param.default?.toString() || ''}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 text-sm rounded font-mono focus:ring-2 focus:border-transparent"
+                style={{
+                  border: '1px solid var(--border-strong)',
+                  backgroundColor: 'var(--surface)',
+                  color: 'var(--text-primary)'
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+                onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-strong)'}
               />
               {isCustom && (
                 <button
                   onClick={() => handleParamChange(param.flag, null)}
-                  className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+                  className="px-2 py-1 text-xs rounded transition-colors"
+                  style={{
+                    backgroundColor: 'var(--surface-alt)',
+                    color: 'var(--text-secondary)'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--border)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-alt)'}
                   title="Reset to default"
                 >
                   Reset
@@ -140,13 +161,13 @@ export const EngineParametersConfig: React.FC = () => {
               )}
             </div>
             {tensorParallelMismatch && (
-              <p className="text-xs text-red-600 dark:text-red-400">
+              <p className="text-xs" style={{ color: 'var(--danger-text)' }}>
                 ⚠️ Tensor parallel size ({value}) doesn't match GPU count ({numGPUs}). This will
                 cause errors!
               </p>
             )}
             {param.validation && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 {param.validation.min !== undefined && `Min: ${param.validation.min}`}
                 {param.validation.min !== undefined && param.validation.max !== undefined && ', '}
                 {param.validation.max !== undefined && `Max: ${param.validation.max}`}
@@ -163,12 +184,25 @@ export const EngineParametersConfig: React.FC = () => {
               value={value as string}
               onChange={(e) => handleParamChange(param.flag, e.target.value || null)}
               placeholder={param.default?.toString() || ''}
-              className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 px-3 py-2 text-sm rounded focus:ring-2 focus:border-transparent"
+              style={{
+                border: '1px solid var(--border-strong)',
+                backgroundColor: 'var(--surface)',
+                color: 'var(--text-primary)'
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+              onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-strong)'}
             />
             {isCustom && (
               <button
                 onClick={() => handleParamChange(param.flag, null)}
-                className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+                className="px-2 py-1 text-xs rounded transition-colors"
+                style={{
+                  backgroundColor: 'var(--surface-alt)',
+                  color: 'var(--text-secondary)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--border)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-alt)'}
                 title="Reset to default"
               >
                 Reset
@@ -182,12 +216,13 @@ export const EngineParametersConfig: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="rounded-lg" style={{ backgroundColor: 'var(--surface-inset)', border: '1px solid var(--border)' }}>
       {/* Header - Clickable to toggle */}
-      <div className="w-full flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg">
+      <div className="w-full flex items-center justify-between p-4 rounded-t-lg transition-colors" onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-alt)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
         <div className="flex items-center cursor-pointer flex-1" onClick={() => setIsExpanded(!isExpanded)}>
           <svg
-            className="w-5 h-5 mr-2 text-purple-500"
+            className="w-5 h-5 mr-2"
+            style={{ color: 'var(--accent)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -199,11 +234,11 @@ export const EngineParametersConfig: React.FC = () => {
               d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
             />
           </svg>
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
             Engine Parameters
           </h4>
           {customEngineParams.size > 0 && (
-            <span className="ml-3 px-2 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 rounded">
+            <span className="ml-3 px-2 py-1 text-xs font-medium rounded" style={{ backgroundColor: 'var(--accent-light)', color: 'var(--accent-text)' }}>
               {customEngineParams.size} Custom
             </span>
           )}
@@ -211,12 +246,14 @@ export const EngineParametersConfig: React.FC = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-xs hover:underline"
+            style={{ color: 'var(--accent)' }}
           >
             {showAdvanced ? 'Hide Advanced' : 'Show Advanced'}
           </button>
           <svg
-            className={`w-5 h-5 text-gray-500 transition-transform cursor-pointer ${isExpanded ? 'transform rotate-180' : ''}`}
+            className={`w-5 h-5 transition-transform cursor-pointer ${isExpanded ? 'transform rotate-180' : ''}`}
+            style={{ color: 'var(--text-muted)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -232,33 +269,33 @@ export const EngineParametersConfig: React.FC = () => {
         <div className="p-4 pt-0">
 
       {/* Info */}
-      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+      <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
         Parameters are automatically configured from calculator settings. Override only if needed.
       </p>
 
       {/* Overridable Calculator Parameters */}
       {overridableParameters.length > 0 && showAdvanced && (
         <div className="mb-4">
-          <h5 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+          <h5 className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
             Override Calculator Settings
           </h5>
           <div className="space-y-3">
             {overridableParameters.map((param: EngineParameter) => (
               <div key={param.flag}>
                 <div className="flex items-start justify-between mb-1">
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
                     {param.flag}
                     {isParamCustomized(param.flag) && (
-                      <span className="ml-1 text-blue-600 dark:text-blue-400">(custom)</span>
+                      <span className="ml-1" style={{ color: 'var(--accent)' }}>(custom)</span>
                     )}
                   </label>
                   {param.validation?.mustMatchGpuCount && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                       Must match GPU count
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
                   {param.description}
                 </p>
                 {renderParameterInput(param)}
@@ -271,20 +308,20 @@ export const EngineParametersConfig: React.FC = () => {
       {/* Manual Parameters */}
       {manualParameters.length > 0 && showAdvanced && (
         <div>
-          <h5 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+          <h5 className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
             Additional Parameters
           </h5>
           <div className="space-y-3">
             {manualParameters.map((param: EngineParameter) => (
               <div key={param.flag}>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                   {param.flag}
-                  {param.required && <span className="text-red-500 ml-1">*</span>}
+                  {param.required && <span style={{ color: 'var(--danger-text)' }} className="ml-1">*</span>}
                   {isParamCustomized(param.flag) && (
-                    <span className="ml-1 text-blue-600 dark:text-blue-400">(custom)</span>
+                    <span className="ml-1" style={{ color: 'var(--accent)' }}>(custom)</span>
                   )}
                 </label>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
                   {param.description}
                 </p>
                 {renderParameterInput(param)}
@@ -296,9 +333,9 @@ export const EngineParametersConfig: React.FC = () => {
 
       {/* Summary of customizations */}
       {customEngineParams.size > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600 dark:text-gray-400">
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
               {customEngineParams.size} custom parameter{customEngineParams.size > 1 ? 's' : ''}{' '}
               set
             </span>
@@ -306,7 +343,8 @@ export const EngineParametersConfig: React.FC = () => {
               onClick={() => {
                 customEngineParams.forEach((_, flag) => clearCustomEngineParam(flag));
               }}
-              className="text-xs text-red-600 dark:text-red-400 hover:underline"
+              className="text-xs hover:underline"
+              style={{ color: 'var(--danger-text)' }}
             >
               Clear All
             </button>
